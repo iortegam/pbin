@@ -7,10 +7,12 @@
 #       - Optimize the regularization strength (alpha) used in Tikhonov (SFIT4)
 #
 # Notes:
+#       - See important inputs in main()
 #       - This script will run under the folder containing the t15asc.4 and the sfit4.ctl file
 #       - Error analysis is optional (See Initializations below)
 #       - Layer1Mods, sfitClasses, and dataOutClass classes are needed to plot results
 #       - The name of the Sa matrix used in the ctl file needs to be 'Tik.inp'
+#       - OPTIONAL = TRANSFORMATION IN CASE IN CASE NON-CONSTANT RETRIEVAL GRID 
 #   
 # Version History:
 #       Created, June, 2017  Ivan Ortega (iortega@ucar.edu)
@@ -62,56 +64,117 @@ def ckFile(fName,logFlg=False,exit=False):
     else:
         return True
 
-def TikCov(nlayer, alpha, pathOut):
-    '''First Derivative operator'''
-    L1=np.zeros((nlayer-1,nlayer),dtype=float)
+def getColumns(FileName, headerrow=0, delim=' ', header=True):
+    """
+    Get columns of data from inFile. The order of the rows is respected
+    
+    :param inFile: column file separated by delim
+    :param header: if True the first line will be considered a header line
+    :returns: a tuple of 2 dicts (cols, indexToName). cols dict has keys that 
+    are headings in the inFile, and values are a list of all the entries in that
+    column. indexToName dict maps column index to names that are used as keys in 
+    the cols dict. The names are the same as the headings used in inFile. If
+    header is False, then column indices (starting from 0) are used for the 
+    heading names (i.e. the keys in the cols dict)
+    """
 
-    for i in range(nlayer-1):
-	    L1[i,i]=1.0
-	    L1[i,i+1]=-1.0
+    f = open(FileName, 'r')
+    inFile = f.readlines()
 
-    R=alpha*np.dot(L1.T,L1)
 
-    print nlayer
-    print L1.T.shape
-    print L1.shape
-    print R.shape
+    cols = {}
+    indexToName = {}
+    for lineNum, line in enumerate(inFile):
+        if lineNum < headerrow: continue
 
-    exit()
+        if lineNum == headerrow:
+            if delim == ' ': headings = line.split()
+            else: headings = line.split(delim) 
+              
+            i = 0
+            for heading in headings:
+                heading = heading.strip()
+         
+                if header:
+                    cols[heading] = []
+                    indexToName[i] = heading
+                else:
+                    # in this case the heading is actually just a cell
+                    cols[i] = [heading]
+                    indexToName[i] = i
+                i += 1
+        else:
+            if delim == ' ': cells = line.split()
+            else: cells = line.split(delim)
 
-    np.savetxt(pathOut+'Tik.input',R)
+            i = 0
+            for cell in cells:
+                cell = cell.strip()
+                cols[indexToName[i]] += [cell]
+                i += 1
+                
+    return cols, indexToName
 
-def create_tik(gridbound,transflag=True,normalizeflag=True,quiet=True,logger=rootlogger):
-  """Create a Tikhonov matrix with strength 1 for a non-equidistant grid
 
-  Input argument: a ndarray of gridboundaries (1D) or a string for the file containing the grid boundaries (increasing height)
-  Optional key arguments::
+def tikCov_Trans(gridbound,alpha,pathOut, transflag=True,normalizeflag=True):
+    """Create a Tikhonov matrix with strength 1 for a non-equidistant grid
+
+    Input argument: a ndarray of gridboundaries (1D) or a string for the file containing the grid boundaries (increasing height)
+    Optional key arguments::
     transflag=True, if true, the matrix is transformed to work on a decreasing grid coordinate system
     normalizeflag=True, if true, the matrix is normalized with mean of the layer thickness (if false, unit is $km^{-2}$);;"""
-    logger=getlogger(logger,'create_tik')
-  
-    if type(gridbound)==ndarray: 
+    ##logger=getlogger(logger,'create_tik')
+
+    if isinstance(gridbound,np.ndarray): 
+        
         gridsize=gridbound.shape[0]-1
-        boundaries=sort(gridbound)
+        boundaries=np.sort(gridbound)
+    
     else: 
+        
         try: fid=open(gridbound,'r')
         except: 
-            logger.error('Unable to load the grid file with boundaries %s'%gridbound)
             return array([])
+       
         gridsize=int(fid.readline())
         boundaries=ftir.tools.read_matrixfile(fid)
-    if boundaries.shape!=(gridsize+1,): logger.error('Wrongly shaped data in %s'%gridbound);return array([])
-  logger.debug('Boundaries: %s'%boundaries)
-  l1=zeros((gridsize-1,gridsize));mids=array([(boundaries[i+1]+boundaries[i])/2 for i in range(gridsize)])
-  for i in range(l1.shape[0]): 
-    l1[i,i]=-1;l1[i,i+1]=1
-  thickness=array([mids[i+1]-mids[i] for i in range(gridsize-1)])
-  if normalizeflag: thickness/=thickness.mean()
-  out=l1.T.dot(diag(thickness**-2)).dot(l1)
-  if transflag: out=eye(gridsize)[::-1,:].dot(out).dot(eye(gridsize)[::-1,:])
-  logger.debug('Tikhonov=%s'%out)
-  return out;
+    
+    if boundaries.shape!=(gridsize+1,): 
+    	return array([])
+    
+    l1      = np.zeros((gridsize-1,gridsize))
+    mids    = np.array([(boundaries[i+1]+boundaries[i])/2 for i in range(gridsize)])
+    
+    for i in range(l1.shape[0]): 
+        l1[i,i]=-1
+        l1[i,i+1]=1
 
+    thickness=np.array([mids[i+1]-mids[i] for i in range(gridsize-1)])
+    
+    if normalizeflag: thickness/=thickness.mean()
+    
+    out  = alpha*l1.T.dot(np.diag(thickness**-2)).dot(l1)
+
+ 
+    if transflag: out=np.eye(gridsize)[::-1,:].dot(out).dot(np.eye(gridsize)[::-1,:])
+
+    np.savetxt(pathOut+'Tik.input',out)
+
+    return out
+
+def tikCov(nlayer, alpha, pathOut):
+    '''First Derivative operator'''
+    l1=np.zeros((nlayer-1,nlayer),dtype=float)
+
+    for i in range(nlayer-1):
+	    l1[i,i]=1.0
+	    l1[i,i+1]=-1.0
+
+    out = alpha*np.dot(l1.T,l1)
+
+    np.savetxt(pathOut+'Tik.input',out)
+
+    return out
                                 #-------------------------#
                                 #         Main            #
                                 #-------------------------#
@@ -120,34 +183,46 @@ def main():
     	#-----------------------------------------------------------------------------------------
     	#                             Initialization
     	#-----------------------------------------------------------------------------------------
-    	loc       = 'fl0'                                                                              #LOCATION
-        gas       = 'h2co'                                                                             #GAS                               
-    	alpha     = [0.1, 1, 10, 100, 1000, 10000, 100000, 1000000]                                    #ALPHA VALUES TO TEST
-        #alpha     = [100]                                    #ALPHA VALUES TO TEST
-    	TikOut    = '/data1/ebaumer/'+loc.lower()+'/'+gas.lower()+'/x.'+gas.lower()+'/'                #PATH TO SAVE THE TIK MATRIX
-        binDir    = '/data/ebaumer/Code/sfit-core-code/src/'                                           #PATH FOR THE SFIT4 SOURCE CODE
+    	loc       = 'tab'                                                                              # LOCATION
+        gas       = 'ch3oh'                                                                            # GAS                               
+    	#alpha     = [0.1, 1, 10, 100, 1000, 10000, 100000, 1000000]                                   # ALPHA VALUES TO TEST
+        alpha     = [10000]#, 1000, 1e4]                                                         # ALPHA VALUES TO TEST
+    	TikOut    = '/data1/ebaumer/'+loc.lower()+'/'+gas.lower()+'/x.'+gas.lower()+'/'                # PATH TO SAVE THE TIK MATRIX
+        binDir    = '/data/ebaumer/Code/sfit-core-code/src/'                                           # PATH FOR THE SFIT4 SOURCE CODE
 
-        midpnt    = [113,100.25,  89.85,   81.1,    73.385,  66.585,  60.59,   55.315,  50.7,    46.68,   43.19,   
-                     40.17,   37.555,  35.285,  33.3,    31.53,   29.915,  28.4,    26.94,   25.515,  24.125,  22.77,   
-                     21.45,   20.17,   18.925,  17.715,  16.54,   15.4    14.3,    13.235,  12.205,  11.21,   10.2493, 
-                     9.3264,  8.4356,  7.5769,  6.7504,  5.9559,  5.1986,  4.4734,  3.7803,  3.1193,  2.4904,  1.8986]
-
-        errFlg    = True                                                                               #ERROR ANALYSIS?
-        saveFlg   = True                                                                               #SAVE PDF FILE?
+        errFlg    = True                                                                               # ERROR ANALYSIS?
+        saveFlg   = True                                                                               # SAVE PDF FILE?
+        TransFlg  = True                                                                              # OPTIONAL = TRANSFORMATION IN CASE IN CASE NON-CONSTANT RETRIEVAL GRID (e.g., http://www.atmos-meas-tech.net/4/1943/2011/)
         
-        if loc == 'fl0':   nlayer  = 44                                                                #NUMBER OF LAYERS
-        elif loc == 'mlo': nlayer  = 41
-        elif loc == 'tab': nlayer  = 47
-        else: 
-            print "nlayer is not known for your location"
-            exit()
-
+        
         if saveFlg: pltFile = TikOut + 'TikOpt.pdf'
 
+       
         #-----------------------------------------------------------------------------------------
         #                             START
         #-----------------------------------------------------------------------------------------
         ckDir(TikOut, logFlg=False, exit=True)
+
+
+        if TransFlg:
+        	
+            fileLayers = '/data/Campaign/'+loc.upper()+'/local/station.layers'
+            ckFile(fileLayers, exit=True)
+
+            cols, indexToName = getColumns(fileLayers, headerrow=2, delim=' ', header=True)
+            midpnt   = np.asarray(cols['midpnt'][0:-1]).astype(np.float)
+            thick    = np.asarray(cols['thick'][0:-1]).astype(np.float)
+            level    = np.asarray(cols['level']).astype(np.float)
+
+        else:
+
+        	if   loc == 'fl0': nlayer  = 44                                                              
+        	elif loc == 'mlo': nlayer  = 41
+        	elif loc == 'tab': nlayer  = 47
+        	else: 
+        	    print "nlayer is not known for your location\nModify TikOpt to accomodate nlayer"
+        	    exit()
+
 
         #-----------------------------------------------------------------------------------------
         #                             Define variable to save
@@ -170,11 +245,15 @@ def main():
         #-----------------------------------------------------------------------------------------
         for ai in alpha:
 
-            TikCov(nlayer, ai,  TikOut)
-            
-            print '************'
-            print 'Running sfit4'
-            print '************'
+            if TransFlg:
+            	tikCov_Trans(np.sort(level), ai, TikOut, transflag=True,normalizeflag=False)
+            else: 
+            	tikCov(nlayer, ai,  TikOut)
+
+            print '************************************************************************'
+            print 'Running sfit4 - Tikhonov approach, alpha = {0:.3f}'.format(ai)
+            print '************************************************************************'
+           
             rtn = sc.subProcRun( [binDir + 'sfit4'] )
 
             wrkDir    = os.getcwd()
@@ -184,9 +263,9 @@ def main():
             # Run error analysis
             #-------------------
             if errFlg:
-                print '**********************'
-                print 'Running error analysis'
-                print '**********************'
+                print '**********************************************************************************'
+                print 'Running error analysis - Tikhonov approach, alpha = {0:.3f}\n'.format(ai)
+                print '**********************************************************************************'
                 
                 ckFile('sfit4.ctl', exit=True)
                 ckFile('sb.ctl', exit = True)
@@ -234,7 +313,7 @@ def main():
         # Plots
         #-------------------
         print '**********************'
-        print '        Plots         '
+        print '        Plots        '
         print '**********************'
 
         if saveFlg: pdfsav = PdfPages(pltFile)

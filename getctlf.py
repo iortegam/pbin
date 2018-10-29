@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm 
 import myfunctions as mf
 import numpy as np
-import sondeclass as rs
+#import sondeclass as rs
 from matplotlib.backends.backend_pdf import PdfPages
 import dataOutClass as dc
 import myfunctions as mf
@@ -279,7 +279,7 @@ def main(argv):
     #READING THE STATION LAYER FILE
     #-----------------------------------------------
     ckFile(stfile,exit=True)
-    stfile = file(stfile, 'r')
+    #stfile = file(stfile, 'r')
     cols, indexToName = mf.getColumns(stfile, headerrow=2, delim=' ', header=True)
     midpoint = np.asarray(cols['midpnt'][0:-1]).astype(np.float)
     thick    = np.asarray(cols['thick'][0:-1]).astype(np.float)

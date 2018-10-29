@@ -44,12 +44,12 @@ import matplotlib.colors as colors
 import matplotlib.gridspec as gridspec
 import matplotlib.gridspec as gridspec
 from itertools import izip
-from numpy import *
+#from numpy import *
 import myfunctions as mf
 import dataOutClass as dc
 from collections                     import OrderedDict
 import PltClass as mp
-import sondeclass as rs
+#import sondeclass as rs
 
 from mpl_toolkits.basemap import Basemap
 import pyproj    
@@ -74,6 +74,9 @@ from math import degrees, pi as PI, radians, sin, tan
 print rsstice.fib.__doc__
 print ldse.ldse.__doc__
 import matplotlib as mpl
+
+from shapely.geometry.polygon import Polygon as Polygon2
+
 
 import csv
 
@@ -111,9 +114,9 @@ def closeFig(self):
 
 def main():
 
-    ftsflg     = True       #READ FTS
-    chlflg     = True      #READ Chlorophyll
-    siflg      = True      #READ SE ICE 
+    ftsflg     = True      # READ FTS
+    chlflg     = True      # READ Chlorophyll
+    siflg      = True      # READ SEA ICE 
 
 
     #-----------------------------------------------------------------------------------------
@@ -182,10 +185,10 @@ def main():
     #-------------------------------------------------
     #DEFINING THE AREA OF INTEREST FOR TIME SERIES
     #-------------------------------------------------
-    north2  = 76.75
-    south2  = 74.5
+    north2  = 78.0 #76.75
+    south2  = 74.0
     west2   = (282 - 360.)
-    east2   = (296 - 360.)
+    east2   = (299 - 360.)
 
 
     #-----------------------------------------------------------------------------------------
@@ -793,6 +796,9 @@ def main():
         chlAnoTs   = np.asarray(chlAnoTs)
         chlTs      = np.asarray(chlTs)
 
+        print chlyears.shape
+        print chlAnomaly.shape
+
     #-----------------------------------------------------------------------------------------
     #                             
     #                                     READ SST AND ICE CONC
@@ -944,50 +950,56 @@ def main():
         simonths = np.reshape(simonths, (len(siyears), len(moi)))
         siyears2 = np.reshape(siyears2, (len(siyears), len(moi)))
 
-
     if saveFlg: pdfsav = PdfPages(pltFile)
         
-    if ftsflg & chlflg & siflg:
-       
+    #if ftsflg & chlflg & siflg:
+    if siflg:
+
         #-------------------------------------------------
-        #Fit: MAP WITH CHLORO (MODIS), SURFACE WINDS (ERA-I), and SAA FTS  
+        # MAP WITH SE ICE CONC ANOMALY (MODIS), SAA (FTS)
         #-------------------------------------------------
         for m in moi:
 
-            #----------------------------------
-            #Create Indixes only for months of interest in 2016
-            #----------------------------------
-            idoi = dt.datetime(yoi, m, 1)
-            fdoi = dt.datetime(yoi, m, 30)
-
-            inds = np.where( (dates[gasVer] > idoi) & (dates[gasVer] < fdoi) )
 
             #----------------------------------
             #Initiate Map
             #----------------------------------
             fig, ax1  = plt.subplots()
 
-            latMin   = 70.   # 54.
+            #latMin   = 70.   # 54.
+            #latMax   = 80    # 88.
+            #lonMin   = -75   # -65.
+            #lonMax   = -40    # 20
+
+            latMin   = 67.5   # 54.
             latMax   = 80    # 88.
-            lonMin   = -75   # -65.
-            lonMax   = -40    # 20
+            lonMin   = -80   # -65.
+            lonMax   = -45    # 20
 
             map = Basemap(llcrnrlat=latMin,urcrnrlat=latMax,
                 llcrnrlon=lonMin,urcrnrlon=lonMax,
                 rsphere=(6378137.00,6356752.3142),
-                resolution='l',area_thresh=1000.,projection='lcc',
+                resolution='h',area_thresh=1000.,projection='lcc',
                 lat_1=latMin,lon_0=-60)
 
             map.drawcoastlines(color='black')
             map.drawcountries(color='lightgrey')
-            map.fillcontinents(color='gray', alpha=0.5)
+            map.fillcontinents(color='gray')
 
-            map.drawparallels(np.arange(-80., 81., 5.), labels=[1,0,0,0], alpha=0.5)
-            map.drawmeridians(np.arange(-180., 181., 10.), labels=[0,0,0,1],alpha=0.5)
+            map.drawparallels(np.arange(-80., 81., 2.), labels=[1,0,0,0], alpha=0.5)
+            map.drawmeridians(np.arange(-180., 181., 5.), labels=[0,0,0,1],alpha=0.5)
 
             #----------------------------------
             #plot LOS distance assuming a height 
             #----------------------------------
+            #----------------------------------
+            #Create Indixes only for months of interest in year of interest
+            #----------------------------------
+            idoi = dt.datetime(yoi, m, 1)
+            fdoi = dt.datetime(yoi, m, 30)
+
+            inds = np.where( (dates[gasVer] > idoi) & (dates[gasVer] < fdoi) )
+
             Lonpoly   = []
             Latpoly   = []
 
@@ -998,11 +1010,145 @@ def main():
                 Lonpoly.append(xlon_i)
                 Latpoly.append(xlat_i)
 
-                if totClmn[gasVer][inds][i] > 1.02e16: col = 'red'
-                if totClmn[gasVer][inds][i] < 1.02e16: col = 'blue'
+                #if totClmn[gasVer][inds][i] > 1.02e16: col = 'red'
+                #if totClmn[gasVer][inds][i] < 1.02e16: col = 'blue'
 
-                if vmrP[gasVer+str(0)][0][inds][i] > 600: col = 'red'
-                if vmrP[gasVer+str(0)][0][inds][i] < 600: col = 'blue'
+                if vmrP[gasVer+str(0)][0][inds][i] >= 600: col = 'red'
+                elif ( (vmrP[gasVer+str(0)][0][inds][i] >= 550) & (vmrP[gasVer+str(0)][0][inds][i] < 600) ): col = 'orange'
+                elif ( (vmrP[gasVer+str(0)][0][inds][i] >= 500) & (vmrP[gasVer+str(0)][0][inds][i] < 550) ): col = 'green'
+                elif vmrP[gasVer+str(0)][0][inds][i] < 500: col = 'blue'
+
+                map.drawgreatcircle(Loclon,Loclat,xlon_i,xlat_i, color=col, linewidth=2)
+                x2, y2 = map(xlon_i, xlat_i)
+            #-------------------------------------------------
+            #Plot in Map Sea Ice Anomaly
+            #-------------------------------------------------
+
+            x, y = map(silon, silat)
+
+            indsy = np.where( (siyears2 == yoi))[0]
+            indsm = np.where( (simonths == m))[0]
+
+            indsym = np.where( (siyears2 == yoi) & (simonths == m))
+
+            levels   = np.arange(-40, 40, 1)
+            extender = "both"
+
+            CS1 = map.contourf(x,y,iceAnomaly[indsym[0][0], indsym[1][0], :, :], levels, cmap=mplcm.get_cmap('RdYlBu_r',len(levels)),extend=extender)
+            CS1.axis='tight'
+            bar = plt.colorbar(CS1,orientation='vertical',extend=extender)#, shrink=0.5)
+            bar.set_label('Sea Ice Concentration Anomaly [%]', fontsize=14)
+            bar.ax.tick_params(labelsize=16)
+
+            ax1.tick_params(labelsize=16)
+
+
+            x1,y1 = map(silon2[0], silat2[0])
+            x2,y2 = map(silon2[0], silat2[-1])
+            x3,y3 = map(silon2[-1], silat2[-1])
+            x4,y4 = map (silon2[-1], silat2[0])
+
+            Inipoly = [ (x1,y1), (x2,y2), (x3,y3), (x4,y4 )]
+            poly = Polygon2(Inipoly)
+
+            xx,yy = poly.exterior.xy
+
+            #poly = PatchPolygon([(x1,y1),(x2,y2),(x3,y3),(x4,y4)],facecolor='red',linewidth=3, ALPHA=0.4)
+            #poly = PatchPolygon([(x1,y1),(x2,y2),(x3,y3),(x4,y4)], linewidth=1, edgecolor='k', color='none', alpha=0.75)
+            #plt.gca().add_patch(poly)
+
+            ax1.plot(xx, yy, color='k', alpha=0.7,linewidth=3, zorder=2)
+
+
+            #lons2, lats2 = np.meshgrid(chllon2, chllat2)
+            #x2, y2 = map(lons2, lats2)
+            #ax1.plot(x2, y2, '.k', alpha = 0.03)
+            #ax1.tick_params(labelsize=14)
+
+            if m == 5: myStr = 'May-'+str(yoi)
+            elif m == 6: myStr = 'June-'+str(yoi)
+            else: myStr = str(m)+'-'+str(yoi)
+
+            plt.title('{}'.format(myStr), fontsize=16)
+
+            # datesoi =  [dt.date(d.year, d.month, d.day) for d in dates[gasVer][inds]]
+            # datesoi = np.unique(datesoi)
+            # datesoi = np.sort(datesoi)
+
+            # print'\n' 
+            # print datesoi
+
+            if saveFlg: 
+                pdfsav.savefig(fig,dpi=200)
+            else: 
+                plt.show(block=False)
+
+            plt.savefig('/data1/projects/ocstab/fig/sngl/Map_IceAnom_Az_'+myStr, bbox_inches='tight')
+        
+        #user_input = raw_input('Press any key to exit >>> ')
+        #sys.exit()
+       
+        #-------------------------------------------------
+        # MAP WITH CHLORO (MODIS), SAA (FTS),   SURFACE WINDS (ERA-I),  
+        #-------------------------------------------------
+        for m in moi:
+
+            #----------------------------------
+            #Initiate Map
+            #----------------------------------
+            fig, ax1  = plt.subplots()
+
+            #latMin   = 70.   # 54.
+            #latMax   = 80    # 88.
+            #lonMin   = -75   # -65.
+            #lonMax   = -40    # 20
+
+            latMin   = 67.5   # 54.
+            latMax   = 80    # 88.
+            lonMin   = -80   # -65.
+            lonMax   = -45    # 20
+
+            map = Basemap(llcrnrlat=latMin,urcrnrlat=latMax,
+                llcrnrlon=lonMin,urcrnrlon=lonMax,
+                rsphere=(6378137.00,6356752.3142),
+                resolution='h',area_thresh=1000.,projection='lcc',
+                lat_1=latMin,lon_0=-60)
+
+            map.drawcoastlines(color='black')
+            map.drawcountries(color='lightgrey')
+            map.fillcontinents(color='gray')
+
+            map.drawparallels(np.arange(-80., 81., 2.), labels=[1,0,0,0], alpha=0.5)
+            map.drawmeridians(np.arange(-180., 181., 5.), labels=[0,0,0,1],alpha=0.5)
+            #----------------------------------
+            #plot LOS distance assuming a height 
+            #----------------------------------
+
+            #----------------------------------
+            #Create Indixes only for months of interest in year of interest
+            #----------------------------------
+            idoi = dt.datetime(yoi, m, 1)
+            fdoi = dt.datetime(yoi, m, 30)
+
+            inds = np.where( (dates[gasVer] > idoi) & (dates[gasVer] < fdoi) )
+
+            Lonpoly   = []
+            Latpoly   = []
+
+            for i, a in enumerate(saa[gasVer][inds]):
+                theta     = radians(90.0 - sza[gasVer][inds][i])
+                xdist     = 40.0/tan(theta)
+                xlat_i, xlon_i = mf.destination(Loclat, Loclon, xdist, a, radius=6371.008771415)
+                Lonpoly.append(xlon_i)
+                Latpoly.append(xlat_i)
+
+                #if totClmn[gasVer][inds][i] > 1.02e16: col = 'red'
+                #if totClmn[gasVer][inds][i] < 1.02e16: col = 'blue'
+
+                if vmrP[gasVer+str(0)][0][inds][i] >= 600: col = 'red'
+                elif ( (vmrP[gasVer+str(0)][0][inds][i] >= 550) & (vmrP[gasVer+str(0)][0][inds][i] < 600) ): col = 'orange'
+                elif ( (vmrP[gasVer+str(0)][0][inds][i] >= 500) & (vmrP[gasVer+str(0)][0][inds][i] < 550) ): col = 'green'
+                elif vmrP[gasVer+str(0)][0][inds][i] < 500: col = 'blue'
 
                 map.drawgreatcircle(Loclon,Loclat,xlon_i,xlat_i, color=col, linewidth=2)
                 x2, y2 = map(xlon_i, xlat_i)
@@ -1015,33 +1161,27 @@ def main():
             indsym = np.where( (chlyears == yoi) & (chlmonths == m))[0]
 
             #levels = np.arange(0, 10, 0.2)
-            levels = np.arange(-3, 7, 0.2)
-            extender = "max"
+            levels = np.arange(-3, 7, 0.1)
+            extender = "both"
 
-            CS1 = map.contourf(x,y,chlAnomaly[indsym[0], :, :], levels)#,alpha=0.5)
+            #CS1 = map.contourf(x,y,chlAnomaly[indsym[0], :, :], levels)#,alpha=0.5)
+            CS1 = map.contourf(x,y,chlAnomaly[indsym[0], :, :], levels, cmap=mplcm.get_cmap('RdYlBu_r',len(levels)),extend=extender)
+
             CS1.axis='tight'
             bar = plt.colorbar(CS1,orientation='vertical',extend=extender)#, shrink=0.5)
-            bar.set_label('Chlorophyll Concentration [mg m$^{-3}$]')
+            bar.set_label('Chlorophyll Concentration Anomaly [mg m$^{-3}$]', fontsize=14)
+            bar.ax.tick_params(labelsize=16)
 
             lons2, lats2 = np.meshgrid(chllon2, chllat2)
             x2, y2 = map(lons2, lats2)
             ax1.plot(x2, y2, '.k', alpha = 0.05)
+            ax1.tick_params(labelsize=16)
 
-            #------------------------------
-            #Plot in Map Wind from ERA Reanalysis
-            #------------------------------
-            ERAdir = '/data1/ancillary_data/ERAdata/wind/'
+            if m == 5: myStr = 'May-'+str(yoi)
+            elif m == 6: myStr = 'June-'+str(yoi)
+            else: myStr = str(m)+'-'+str(yoi)
 
-            #---------------------
-            # Establish date range
-            #---------------------
-            #dRange = sc.DateRange(idoi.year,idoi.month,idoi.day,fdoi.year,fdoi.month,fdoi.day) 
-
-            #------------------------------------------
-            # Loop through all folders in specific year
-            #------------------------------------------
-            U_matrix = []
-            V_matrix = []
+            plt.title('{}'.format(myStr), fontsize=16)
 
             datesoi =  [dt.date(d.year, d.month, d.day) for d in dates[gasVer][inds]]
             datesoi = np.unique(datesoi)
@@ -1049,61 +1189,87 @@ def main():
 
             print'\n' 
             print datesoi
+           
 
-            for sngDay in datesoi:
+            # #------------------------------
+            # #Plot in Map Wind from ERA Reanalysis
+            # #------------------------------
+            # ERAdir = '/data1/ancillary_data/ERAdata/wind/'
 
-                YYYY = "{0:04d}".format(sngDay.year)
-                MM   = "{0:02d}".format(sngDay.month)
-                DD   = "{0:02d}".format(sngDay.day) 
+            # #---------------------
+            # # Establish date range
+            # #---------------------
+            # #dRange = sc.DateRange(idoi.year,idoi.month,idoi.day,fdoi.year,fdoi.month,fdoi.day) 
+
+            # #------------------------------------------
+            # # Loop through all folders in specific year
+            # #------------------------------------------
+            # U_matrix = []
+            # V_matrix = []
+
+            # datesoi =  [dt.date(d.year, d.month, d.day) for d in dates[gasVer][inds]]
+            # datesoi = np.unique(datesoi)
+            # datesoi = np.sort(datesoi)
+
+            # print'\n' 
+            # print datesoi
+
+            # for sngDay in datesoi:
+
+            #     YYYY = "{0:04d}".format(sngDay.year)
+            #     MM   = "{0:02d}".format(sngDay.month)
+            #     DD   = "{0:02d}".format(sngDay.day) 
        
-                ERA_F2 = ERAdir + YYYY + MM + '/' + 'ei.oper.an.pv.regn128sc.'+YYYY+MM+DD+'12.nc'
+            #     ERA_F2 = ERAdir + YYYY + MM + '/' + 'ei.oper.an.pv.regn128sc.'+YYYY+MM+DD+'12.nc'
         
-                f2 = netcdf.netcdf_file(ERA_F2,'r',mmap=False)
+            #     f2 = netcdf.netcdf_file(ERA_F2,'r',mmap=False)
 
-                eralat   = f2.variables['g4_lat_0']
-                eralon   = f2.variables['g4_lon_1']
-                eraU     = f2.variables['U_GDS4_PVL']
-                eraV     = f2.variables['V_GDS4_PVL']
+            #     eralat   = f2.variables['g4_lat_0']
+            #     eralon   = f2.variables['g4_lon_1']
+            #     eraU     = f2.variables['U_GDS4_PVL']
+            #     eraV     = f2.variables['V_GDS4_PVL']
 
-                f2.close()
+            #     f2.close()
 
-                eralat  = np.squeeze(eralat[:])
-                eralon  = np.squeeze(eralon[:])
-                eraU    = np.squeeze(eraU[:,:])
-                eraV    = np.squeeze(eraV[:,:])
+            #     eralat  = np.squeeze(eralat[:])
+            #     eralon  = np.squeeze(eralon[:])
+            #     eraU    = np.squeeze(eraU[:,:])
+            #     eraV    = np.squeeze(eraV[:,:])
 
-                U_matrix.append(eraU)
-                V_matrix.append(eraV)
+            #     U_matrix.append(eraU)
+            #     V_matrix.append(eraV)
 
-            U_matrix = np.asarray(U_matrix)
-            V_matrix = np.asarray(V_matrix)
+            # U_matrix = np.asarray(U_matrix)
+            # V_matrix = np.asarray(V_matrix)
 
-            U_matrix = np.mean(U_matrix, axis=0)
-            V_matrix = np.mean(V_matrix, axis=0)
-
-
-            eralon2, eralat2 = np.meshgrid(eralon, eralat)
-
-            x, y = map(eralon2, eralat2)
-
-            yy = np.arange(0, y.shape[0], 2)
-            xx = np.arange(0, x.shape[1], 2)
-
-            points = np.meshgrid(yy, xx)
-
-            map.barbs(x[points], y[points], eraU[points], eraV[points], pivot='middle', barbcolor='#333333')
+            # U_matrix = np.mean(U_matrix, axis=0)
+            # V_matrix = np.mean(V_matrix, axis=0)
 
 
-            plt.title('Chlorophyll Concentration Anomaly and ERA-I Surface Winds\n' + '(Year = {},  Month = {})'.format(yoi, m))
+            # eralon2, eralat2 = np.meshgrid(eralon, eralat)
+
+            # x, y = map(eralon2, eralat2)
+
+            # yy = np.arange(0, y.shape[0], 2)
+            # xx = np.arange(0, x.shape[1], 2)
+
+            # points = np.meshgrid(yy, xx)
+
+            # map.barbs(x[points], y[points], eraU[points], eraV[points], pivot='middle', barbcolor='#333333')
+
+
+            # plt.title('Chlorophyll Concentration Anomaly and ERA-I Surface Winds\n' + '(Year = {},  Month = {})'.format(yoi, m))
            
             #------------------------------
             if saveFlg: 
                 pdfsav.savefig(fig,dpi=200)
-
             else: 
                 plt.show(block=False)
-                user_input = raw_input('Press any key to exit >>> ')
-                sys.exit()
+
+            plt.savefig('/data1/projects/ocstab/fig/sngl/Map_Chl_Az_'+myStr, bbox_inches='tight')
+        
+        #user_input = raw_input('Press any key to exit >>> ')
+        #sys.exit()
 
         #-------------------------------------------
         #PLOT OF correlations
@@ -1284,7 +1450,7 @@ def main():
             ax3.grid(True)
             ax3.set_ylabel('SST anomaly [C]',multialignment='center', fontsize=14)
             ax3.tick_params(which='both',labelsize=14)
-            ax3.set_ylim(-1.5, 1.0)
+            ax3.set_ylim(-1.5, 1.5)
             
             Colors = []
 

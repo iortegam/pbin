@@ -34,6 +34,7 @@ import matplotlib.colorbar as colorbar
 import matplotlib.colors as colors
 from matplotlib.dates import DateFormatter, MonthLocator, YearLocator, DayLocator, WeekdayLocator, MONDAY
 from scipy import linspace, polyval, polyfit, sqrt, stats, randn
+from matplotlib.ticker import MaxNLocator
 
 import pylab as P
 
@@ -494,9 +495,10 @@ def main(argv):
 
                                     if ndoi<=4:
 
-                                        if ndoi ==0: ax0[0, ndoi].set_ylabel('Altitude [km]', fontsize=14)
+                                        if ndoi ==0: ax0[0, ndoi].set_ylabel('Altitude [km]', fontsize=16)
 
-                                        ax0[0, ndoi].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='HR-FTIR', zorder=5)
+
+                                        ax0[0, ndoi].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='FTIR', zorder=5)
                                         ax0[0, ndoi].scatter(prfmean_day[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=6)
                                         ax0[0, ndoi].fill_betweenx(fts.alt[v],prfmean_day[dfValue+v][d]/1e3-prferr_day[dfValue+v][d]/1e3,prfmean_day[dfValue+v][d]/1e3+prferr_day[dfValue+v][d]/1e3,alpha=0.25,color='blue')
 
@@ -504,22 +506,26 @@ def main(argv):
                                         if loc.lower() == 'fl0': ax0[0, ndoi].set_ylim(1, 15)
                                         if loc.lower() == 'mlo': ax0[0, ndoi].set_ylim(3, 15)
                                            
-                                        ax0[0, ndoi].grid(True,which='both')
-                                        ax0[0, ndoi].tick_params(which='both',labelsize=14)
-                                        ax0[0, ndoi].set_title(da, fontsize=14)   
+                                        ax0[0, ndoi].grid(True,which='both', alpha=0.35)
+                                        ax0[0, ndoi].tick_params(which='both',labelsize=16)
+                                        ax0[0, ndoi].set_title(da, fontsize=16)   
 
                                         ax0[0, ndoi].plot(aPrf_day[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
                                         ax0[0, ndoi].scatter(aPrf_day[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=4)
                                            
                                         ax0[0, ndoi].plot(sondePrf[dfValue+v][d][indsFPH]/1e3, sondealt2[dfValue+v][d][indsFPH],color='k', label='FPH', linewidth=2.0, zorder=1)
                                         #ax0[0, ndoi].scatter(sondePrf[dfValue+v][d]/1e3, sondealt2[dfValue+v][d],facecolors='white', s=35, color='k', zorder=2)
-                                        ax0[0, ndoi].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,alpha=0.25,color='k')
+                                        #ax0[0, ndoi].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,alpha=0.25,color='k')
+                                        ax0[0, ndoi].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrfsd[dfValue+v][d][indsFPH]/1e3,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrfsd[dfValue+v][d][indsFPH]/1e3,alpha=0.25,color='k')
 
 
-                                        ax0[0, ndoi].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[0, ndoi].transAxes,fontsize=14)
+                                        ax0[0, ndoi].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[0, ndoi].transAxes,fontsize=16)
 
                                         ax0[0, ndoi].set_xlim(xmin=0)
                                         if ndoi == 0: ax0[0, ndoi].legend(prop={'size':11})
+
+                                        if aPrf_day[dfValue+v][d][-1]/1e3 <= 3: ax0[0, ndoi].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
+                                        else: ax0[0, ndoi].xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
 
                                     if ndoi>=5:
 
@@ -527,15 +533,15 @@ def main(argv):
                                         ax0[1, (ndoi-5)].scatter(prfmean_day[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=6)
                                         ax0[1, (ndoi-5)].fill_betweenx(fts.alt[v],prfmean_day[dfValue+v][d]/1e3-prferr_day[dfValue+v][d]/1e3,prfmean_day[dfValue+v][d]/1e3+prferr_day[dfValue+v][d]/1e3,alpha=0.25,color='blue')
 
-                                        if ndoi ==5: ax0[1, (ndoi-5)].set_ylabel('Altitude [km]', fontsize=14)
+                                        if ndoi ==5: ax0[1, (ndoi-5)].set_ylabel('Altitude [km]', fontsize=16)
 
                                         if loc.lower() == 'fl0': ax0[1, (ndoi-5)].set_ylim(1, 15)
                                         if loc.lower() == 'mlo': ax0[1, (ndoi-5)].set_ylim(3, 15)
      
-                                        if ndoi ==7 :ax0[1, (ndoi-5)].set_xlabel('VMR [x10$^3$ ppm]', fontsize=14)
-                                        ax0[1, (ndoi-5)].grid(True,which='both')
-                                        ax0[1, (ndoi-5)].tick_params(which='both',labelsize=14)
-                                        ax0[1, (ndoi-5)].set_title(da, fontsize=14)
+                                        if ndoi ==7 :ax0[1, (ndoi-5)].set_xlabel('VMR [x10$^3$ ppm]', fontsize=16)
+                                        ax0[1, (ndoi-5)].grid(True,which='both', alpha=0.35)
+                                        ax0[1, (ndoi-5)].tick_params(which='both',labelsize=16)
+                                        ax0[1, (ndoi-5)].set_title(da, fontsize=16)
 
                                         ax0[1, (ndoi-5)].plot(aPrf_day[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
                                         ax0[1, (ndoi-5)].scatter(aPrf_day[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=2)
@@ -544,13 +550,15 @@ def main(argv):
                                         ax0[1, (ndoi-5)].plot(sondePrf[dfValue+v][d][indsFPH]/1e3, sondealt2[dfValue+v][d][indsFPH],color='k', label='FPH', linewidth=2.0, zorder=1)
                                         ##ax0[1, (ndoi-5)].scatter(sondePrf[dfValue+v][d]/1e3, sondealt2[dfValue+v][d],facecolors='white', s=35, color='k',zorder=2)
                                         #ax0[1, (ndoi-5)].fill_betweenx(sondealt2[dfValue+v][d],sondePrf[dfValue+v][d]/1e3-sondePrf[dfValue+v][d]/1e3*0.05,sondePrf[dfValue+v][d]/1e3+sondePrf[dfValue+v][d]/1e3*0.05,alpha=0.25,color='k')
-                                        ax0[1, (ndoi-5)].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,alpha=0.25,color='k')
+                                        #ax0[1, (ndoi-5)].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,alpha=0.25,color='k')
+                                        ax0[1, (ndoi-5)].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrfsd[dfValue+v][d][indsFPH]/1e3,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrfsd[dfValue+v][d][indsFPH]/1e3,alpha=0.25,color='k')
 
-
-
-                                        ax0[1, (ndoi-5)].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[1, (ndoi-5)].transAxes,fontsize=14)
+                                        ax0[1, (ndoi-5)].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[1, (ndoi-5)].transAxes,fontsize=16)
 
                                         ax0[1, (ndoi-5)].set_xlim(xmin=0)
+
+                                        if aPrf_day[dfValue+v][d][-1]/1e3 <= 3: ax0[1, (ndoi-5)].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
+                                        else: ax0[1, (ndoi-5)].xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
 
                                     ndoi+=1
 
@@ -566,8 +574,8 @@ def main(argv):
                             plt.savefig(pltDir+'Selected_Prf_'+loc.upper()+'_'+idver+'.pdf', bbox_inches='tight')
                     else:       
                         plt.show(block=False)
-                        #user_input = raw_input('Press any key to exit >>> ')
-                        #sys.exit() 
+                        user_input = raw_input('Press any key to exit >>> ')
+                        sys.exit() 
 
 
             #---------------------------------
@@ -598,7 +606,7 @@ def main(argv):
 
                                         if ndoi ==0: ax0[0, ndoi].set_ylabel('Altitude [km]', fontsize=14)
 
-                                        ax0[0, ndoi].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='HR-FTIR', zorder=5)
+                                        ax0[0, ndoi].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='FTIR', zorder=5)
                                         ax0[0, ndoi].scatter(prfmean_day[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=6)
                                         ax0[0, ndoi].fill_betweenx(fts.alt[v],prfmean_day[dfValue+v][d]/1e3-prferr_day[dfValue+v][d]/1e3,prfmean_day[dfValue+v][d]/1e3+prferr_day[dfValue+v][d]/1e3,alpha=0.25,color='blue')
 
@@ -606,7 +614,7 @@ def main(argv):
                                         if loc.lower() == 'fl0': ax0[0, ndoi].set_ylim(1, 15)
                                         if loc.lower() == 'mlo': ax0[0, ndoi].set_ylim(3, 15)
                                            
-                                        ax0[0, ndoi].grid(True,which='both')
+                                        ax0[0, ndoi].grid(True,which='both', alpha=0.35)
                                         ax0[0, ndoi].tick_params(which='both',labelsize=14)
                                         ax0[0, ndoi].set_title(da, fontsize=14)   
 
@@ -621,6 +629,10 @@ def main(argv):
                                         ax0[0, ndoi].set_xlim(xmin=0)
                                         if ndoi == 0: ax0[0, ndoi].legend(prop={'size':11})
 
+                                        if prfmean_day[dfValue+v][d][-1]/1e3 <= 3: ax0[0, ndoi].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
+                                        else: ax0[0, ndoi].xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
+
+
                                     if ndoi>=5:
 
                                         ax0[1, (ndoi-5)].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='Mean (Retrieved)', zorder=5)
@@ -633,7 +645,7 @@ def main(argv):
                                         if loc.lower() == 'mlo': ax0[1, (ndoi-5)].set_ylim(3, 15)
         
                                         if ndoi ==7 :ax0[1, (ndoi-5)].set_xlabel('VMR [x10$^3$ ppm]', fontsize=14)
-                                        ax0[1, (ndoi-5)].grid(True,which='both')
+                                        ax0[1, (ndoi-5)].grid(True,which='both', alpha=0.35)
                                         ax0[1, (ndoi-5)].tick_params(which='both',labelsize=14)
                                         ax0[1, (ndoi-5)].set_title(da, fontsize=14)
 
@@ -646,6 +658,9 @@ def main(argv):
                                         ax0[1, (ndoi-5)].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[1, (ndoi-5)].transAxes,fontsize=14)
 
                                         ax0[1, (ndoi-5)].set_xlim(xmin=0)
+
+                                        if prfmean_day[dfValue+v][d][-1]/1e3 <= 3: ax0[1, (ndoi-5)].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
+                                        else: ax0[1, (ndoi-5)].xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
 
                                     ndoi+=1
 
@@ -706,7 +721,7 @@ def main(argv):
                 ax1.axvline(x=mu - sigma, color='r', linestyle='--')
 
 
-                ax1.grid(True,which='both')
+                ax1.grid(True,which='both', alpha=0.35)
                 ax1.tick_params(which='both',labelsize=12)#, labelbottom='off')
                 #ax1.set_ylabel('Probability', fontsize=12)
                 #ax1.set_title(str(pcol[0])+' - '+str(pcol[1])+' km',horizontalalignment='center', verticalalignment='baseline', fontsize=14)
@@ -1025,33 +1040,33 @@ def main(argv):
                     if pn == 0:
 
                         ax1[0].plot(diffT, Npnts2,  color='k',linewidth=2.0, zorder=3)
-                        ax1[0].scatter(diffT, Npnts2, facecolors='white', color='k',s=60, label='# of Dates', zorder=4)
+                        ax1[0].scatter(diffT, Npnts2, facecolors='white', color='k',s=60, label='Number of dates', zorder=4)
                         
                         ax1[0].plot(diffT, Npnts,  color='blue',linewidth=2.0, zorder=1)
-                        ax1[0].scatter(diffT, Npnts, facecolors='white', color='blue',s=60, label='# of Profiles', zorder=2)
+                        ax1[0].scatter(diffT, Npnts, facecolors='white', color='blue',s=60, label='Number of profiles', zorder=2)
                         
 
-                        print '# of Profiles = {}'.format(Npnts)
-                        print '# of Dates = {}'.format(Npnts2)
+                        print 'Number of profiles = {}'.format(Npnts)
+                        print 'Number of dates = {}'.format(Npnts2)
                         print 'diffT = {}'.format(diffT)
 
                     ax1[1].plot(diffT, np.asarray(stdDF)*100.,   color=clr[pn], linewidth=2.0, zorder=1)
                     ax1[1].scatter(diffT, np.asarray(stdDF)*100., color=clr[pn], s=60, facecolors='white', label= str(pcol[0])+'-'+str(pcol[1])+' km', zorder=2)
                     
                 
-                ax1[0].grid(True) 
-                ax1[0].tick_params(which='both',labelsize=14)
-                ax1[0].set_ylabel('Number of observations', fontsize=14)
+                ax1[0].grid(True, alpha=0.35) 
+                ax1[0].tick_params(which='both',labelsize=16)
+                ax1[0].set_ylabel('Number of observations', fontsize=16)
                 ax1[0].set_ylim(bottom=0)
                 ax1[0].legend(prop={'size':11}, loc=2)
 
-                ax1[1].grid(True)
-                ax1[1].set_ylabel('Variability [%]', fontsize=14)
-                ax1[1].tick_params(which='both',labelsize=14)
+                ax1[1].grid(True, alpha=0.5)
+                ax1[1].set_ylabel('Variability [%]', fontsize=16)
+                ax1[1].tick_params(which='both',labelsize=16)
                 ax1[1].set_ylim(bottom=0)
                 ax1[1].legend(prop={'size':10.5}, loc=2)
                 ax1[1].set_xlim(left=0, right=np.max(diffT) + 10)
-                ax1[1].set_xlabel('$\Delta$t [min]', fontsize=14)
+                ax1[1].set_xlabel('$\Delta$t [min]', fontsize=18)
 
                 if loc.lower() == 'fl0': ptitle = 'BLD'
                 elif loc.lower() == 'mlo': ptitle = 'MLO'
@@ -1096,7 +1111,10 @@ def main(argv):
 
                             inds = np.where(np.asarray(diffT) == t)[0]
 
-                            df = str(diffT[inds])
+                            print inds.shape
+                            print inds
+
+                            df = str(diffT[inds[0]])
 
                             #PrfDiff_i = np.asarray(PrfDiffRel[diffT[inds]])
                     
@@ -1149,11 +1167,15 @@ def main(argv):
                             #sc1 = ax.scatter(PrfDistMean, alt, s=50,  marker=markers[ti], label=lab)
 
                             ax.plot(PrfDistMean, fts.alt[v],   color=clr[ti], linewidth=2, zorder=1)
+                            #ax.errorbar(PrfDistMean, fts.alt[v],xerr=PrfDistStd, markersize=60, linestyle='-', color=clr[ti], ecolor=clr[ti])
                             ax.scatter(PrfDistMean, fts.alt[v], color=clr[ti], s=60, label= lab, facecolors='white', zorder=2)
+
+                            #ax.fill_betweenx(fts.alt[v],PrfDistMean-PrfDistStd,PrfDistMean+PrfDistStd, alpha=0.25, color=clr[ti])
+
 
                             #ax.plot(PrfDisMax, fts.alt[v],   color=clr[ti], linewidth=2,linestyle='--', zorder=1)
                             #ax.plot(PrfDisMin, fts.alt[v],   color=clr[ti], linewidth=2,linestyle='--', zorder=1)
-                            #ax.errorbar(PrfDistMean, fts.alt[v],xerr=PrfDistStd, markersize=60, linestyle='-', color='k', ecolor='k')
+                            #ax.errorbar(PrfDistMean, fts.alt[v],xerr=PrfDistStd, markersize=60, linestyle='-', color=clr[ti], ecolor=clr[ti])
 
                             #print np.transpose([PrfDiff_i, alt])
 
@@ -1161,11 +1183,12 @@ def main(argv):
                         #    #ax.plot(PrfDist_i[pi, :], alt, color='gray', alpha=0.5, zorder=1)
                         #    sc1 = ax.scatter(PrfDist_i[pi, :], alt, c=PrfDiff_i[pi, :], s=30, cmap=cm, norm=norm, zorder=2)
                         
-                    ax.set_ylabel('Altitude [km]', fontsize=14)
-                    ax.set_xlabel('Spatial mismatch [km]', fontsize=14)
-                    ax.grid(True)
-                    ax.legend(prop={'size':11}, loc=2)
+                    ax.set_ylabel('Altitude [km]', fontsize=16)
+                    ax.set_xlabel('Spatial mismatch [km]', fontsize=16)
+                    ax.grid(True, alpha=0.35)
+                    ax.legend(prop={'size':12}, loc=2)
                     ax.set_ylim(0, 20)
+                    ax.set_xlim(xmin=0)
 
                     #cax  = fig.add_axes([0.86, 0.1, 0.03, 0.8])
                     
@@ -1173,7 +1196,7 @@ def main(argv):
                     #cbar.set_label('Bias [%]', fontsize=13)
                     #ax.set_title('Averaging Kernels Scale Factor')
                     
-                    ax.tick_params(which='both',labelsize=14)       
+                    ax.tick_params(which='both',labelsize=16)       
 
                     #fig.subplots_adjust(right=0.82) 
 
@@ -1186,6 +1209,8 @@ def main(argv):
                         
                     else:           
                         plt.show(block=False)
+                        #user_input = raw_input('Press any key to exit >>> ')
+                        #sys.exit()           # Exit program    
 
         #---------------------------------
         # CALCULATION OF BIAS (MEDIAN OF DIFFERENCES), PRECISION (STDV OF RESIDUALS), CORRELATION AND HISTOGRAM OF BIAS
@@ -1249,6 +1274,7 @@ def main(argv):
                     me = np.nanmedian(bias_n)
                     sigma = np.std(bias_n)
                     stdE = sigma/np.sqrt(len(bias_n))      #http://www.mas.ncl.ac.uk/~njnsm/medfac/docs/se&ci.pdf
+
                     prec_n = sigma/np.sqrt(len(bias_n)) * 2.
 
                     bias.setdefault(df+v, []).append(me)
@@ -1258,10 +1284,12 @@ def main(argv):
                     bias_perc_e.setdefault(df+v, []).append(stdE/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
 
                     prec.setdefault(df+v, []).append(prec_n)
-                    prec_e.setdefault(df+v, []).append(stdE * 0.71)
+                    #prec_e.setdefault(df+v, []).append(stdE * 0.71)
+                    prec_e.setdefault(df+v, []).append(stdE * 0.0)
 
                     prec_perc.setdefault(df+v, []).append(prec_n/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
-                    prec_perc_e.setdefault(df+v, []).append((stdE * 0.71)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    #prec_perc_e.setdefault(df+v, []).append((stdE * 0.71)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    prec_perc_e.setdefault(df+v, []).append((stdE * 0.0)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
 
                     #--------------
                     #Bias and precision in Apriori
@@ -1281,7 +1309,8 @@ def main(argv):
                     bias_eApr.setdefault(df+v, []).append(sigmaApr/np.sqrt(len(bias_nApr)))
 
                     precApr.setdefault(df+v, []).append(sigmaApr/np.sqrt(len(bias_nApr)) * 2.)
-                    prec_eApr.setdefault(df+v, []).append(sigmaApr/np.sqrt(len(bias_nApr)) * 0.71)
+                    #prec_eApr.setdefault(df+v, []).append(sigmaApr/np.sqrt(len(bias_nApr)) * 0.71)
+                    prec_eApr.setdefault(df+v, []).append(sigmaApr/np.sqrt(len(bias_nApr)) * 0.0)
 
                     #--------------
                     #Orthogonal Regression in Retrieval
@@ -1332,6 +1361,7 @@ def main(argv):
                     if df == str(dfValue):
 
                         print '\nBias and Correlation - version: {} and time {}'.format(v, df)
+                        print 'Number of Profiles: {}'.format(prfmean_day[df+v][:, inds].shape)
                     
                         print 'Altitude Layer: '+str(pcol[0])+' - '+str(pcol[1])+' km'
                         #print 'bias (vmr)        = {0:.2f}'.format(biasCalc2/1e3)
@@ -1405,10 +1435,12 @@ def main(argv):
                     bias_perc_e2.setdefault(pcolstr+v, []).append(stdE/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
 
                     prec2.setdefault(pcolstr+v, []).append(prec_n)
-                    prec_e2.setdefault(pcolstr+v, []).append(stdE * 0.71)
+                    #prec_e2.setdefault(pcolstr+v, []).append(stdE * 0.71)
+                    prec_e2.setdefault(pcolstr+v, []).append(stdE * 0.0)
 
                     prec_perc2.setdefault(pcolstr+v, []).append(prec_n/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
-                    prec_perc_e2.setdefault(pcolstr+v, []).append((stdE * 0.71)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    #prec_perc_e2.setdefault(pcolstr+v, []).append((stdE * 0.71)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    prec_perc_e2.setdefault(pcolstr+v, []).append((stdE * 0.0)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
 
                     #--------------
                     #Orthogonal Regression in Retrieval
@@ -1466,24 +1498,41 @@ def main(argv):
                     bar_groups.append(bars)
 
                 ax.set_xlim(-width,len(ind)+width*0.4)
-                ax.set_ylabel('Slope', fontsize=14)
+                ax.set_ylabel('Slope', fontsize=16)
                 ax.set_ylim(0,1.5)
                 ax.axhline(y=1.0, linestyle='--', linewidth=1.5, color='k', alpha=0.5)
-                ax.legend([b[0] for b in bar_groups], labels, fontsize=11, ncol=len(labels), loc='upper center', bbox_to_anchor=(0.5, 1.05))
+                ax.legend([b[0] for b in bar_groups], labels, fontsize=12, ncol=len(labels), loc='upper center', bbox_to_anchor=(0.5, 1.05))
                 #ax.text(0.01, 0.95, '(a)', va='center', ha='left', transform=ax.transAxes,fontsize=14)
 
                 ax.set_xticks(ind+width*2)
-                ax.tick_params(which='both',labelsize=14)
+                ax.tick_params(which='both',labelsize=16)
 
                 for c, v in enumerate(pltInputs['ver']):
-                    ax2.bar(ind+c*width, intercept[df+v], width, yerr=intercept_e[df+v], ecolor='k', color=colors2[c % len(colors2)])
+                    intercept_v = np.asarray(intercept[df+v], dtype='float')
+                    intercept_v[-3:] = intercept_v[-3:]*10.
+
+                    intercept_ve = np.asarray(intercept_e[df+v], dtype='float')
+                    intercept_ve[-3:] = intercept_ve[-3:]*10.
+
+                    ax2.bar(ind+c*width, intercept_v, width, yerr=intercept_ve, ecolor='k', color=colors2[c % len(colors2)])
 
                 ax2.set_xlim(-width,len(ind)+width*0.4)
-                ax2.set_ylabel('Intercept [x10$^3$ ppm$_v$]', fontsize=14)
+                ax2.set_ylabel('Intercept [x10$^3$ ppm$_v$]', fontsize=16)
                 ax2.set_xticks(ind+width*2)
-                ax2.tick_params(which='both',labelsize=14)
-                if loc.lower =='fl0': ax2.set_ylim(-0.9,0.6)
-                elif loc.lower =='mlo': ax2.set_ylim(-0.2,0.1)
+                ax2.tick_params(which='both',labelsize=16)
+                if loc.lower() =='fl0': 
+                    ax2.set_ylim(-0.8,0.45)
+                    ax2.text(0.56, 0.8, 'x10', va='center', ha='left', transform=ax2.transAxes,fontsize=14)
+                    ax2.text(0.71, 0.8, 'x10', va='center', ha='left', transform=ax2.transAxes,fontsize=14)
+                    ax2.text(0.87, 0.7, 'x10', va='center', ha='left', transform=ax2.transAxes,fontsize=14)
+
+                elif loc.lower() =='mlo': 
+                    ax2.set_ylim(-0.15,0.15)
+                    ax2.text(0.6, 0.94, 'x10', va='center', ha='left', transform=ax2.transAxes,fontsize=14)
+                    ax2.text(0.71, 0.62, 'x10', va='center', ha='left', transform=ax2.transAxes,fontsize=14)
+                    ax2.text(0.87, 0.62, 'x10', va='center', ha='left', transform=ax2.transAxes,fontsize=14)
+                    
+
 
                 ax2.axhline(y=0.0, linestyle='--', linewidth=1.5, color='k', alpha=0.5)
                 #ax2.text(0.01, 0.95, '(b)', va='center', ha='left', transform=ax2.transAxes,fontsize=14)
@@ -1492,17 +1541,22 @@ def main(argv):
                     ax3.bar(ind+c*width, rvalue[df+v], width, color=colors2[c % len(colors2)])
 
                 ax3.set_xlim(-width,len(ind)+width*0.4)
-                ax3.set_ylabel('r-value', fontsize=14)
+                ax3.set_ylabel('r-value', fontsize=16)
                 xTickMarks = [str(pcol[0])+'-'+str(pcol[1]) for pcol in pCols]
                 ax3.set_xticks(ind+width*2)
                 xtickNames = ax3.set_xticklabels(xTickMarks)
                 plt.setp(xtickNames, rotation=0, fontsize=11)
-                ax3.tick_params(which='both',labelsize=14)
-                ax3.set_xlabel('Layer [km]', fontsize=14)
+                ax3.tick_params(which='both',labelsize=16)
+                ax3.set_xlabel('Layer [km]', fontsize=16)
                 ax3.set_ylim(0,1)
                 #ax3.text(0.01, 0.95, '(c)', va='center', ha='left', transform=ax3.transAxes,fontsize=14)
 
-                fig.subplots_adjust(bottom=0.075,top=0.975, left=0.15, right=0.95)
+                if loc.lower() == 'fl0': ptitle = 'BLD'
+                elif loc.lower() == 'mlo': ptitle = 'MLO'
+
+                plt.suptitle(ptitle, fontsize=16)
+
+                fig.subplots_adjust(bottom=0.075,top=0.95, left=0.15, right=0.95)
                 
                 if pltInputs['saveFlg']: 
                     pdfsav.savefig(fig,dpi=200)
@@ -1537,57 +1591,94 @@ def main(argv):
                     if labstr[1] == 'Current_ERA_v66': labels.append('ERA-6')
                     if labstr[1] == 'Current_WACCM': labels.append('WACCM')
                     if labstr[1] == 'Current_NCEP': labels.append('NCEP-d')
+
+                    bias_v = np.asarray(bias[df+v], dtype='float')
+                    bias_v[-2:] = bias_v[-2:]*10.
+
+                    bias_ve = np.asarray(bias_e[df+v], dtype='float')
+                    bias_ve[-2:] = bias_ve[-2:]*10.
                     
-                    bars = ax.bar(ind+c*width, bias[df+v], width, yerr=bias_e[df+v], ecolor='k', color=colors2[c % len(colors2)])
+                    bars = ax.bar(ind+c*width, bias_v, width, yerr=bias_ve, ecolor='k', color=colors2[c % len(colors2)])
                     bar_groups.append(bars)
 
+                
                 ax.set_xlim(-width,len(ind)+width*0.4)
-                ax.set_ylabel('Bias [x10$^3$ ppm$_v$]', fontsize=14)
+                ax.set_ylabel('Bias [x10$^3$ ppm$_v$]', fontsize=16)
                 #ax.set_ylim(0,1.5)
                 ax.axhline(y=0.0, linestyle='--', linewidth=1.5, color='k', alpha=0.5)
-                ax.legend([b[0] for b in bar_groups], labels, fontsize=11, ncol=len(labels), loc='upper center', bbox_to_anchor=(0.5, 1.05))
+                ax.legend([b[0] for b in bar_groups], labels, fontsize=12, ncol=len(labels), loc='upper center', bbox_to_anchor=(0.5, 1.05))
                 #ax.text(0.01, 0.95, '(a)', va='center', ha='left', transform=ax.transAxes,fontsize=14)
 
                 ax.set_xticks(ind+width*2)
-                ax.tick_params(which='both',labelsize=14)
-                ax.set_ylim(-0.5,0.3)
+                ax.tick_params(which='both',labelsize=16)
+                if loc.lower() == 'mlo':   
+                    ax.set_ylim(-0.3,0.2)
+                    ax.text(0.69, 0.5, 'x10', va='center', ha='left', transform=ax.transAxes,fontsize=14)
+                    ax.text(0.85, 0.5, 'x10', va='center', ha='left', transform=ax.transAxes,fontsize=14)
+
+                elif loc.lower() == 'fl0': 
+                    ax.set_ylim(-0.5, 0.3)
+                    ax.text(0.69, 0.5, 'x10', va='center', ha='left', transform=ax.transAxes,fontsize=14)
+                    ax.text(0.85, 0.5, 'x10', va='center', ha='left', transform=ax.transAxes,fontsize=14)
+                #ax.annotate('x10', xy=(0.65, 0.12), size=16, xycoords='axes fraction', xytext=(0.69, 0.45), textcoords='axes fraction', arrowprops=dict(facecolor='black', shrink=0.05))
 
                 for c, v in enumerate(pltInputs['ver']):
                     ax2.bar(ind+c*width, bias_perc[df+v], width, yerr=bias_perc_e[df+v], ecolor='k', color=colors2[c % len(colors2)])
 
                 ax2.set_xlim(-width,len(ind)+width*0.4)
-                ax2.set_ylabel('Bias [%]', fontsize=14)
+                ax2.set_ylabel('Bias [%]', fontsize=16)
                 ax2.set_xticks(ind+width*2)
-                ax2.tick_params(which='both',labelsize=14)
+                ax2.tick_params(which='both',labelsize=16)
                 ax2.set_ylim(-15, 30)
 
                 ax2.axhline(y=0.0, linestyle='--', linewidth=1.5, color='k', alpha=0.5)
                 #ax2.text(0.01, 0.95, '(b)', va='center', ha='left', transform=ax2.transAxes,fontsize=14)
 
                 for c, v in enumerate(pltInputs['ver']):
-                    ax3.bar(ind+c*width, prec[df+v], width, yerr=prec_e[df+v], ecolor='k', color=colors2[c % len(colors2)])
+
+                    prec_v = np.asarray(prec[df+v], dtype='float')
+                    prec_v[-2:] = prec_v[-2:]*10.
+
+                    prec_ve = np.asarray(prec_e[df+v], dtype='float')
+                    prec_ve[-2:] = prec_ve[-2:]*10.
+                    
+                    ax3.bar(ind+c*width, prec_v, width, yerr=prec_ve, ecolor='k', color=colors2[c % len(colors2)])
 
                 ax3.set_xlim(-width,len(ind)+width*0.4)
-                ax3.set_ylabel('Precision [x10$^3$ ppm$_v$]', fontsize=14)
+                ax3.set_ylabel('Precision [x10$^3$ ppm$_v$]', fontsize=16)
                 ax3.set_xticks(ind+width*2)
-                ax3.tick_params(which='both',labelsize=14)
+                ax3.tick_params(which='both',labelsize=16)
                 ax3.axhline(y=0.0, linestyle='--', linewidth=1.5, color='k', alpha=0.5)
                 #ax2.text(0.01, 0.95, '(b)', va='center', ha='left', transform=ax2.transAxes,fontsize=14)
+
+                if loc.lower() == 'mlo': 
+                    ax3.text(0.69, 0.15, 'x10', va='center', ha='left', transform=ax3.transAxes,fontsize=14)
+                    ax3.text(0.85, 0.075, 'x10', va='center', ha='left', transform=ax3.transAxes,fontsize=14)
+                elif loc.lower() == 'fl0':
+                    ax3.text(0.69, 0.3, 'x10', va='center', ha='left', transform=ax3.transAxes,fontsize=14)
+                    ax3.text(0.85, 0.15, 'x10', va='center', ha='left', transform=ax3.transAxes,fontsize=14)
+
+
 
                 for c, v in enumerate(pltInputs['ver']):
                     ax4.bar(ind+c*width, prec_perc[df+v], width, yerr=prec_perc_e[df+v], ecolor='k', color=colors2[c % len(colors2)])
 
                 ax4.set_xlim(-width,len(ind)+width*0.4)
-                ax4.set_ylabel('Precision [%]', fontsize=14)
+                ax4.set_ylabel('Precision [%]', fontsize=16)
                 xTickMarks = [str(pcol[0])+'-'+str(pcol[1]) for pcol in pCols]
                 ax4.set_xticks(ind+width*2)
                 xtickNames = ax4.set_xticklabels(xTickMarks)
-                plt.setp(xtickNames, rotation=0, fontsize=11)
-                ax4.tick_params(which='both',labelsize=14)
-                ax4.set_xlabel('Layer [km]', fontsize=14)
+                plt.setp(xtickNames, rotation=0, fontsize=12)
+                ax4.tick_params(which='both',labelsize=16)
+                ax4.set_xlabel('Layer [km]', fontsize=16)
                 #ax3.text(0.01, 0.95, '(c)', va='center', ha='left', transform=ax3.transAxes,fontsize=14)
 
-                fig.subplots_adjust(bottom=0.075,top=0.975, left=0.15, right=0.95)
+                if loc.lower() == 'fl0': ptitle = 'BLD'
+                elif loc.lower() == 'mlo': ptitle = 'MLO'
+
+                plt.suptitle(ptitle, fontsize=16)
+
+                fig.subplots_adjust(bottom=0.075,top=0.95, left=0.15, right=0.95)
                 
                 if pltInputs['saveFlg']: 
                     pdfsav.savefig(fig,dpi=200)
@@ -1624,29 +1715,29 @@ def main(argv):
             ax1[3].scatter(diffT, prec_perc2[pcolstr+voi], color=colors2[c % len(colors2)], s=60, facecolors='white', zorder=2)
 
         ax1[0].grid(True) 
-        ax1[0].tick_params(which='both',labelsize=14)
-        ax1[0].set_ylabel('Slope', fontsize=14)
+        ax1[0].tick_params(which='both',labelsize=16)
+        ax1[0].set_ylabel('Slope', fontsize=16)
         #ax1[0].set_ylim(bottom=0)
-        ax1[0].legend(prop={'size':11}, loc=2)
+        ax1[0].legend(prop={'size':12}, loc=2)
 
         ax1[1].grid(True) 
-        ax1[1].tick_params(which='both',labelsize=14)
-        ax1[1].set_ylabel('Intercept [x10$^3$ ppm$_v$]', fontsize=14)
+        ax1[1].tick_params(which='both',labelsize=16)
+        ax1[1].set_ylabel('Intercept [x10$^3$ ppm$_v$]', fontsize=16)
         #ax1[0].set_ylim(bottom=0)
         #ax1[1].legend(prop={'size':11}, loc=2)
 
         ax1[2].grid(True) 
-        ax1[2].tick_params(which='both',labelsize=14)
-        ax1[2].set_ylabel('Bias [x10$^3$ ppm$_v$]', fontsize=14)
+        ax1[2].tick_params(which='both',labelsize=16)
+        ax1[2].set_ylabel('Bias [x10$^3$ ppm$_v$]', fontsize=16)
         #ax1[0].set_ylim(bottom=0)
         #ax1[2].legend(prop={'size':11}, loc=2)
 
         ax1[3].grid(True)
-        ax1[3].set_ylabel('Precision [x10$^3$ ppm$_v$]', fontsize=14)
-        ax1[3].tick_params(which='both',labelsize=14)
+        ax1[3].set_ylabel('Precision [x10$^3$ ppm$_v$]', fontsize=16)
+        ax1[3].tick_params(which='both',labelsize=16)
         #ax1[3].set_ylim(bottom=0)
         ax1[3].set_xlim(left=0, right=np.max(diffT) + 10)
-        ax1[3].set_xlabel('$\Delta$t [min]', fontsize=14)
+        ax1[3].set_xlabel('$\Delta$t [min]', fontsize=16)
 
         if loc.lower() == 'fl0': ptitle = 'BLD'
         elif loc.lower() == 'mlo': ptitle = 'MLO'
@@ -1700,29 +1791,29 @@ def main(argv):
                     ax1[3].scatter(diffT, prec2[pcolstr+v], color=colors2[c % len(colors2)], s=60, facecolors='white', zorder=2)
 
                 ax1[0].grid(True) 
-                ax1[0].tick_params(which='both',labelsize=14)
-                ax1[0].set_ylabel('Slope', fontsize=14)
+                ax1[0].tick_params(which='both',labelsize=16)
+                ax1[0].set_ylabel('Slope', fontsize=16)
                 #ax1[0].set_ylim(bottom=0)
-                ax1[0].legend(prop={'size':11}, ncol=len(pltInputs['ver']), loc='upper center', bbox_to_anchor=(0.5, 1.05))
+                ax1[0].legend(prop={'size':12}, ncol=len(pltInputs['ver']), loc='upper center', bbox_to_anchor=(0.5, 1.05))
 
                 ax1[1].grid(True) 
-                ax1[1].tick_params(which='both',labelsize=14)
-                ax1[1].set_ylabel('Intercept [x10$^3$ ppm$_v$]', fontsize=14)
+                ax1[1].tick_params(which='both',labelsize=16)
+                ax1[1].set_ylabel('Intercept [x10$^3$ ppm$_v$]', fontsize=16)
                 #ax1[0].set_ylim(bottom=0)
                 #ax1[1].legend(prop={'size':11}, loc=2)
 
                 ax1[2].grid(True) 
-                ax1[2].tick_params(which='both',labelsize=14)
-                ax1[2].set_ylabel('Bias [x10$^3$ ppm$_v$]', fontsize=14)
+                ax1[2].tick_params(which='both',labelsize=16)
+                ax1[2].set_ylabel('Bias [x10$^3$ ppm$_v$]', fontsize=16)
                 #ax1[0].set_ylim(bottom=0)
                 #ax1[2].legend(prop={'size':11}, loc=2)
 
                 ax1[3].grid(True)
-                ax1[3].set_ylabel('Precision [x10$^3$ ppm$_v$]', fontsize=14)
-                ax1[3].tick_params(which='both',labelsize=14)
+                ax1[3].set_ylabel('Precision [x10$^3$ ppm$_v$]', fontsize=16)
+                ax1[3].tick_params(which='both',labelsize=16)
                 ax1[3].set_ylim(bottom=0)
                 ax1[3].set_xlim(left=0, right=np.max(diffT) + 10)
-                ax1[3].set_xlabel('$\Delta$t [min]', fontsize=14)
+                ax1[3].set_xlabel('$\Delta$t [min]', fontsize=16)
 
                 if loc.lower() == 'fl0': ptitle = 'BLD'
                 elif loc.lower() == 'mlo': ptitle = 'MLO'

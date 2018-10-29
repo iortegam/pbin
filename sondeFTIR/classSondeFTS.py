@@ -418,7 +418,6 @@ class FTSClass():
         #--------------
         # Read profiles
         #--------------
-
         for ver in statDataCl:
             statDataCl[ver].readprfs([statDataCl[ver].PrimaryGas],retapFlg=1)
             statDataCl[ver].readprfs([statDataCl[ver].PrimaryGas],retapFlg=0)

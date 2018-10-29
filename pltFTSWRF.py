@@ -103,7 +103,8 @@ def main():
     #-----------------------------------------------------------------------------------------
     #                 Initializations for WRF-Chem during FRAPPE (Jul - Aug 2014)
     #-----------------------------------------------------------------------------------------
-    dataDirWRF        = '/data1/ancillary_data/'+loc.lower()+'/FRAPPE/'
+    #dataDirWRF        = '/data1/ancillary_data/'+loc.lower()+'/FRAPPE/'
+    dataDirWRF        = '/ya4/Campaign/'+loc.upper()+'/FRAPPE/'
     #fileWRF1          = 'BoulderFL.nc'
     fileWRF1          = 'Boulder_FL_WRFV3.6.1_BTX_ECMWF_mozmozaic.nc'  
     fileWRF2          = 'BoulderFL_loc.nc'
@@ -120,7 +121,7 @@ def main():
     #-----------------------------------------------------------------------------------------
     #                 Initializations for CMAQ (EMISSIONS)
     #-----------------------------------------------------------------------------------------
-    dataDirCMAQ       = '/data1/ancillary_data/'+loc.lower()+'/FRAPPE/'
+    dataDirCMAQ       = '/ya4/Campaign/'+loc.upper()+'/FRAPPE/'
     fileCMAQ          = 'CMAQ_CB6_20140709_D02.nc'  
 
     ReadCMAQ          = False
@@ -187,8 +188,6 @@ def main():
     redFct  = 5.0
     hgtTrgU = 10.0       # Upper Layer thickness [km]
     hgtTrgL = False       # Lower Layer thickness [km];Set to False if you want surface value
-
-
 
 
                                     #----------------------------#
@@ -776,10 +775,10 @@ def main():
         #
         #-------------------------------------------------
 
-        stfile = '/data1/ancillary_data/'+loc.lower()+'/FRAPPE/flexpart2/FLX_SCF_12h.txt'
+        stfile = '/ya4/Campaign/'+loc.upper()+'/FRAPPE//flexpart2/FLX_SCF_12h.txt'
 
         ckFile(stfile)
-        stfile = file(stfile, 'r')
+        #stfile = file(stfile, 'r')
         cols, indexToName = mf.getColumns(stfile, headerrow=1, delim=',', header=True)
 
         SCsd = np.asarray(cols['Date'])  

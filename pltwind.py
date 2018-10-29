@@ -116,7 +116,7 @@ def main():
     weatherDir     = '/data1/ancillary_data/fl0/eol/'
     weatherFileTag = 'v2'
     iyear = 2010
-    fyear = 2016
+    fyear = 2010
 
 
     wdir, wspeed, temp, rh, dtw = weatherout(loc, weatherDir, weatherFileTag, iyear, fyear )

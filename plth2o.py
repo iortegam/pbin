@@ -803,7 +803,7 @@ def main():
             ax1.plot(dataSpec['WaveN_'+x],dataSpec['Difference_'+x]*100.0,  color='k')
             ax1.axhline(y=0,color='r')
             if len(dates[gasVer]) > 1: ax1.fill_between(dataSpec['WaveN_'+x],dataSpec['Difference_'+x]*100.0-dataSpec['DifSTD_'+x]*100.0,dataSpec['Difference_'+x]*100.0+dataSpec['DifSTD_'+x]*100.0,alpha=0.5,color='0.75')
-            ax1.grid(True)
+            ax1.grid(True, alpha=0.5)
             if (p == 0) or (p == 1): ax1.set_ylabel('% Difference', fontsize=14,)
             ax1.set_title('Micro-Window '+ x)
             ax1.set_xlim((np.min(dataSpec['WaveN_'+x]),np.max(dataSpec['WaveN_'+x])))
@@ -815,7 +815,7 @@ def main():
             if statDataCl[gasVer].solarFlg: ax2.plot(dataSpec['WaveN_'+x],dataSpec['Sol_'+x],label='Solar')
             sclfct = 0.0
             for g in mwList[x]: 
-                sclfct += 0.02
+                sclfct += 0.03
                 
                 ax2.plot(dataSpec['WaveN_'+x],gasSpec[g.upper()+'_'+x]+(gasSpec[g.upper()+'_'+x]*sclfct),label=g.upper())
             
@@ -825,7 +825,7 @@ def main():
             #ax2.set_ylim(bottom=0.0)
             if (p == 0) or (p == 1):ax2.set_xlim((np.min(dataSpec['WaveN_'+x]),np.max(dataSpec['WaveN_'+x])))
 
-            ax2.legend(prop={'size':10.5},loc='upper center', bbox_to_anchor=(0.5, 1.065),
+            ax2.legend(prop={'size':12},loc='upper center', bbox_to_anchor=(0.5, 1.065),
                       fancybox=True, ncol=len(mwList[x])+3)  
             
             ax1.tick_params(axis='x',which='both',labelsize=14, bottom='off', labelbottom='off')
@@ -850,57 +850,89 @@ def main():
             plt.savefig(FigDir+'FitMean1_'+loc.upper()+'.pdf', bbox_inches='tight')
         else:       plt.show(block=False)
 
+
         #-------------------------------------------------
         #Fit: Mean   
         #-------------------------------------------------
+
+        clr = ['maroon', 'gray', 'orange', 'cyan', 'yellow', 'black']
         fig = plt.figure(figsize=(16,9))
+
             
         for p, x in enumerate(mwList):
+          
             gs1 = gridspec.GridSpec(1, 2)
 
-            if p == 0: gs1.update(left=0.05, right=0.48, top=0.95, bottom=0.55, wspace=0.05, hspace=0.08)
-            if p == 1: gs1.update(left=0.05, right=0.48, top=0.45, bottom=0.1,  wspace=0.05, hspace=0.08)
-            if p == 2: gs1.update(left=0.55, right=0.98, top=0.95, bottom=0.55, wspace=0.05, hspace=0.08)
-            if p == 3: gs1.update(left=0.55, right=0.98, top=0.45, bottom=0.1,  wspace=0.05, hspace=0.08)
+            if p == 0: gs1.update(left=0.06, right=0.49, top=0.95, bottom=0.55)
+            if p == 1: gs1.update(left=0.06, right=0.49, top=0.45, bottom=0.1)
+            if p == 2: gs1.update(left=0.53, right=0.97, top=0.95, bottom=0.55)
+            if p == 3: gs1.update(left=0.53, right=0.97, top=0.45, bottom=0.1)
 
             ax2 = plt.subplot(gs1[0:1, :])
 
-            ax2.plot(dataSpec['WaveN_'+x],dataSpec['Difference_'+x]*10.0,  color='k')
-            ax2.axhline(y=0,color='gray', linestyle='-')
+            ax2.plot(dataSpec['WaveN_'+x],dataSpec['Difference_'+x]*10.0,  color='k', linewidth=1.5)
+            ax2.axhline(y=0, color='k', linestyle='--')
+     
             if len(dates[gasVer]) > 1: ax2.fill_between(dataSpec['WaveN_'+x],dataSpec['Difference_'+x]*10.0-dataSpec['DifSTD_'+x]*10.0,dataSpec['Difference_'+x]*10.0+dataSpec['DifSTD_'+x]*10.0,alpha=0.5,color='0.75')
+
+            if statDataCl[gasVer].solarFlg: ax2.plot(dataSpec['WaveN_'+x],dataSpec['Sol_'+x],label='Solar', color='red')
+            sclfct = 0.0
+            for i,g in enumerate(mwList[x]): 
+                sclfct += 0.05
+
+                if g.upper() == 'CH4': lab = 'CH$_4$'
+                elif g.upper() == 'CO2': lab = 'CO$_2$'
+                elif g.upper() == 'N2O': lab = 'N$_2$O'
+                elif g.upper() == 'H2O': lab = 'H$_2$O'
+                elif g.upper() == 'HCL': lab = 'HCl'
+                else: lab = g.upper() 
+                
+                ax2.plot(dataSpec['WaveN_'+x],gasSpec[g.upper()+'_'+x]+(gasSpec[g.upper()+'_'+x]*sclfct),label=lab, color=clr[i])
             
             plt.tick_params(which='minor',length=4,color='b')
             
-            ax2.plot(dataSpec['WaveN_'+x],dataSpec['Obs_'+x],label='Observed')
-            ax2.plot(dataSpec['WaveN_'+x],dataSpec['Fitted_'+x],label='Fitted')
-            #if statDataCl[gasVer].solarFlg: ax2.plot(dataSpec['WaveN_'+x],dataSpec['Sol_'+x],label='Solar')
-            sclfct = 0.0
-            #for g in mwList[x]: 
-            #    sclfct += 0.02   
-            #    ax2.plot(dataSpec['WaveN_'+x],gasSpec[g.upper()+'_'+x]+(gasSpec[g.upper()+'_'+x]*sclfct),label=g.upper())
+            ax2.plot(dataSpec['WaveN_'+x],dataSpec['Obs_'+x],label='Observed', color='blue')
+            ax2.plot(dataSpec['WaveN_'+x],dataSpec['Fitted_'+x],label='Fitted', color='green')
+
+            ax2.legend(prop={'size':11.75},loc='upper center', bbox_to_anchor=(0.5, 1.065),
+                      fancybox=True, ncol=len(mwList[x])+3, handletextpad=0.1)  
             
-            ax2.grid(True)
-            if (p == 1) or (p == 3): ax2.set_xlabel('Wavenumber [cm$^{-1}$]', fontsize=14)
-            if (p == 0) or (p == 1): ax2.set_ylabel('Transmission', fontsize=14)
+            
+            #ax2.grid(True, alpha=0.1)
+            if (p == 1) or (p == 3): ax2.set_xlabel('Wavenumber [cm$^{-1}$]', fontsize=18)
+            if (p == 0) or (p == 1): ax2.set_ylabel('Transmission', fontsize=18)
             if (p == 0) or (p == 1):ax2.set_xlim((np.min(dataSpec['WaveN_'+x]),np.max(dataSpec['WaveN_'+x])))
 
             #ax2.legend(prop={'size':10.5},loc='upper center', bbox_to_anchor=(0.5, 1.065),
             #          fancybox=True, ncol=len(mwList[x])+3)  
             
-            ax2.tick_params(axis='x',which='both',labelsize=14)
-            ax2.tick_params(axis='y',which='both',labelsize=14)
+            ax2.tick_params(axis='x',which='both',labelsize=18)
+            ax2.tick_params(axis='y',which='both',labelsize=18)
 
             ax2.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
             ax2.xaxis.set_minor_locator(AutoMinorLocator())
+            #ax2.set_xticks(ax2.get_xticks()[::2])
+
+            ax2.xaxis.set_major_locator(plt.MaxNLocator(5))
+            ax.axis('equal')
+
+            #xmarks=[i for i in range(dataSpec['WaveN_'+x].min(), dataSpec['WaveN_'+x].max(), 5)]
+
+            #plt.xticks(xmarks)
 
             ax2.annotate('x10', xy=(0.65, 0.12),size=16, xycoords='axes fraction', xytext=(0.7, 0.25), textcoords='axes fraction', arrowprops=dict(facecolor='black', shrink=0.05))
 
-            ax2.set_ylim(-0.22,1.075)
+            ax2.set_ylim(-0.22,1.3)
+
+
 
         if saveFlg: 
             pdfsav.savefig(fig,dpi=200)
             plt.savefig(FigDir+'FitMean2_'+loc.upper()+'.pdf', bbox_inches='tight')
         else:       plt.show(block=False)
+
+        #user_input = raw_input('Press any key to exit >>> ')
+        #sys.exit()
 
 
         #-----------------------------
@@ -960,16 +992,16 @@ def main():
                 ax1[0].plot(errPlt,alt[gasVer],linewidth=2.0, label=legend)
 
             ax1[0].plot(np.nanmean(rand_errvmr[gasVer], axis=0)/ retPrf *100.,alt[gasVer],linestyle='--', color='k',linewidth=2.0, label='Total')
-            ax1[0].set_ylabel('Altitude [km]', fontsize=14)
+            ax1[0].set_ylabel('Altitude [km]', fontsize=18)
             #ax1[0].set_xlabel('VMR [ppm]', fontsize=14)
-            ax1[0].set_xlabel('uncertainty [%]', fontsize=14)             
-            ax1[0].grid(True,which='both')
+            ax1[0].set_xlabel('uncertainty [%]', fontsize=18)             
+            #ax1[0].grid(True,which='both')
             ax1[0].legend(prop={'size':12},loc='upper right')          
             #ax2[k,0].tick_params(axis='both',which='both',labelsize=8) 
-            ax1[0].set_title('Random Components')
+            ax1[0].set_title('Random Components', fontsize=18)
             if loc.lower() == 'fl0': ax1[0].set_ylim(1, 15.5)
             if loc.lower() == 'mlo': ax1[0].set_ylim(3, 15.5)
-            ax1[0].tick_params(which='both',labelsize=14)
+            ax1[0].tick_params(which='both',labelsize=18)
             ax1[0].set_xlim(0, 10)
 
             #-----------------------------
@@ -1001,13 +1033,13 @@ def main():
 
             ax1[1].plot(np.nanmean(sys_errvmr[gasVer], axis=0)/ retPrf *100., alt[gasVer],linestyle='--', color='k',linewidth=2.0, label='Total')
             #ax1[1].set_xlabel('VMR [ppm]', fontsize=14)
-            ax1[1].set_xlabel('uncertainty [%]', fontsize=14)             
-            ax1[1].grid(True,which='both')
+            ax1[1].set_xlabel('uncertainty [%]', fontsize=18)             
+            #ax1[1].grid(True,which='both')
             ax1[1].legend(prop={'size':12}, loc='upper right')
-            ax1[1].set_title('Systematic Components')
+            ax1[1].set_title('Systematic Components', fontsize=18)
             if loc.lower() == 'fl0': ax1[1].set_ylim(1, 15.5)
             if loc.lower() == 'mlo': ax1[1].set_ylim(3, 15.5)
-            ax1[1].tick_params(which='both',labelsize=14)
+            ax1[1].tick_params(which='both',labelsize=18)
             ax1[1].set_xlim(0, 10)
                 #ax1[1].set_xscale('log')
 
@@ -1025,6 +1057,9 @@ def main():
         #---------------------------------
         # Plot : Averaging Kernel Smoothing Function (row of avk)
         #---------------------------------
+        indAlt = np.where(alt[gasVer] < 20.)[0]
+
+
         clmap        = 'jet'
         cm           = plt.get_cmap(clmap)
         fig       = plt.figure(figsize=(9,7))
@@ -1033,27 +1068,28 @@ def main():
         axb       = plt.subplot(gs[1])
         axc       = plt.subplot(gs[2])
         cm        = plt.get_cmap(clmap)
-        cNorm     = colors.Normalize(vmin=np.min(alt[gasVer]), vmax=np.max(alt[gasVer]))
+        cNorm     = colors.Normalize(vmin=np.min(alt[gasVer][indAlt]), vmax=np.max(alt[gasVer][indAlt]))
         scalarMap = mplcm.ScalarMappable(norm=cNorm,cmap=clmap)
-        scalarMap.set_array(alt[gasVer])
+        scalarMap.set_array(alt[gasVer][indAlt])
 
         #---------------------------------
-        ax.set_color_cycle([scalarMap.to_rgba(x) for x in alt[gasVer]])
+        ax.set_color_cycle([scalarMap.to_rgba(x) for x in alt[gasVer][indAlt]])
         
-        for i in range(len(alt[gasVer])):
-            ax.plot(avkSCFav[gasVer][i,:],alt[gasVer])
+        for i in range(len(alt[gasVer][indAlt])):
+            ax.plot(avkSCFav[gasVer][indAlt[i],indAlt],alt[gasVer][indAlt])
             
-        ax.set_ylabel('Altitude [km]', fontsize=14)
-        ax.set_xlabel('AK', fontsize=14)
-        ax.grid(True, alpha=0.5)
+        ax.set_ylabel('Altitude [km]', fontsize=16)
+        ax.set_xlabel('AK', fontsize=16)
+        #ax.grid(True, alpha=0.5)
         #ax.set_title('(a)', loc='left', fontsize=14)
         ax.text(0.025, 0.95,'(a)', fontsize=16,transform=ax.transAxes)   
 
         cbaxes = fig.add_axes([0.4, 0.55, 0.02, 0.4]) 
         cbar = fig.colorbar(scalarMap, orientation='vertical', cax = cbaxes)
-        cbar.set_label('Altitude [km]', fontsize=14)
+        cbar.set_label('Altitude [km]', fontsize=16)
         #ax.set_title('H2O Averaging Kernels Scale Factor', fontsize=14)
-        ax.tick_params(labelsize=14)
+        ax.tick_params(labelsize=16)
+        ax.axvline(x=0,color='k', linestyle='--')
         #ax.set_ylim(1, 15)
         if loc.lower() == 'fl0': ax.set_ylim(1, 15)
         if loc.lower() == 'mlo': ax.set_ylim(3, 15)
@@ -1078,9 +1114,9 @@ def main():
         #axb.plot(np.sum(avkSCFav[gasVer],axis=0), alt[gasVer],color='k')
         axb.plot(avkTCAv, alt[gasVer],color='k')
 
-        axb.grid(True,  alpha=0.5)
-        axb.set_xlabel('Total Column AK', fontsize=14)
-        axb.tick_params(labelsize=14)
+        #axb.grid(True,  alpha=0.5)
+        axb.set_xlabel('Total Column AK', fontsize=16)
+        axb.tick_params(labelsize=16)
         #axb.set_title('(b)', loc='left', fontsize=14)
         axb.text(0.725, 0.95,'(b)', fontsize=16,transform=axb.transAxes)  
 
@@ -1110,8 +1146,8 @@ def main():
         #axc.set_title('DOFs Profile - ' +str(pltID[i]))
         #axc.set_ylabel('Altitude [km]')
         
-        axc.set_xlabel('Cumulative\nSum of DOFS', fontsize=14)  
-        axc.tick_params(labelsize=14)
+        axc.set_xlabel('Cumulative\nSum of DOFS', fontsize=16)  
+        axc.tick_params(labelsize=16)
         #axc.set_title('(c)', loc='left', fontsize=14)
         axc.text(0.025, 0.95,'(c)', fontsize=16,transform=axc.transAxes)  
         #axc.set_title('DOFs for layer {0:.1f}-{1:.1f}[km] = {2:.2f}'.format(alt[idhdf][ind1],alt[idhdf][ind2],dofsPcol), fontsize=9)    
@@ -1119,7 +1155,7 @@ def main():
         axc.set_xticks(major_ticks)
 
         axc.set_ylim((0,120))
-        axc.grid(True,which='both',  alpha=0.5)
+        #axc.grid(True,which='both',  alpha=0.5)
         if loc.lower() == 'fl0': axc.set_ylim(1, 15)
         if loc.lower() == 'mlo': axc.set_ylim(3, 15)
         if loc.lower() == 'tab': axc.set_ylim(0, 15)

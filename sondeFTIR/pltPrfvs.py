@@ -328,23 +328,27 @@ def main(argv):
 
                 PrfRef        = np.nanmean(fts.rPrfVMR[pltInputs['ver'][0]][indsTime],axis=0)
 
-                ax02.plot(PrfMeanWP[indsH],fts.alt[v][indsH], color=colors3[vi], linewidth=2.0, label=idvers[vi], zorder=0)
-                #ax0[0].scatter(PrfMeanWP,fts.alt[v],facecolors='white', s=35, color=clr[vi], zorder=1)
+                ax02.plot(PrfMeanWP[indsH],fts.alt[v][indsH], color=colors3[vi], linewidth=2.0, zorder=0)
+                ax02.scatter(PrfMeanWP[indsH],fts.alt[v][indsH],facecolors='white', s=45, color=colors3[vi], zorder=1, label=idvers[vi])
                 #ax0[0].fill_betweenx(fts.alt[v],PrfMeanWP-PrfStdWP,PrfMeanWP+PrfStdWP,alpha=0.25,color=clr[vi])
 
                 ax0[0].plot(PrfMean[indsH],fts.alt[v][indsH], color=colors3[vi], linewidth=2.0,zorder=0)
+                ax0[0].scatter(PrfMean[indsH],fts.alt[v][indsH],facecolors='white', s=45, color=colors3[vi], zorder=1, label=idvers[vi])
                 #ax0[1].scatter(PrfMean,fts.alt[v],facecolors='white', s=35, color=clr[vi], zorder=1)
                 #ax0[1].fill_betweenx(fts.alt[v],PrfMean-PrfStd,PrfMean+PrfStd,alpha=0.25,color=clr[vi])
 
-                if v != pltInputs['ver'][0]: ax0[1].plot((PrfMean[indsH] - PrfRef[indsH])/PrfRef[indsH] * 100.,fts.alt[v][indsH], color=colors3[vi], linewidth=2.0,zorder=0)
+        
+                if v != pltInputs['ver'][0]: 
+                    ax0[1].plot((PrfMean[indsH] - PrfRef[indsH])/PrfRef[indsH] * 100.,fts.alt[v][indsH], color=colors3[vi], linewidth=2.0,zorder=0)
+                    ax0[1].scatter((PrfMean[indsH] - PrfRef[indsH])/PrfRef[indsH] * 100.,fts.alt[v][indsH], facecolors='white', s=45, color=colors3[vi], zorder=1, label=idvers[vi])
                 #ax0[2].scatter(PrfMean,fts.alt[v],facecolors='white', s=35, color=clr[vi], zorder=1)
 
-        ax02.set_xlabel('VMR [x10$^3$ ppm]', fontsize=14)
-        ax02.set_ylabel('Altitude [km]', fontsize=14)
+        ax02.set_xlabel('VMR [x10$^3$ ppm]', fontsize=16)
+        ax02.set_ylabel('Altitude [km]', fontsize=16)
         ax02.set_ylim(1, 15)                   
-        ax02.grid(True,which='both')
-        ax02.tick_params(which='both',labelsize=14)
-        ax02.set_title('Water Vapor', fontsize=14)   
+        ax02.grid(True,which='both', alpha=0.35)
+        ax02.tick_params(which='both',labelsize=16)
+        ax02.set_title('Water Vapor', fontsize=16)   
         ax02.set_xlim(xmin=0, xmax=22)
         ax02.legend(prop={'size':12})
 
@@ -358,39 +362,41 @@ def main(argv):
             gaslabel = pltInputs['gasName'].upper()
 
 
-        ax0[0].set_xlabel('VMR [ppb]', fontsize=14)                 
-        ax0[0].grid(True,which='both')
-        ax0[0].tick_params(which='both',labelsize=14)
-        ax0[0].set_title(gaslabel, fontsize=14)  
+        ax0[0].set_xlabel('VMR [ppb]', fontsize=16)                 
+        ax0[0].grid(True,which='both', alpha=0.35)
+        ax0[0].tick_params(which='both',labelsize=16)
+        ax0[0].set_title(gaslabel, fontsize=16)  
         ax0[0].set_ylim(1, 15)
-        ax0[0].set_yticklabels([])
+        #ax0[0].set_yticklabels([])
+        ax0[0].set_ylabel('Altitude [km]', fontsize=16)
         #ax0[0].yaxis.label.set_visible(False)
         #ax0[1].set_xlim(xmin=0)
 
-        ax0[1].set_xlabel('Relative Difference [%]', fontsize=14)                 
-        ax0[1].grid(True,which='both')
-        ax0[1].tick_params(which='both',labelsize=14)
-        ax0[1].set_title(gaslabel + ' Difference', fontsize=14) 
+        ax0[1].set_xlabel('Relative Difference [%]', fontsize=16)                 
+        ax0[1].grid(True,which='both', alpha=0.35)
+        ax0[1].tick_params(which='both',labelsize=16)
+        ax0[1].set_title(gaslabel + ' Difference', fontsize=16) 
         #ax0[1].set_xlim(xmin=0)
         #ax0[0].set_title(doi_i, fontsize=14)   
         #ax0[0].legend(prop={'size':11})
 
                 #ax0[0, ndoi].text(0.05, 0.95, 'N = {}'.format(len(indsTime)), va='center',transform=ax0[0, ndoi].transAxes,fontsize=14)
                 
-        fig.subplots_adjust(bottom=0.1,top=0.95, left=0.075, right=0.975)
-        fig2.subplots_adjust(bottom=0.1,top=0.95, left=0.13, right=0.975)  
+        fig.subplots_adjust(bottom=0.1,top=0.95, left=0.08, right=0.975)
+        fig2.subplots_adjust(bottom=0.1,top=0.95, left=0.15, right=0.975)  
 
                         
         if pltInputs['saveFlg']: 
             pdfsav.savefig(fig,dpi=200)
             fig.savefig(pltInputs['pltDir']+pltInputs['gasName']+'_singlePrf_'+pltInputs['sdoi'][0]+'_'+pltInputs['loc']+'.pdf', bbox_inches='tight')
-            fig2.savefig(pltInputs['pltDir']+pltInputs['gasName']+'_singlePrf_WP_'+pltInputs['sdoi'][0]+'_'+pltInputs['loc']+'.pdf', bbox_inches='tight')
+            fig2.savefig(pltInputs['pltDir']+pltInputs['gasName']+'_singlePrf_WV_'+pltInputs['sdoi'][0]+'_'+pltInputs['loc']+'.pdf', bbox_inches='tight')
         
         else:       
             plt.show(block=False)
+            user_input = raw_input('Press any key to exit >>> ')
+            sys.exit()           # Exit program     
 
-    user_input = raw_input('Press any key to exit >>> ')
-    sys.exit()  
+    
     #-------------------
     #Slope and Intercept Bars
     #-------------------
@@ -421,24 +427,24 @@ def main(argv):
                     ax3.bar(ind+k*width, rvalue[k], width, color=colors2[k % len(colors2)])
 
                          
-            ax.set_ylabel('Slope', fontsize=14)
+            ax.set_ylabel('Slope', fontsize=16)
             ax.legend([b[0] for b in bar_groups], labels, fontsize=11, ncol=len(labels), loc='upper center', bbox_to_anchor=(0.5, 1.1))
-            ax.tick_params(which='both',labelsize=14)
+            ax.tick_params(which='both',labelsize=16)
             ax.axhline(y=1.0, linestyle='--', linewidth=1.0, color='k', alpha=0.5)
             ax.set_ylim(0.85, 1.1)
 
-            ax2.set_ylabel('Intercept [{}]'.format(pltInputs['sclfctName']), fontsize=14)
-            ax2.tick_params(which='both',labelsize=14)
+            ax2.set_ylabel('Intercept [{}]'.format(pltInputs['sclfctName']), fontsize=16)
+            ax2.tick_params(which='both',labelsize=16)
             ax2.axhline(y=0.0, linestyle='-', linewidth=1.0, color='k')
 
             ax3.set_xlim(-width*0.5,len(ind)+width)
-            ax3.set_ylabel('r-value', fontsize=14)
+            ax3.set_ylabel('r-value', fontsize=16)
             xTickMarks = [str(pcol[0])+'-'+str(pcol[1]) for pcol in pCols]
             ax3.set_xticks(ind+width*3.5)
             xtickNames = ax3.set_xticklabels(xTickMarks)
-            plt.setp(xtickNames, rotation=0, fontsize=11)
-            ax3.tick_params(which='both',labelsize=14)
-            ax3.set_xlabel('Layer [km]', fontsize=14)
+            plt.setp(xtickNames, rotation=0, fontsize=12)
+            ax3.tick_params(which='both',labelsize=16)
+            ax3.set_xlabel('Layer [km]', fontsize=16)
             ax3.set_ylim(0.9, 1.005)
             ax3.axhline(y=1.0, linestyle='--', linewidth=1.0, color='k', alpha=0.5)
             #ax3.text(0.01, 0.95, '(c)', va='center', ha='left', transform=ax3.transAxes,fontsize=14)
@@ -480,35 +486,36 @@ def main(argv):
 
                     ax2.bar(ind+k*width, bias_perc[k], width, yerr=bias_perc_e[k], ecolor='k', color=colors2[k % len(colors2)])
 
-                    ax3.bar(ind+k*width, prec[k], width, yerr=prec_e[k], ecolor='k', color=colors2[k % len(colors2)])
+                    ax3.bar(ind+k*width, prec[k], width, color=colors2[k % len(colors2)])
+                    #ax3.bar(ind+k*width, prec[k], width, yerr=prec_e[k], ecolor='k', color=colors2[k % len(colors2)])
 
-                    ax4.bar(ind+k*width, prec_perc[k], width, yerr=prec_perc_e[k], ecolor='k', color=colors2[k % len(colors2)])                    
+                    ax4.bar(ind+k*width, prec_perc[k], width, color=colors2[k % len(colors2)])
+                    #ax4.bar(ind+k*width, prec_perc[k], width, yerr=prec_perc_e[k], ecolor='k', color=colors2[k % len(colors2)])                    
 
-            ax.set_ylabel('Bias [{}]'.format(pltInputs['sclfctName']), fontsize=14)
+            ax.set_ylabel('Bias [{}]'.format(pltInputs['sclfctName']), fontsize=16)
             #ax.set_ylim(0,1.5)
             #ax.axhline(y=1.0, linestyle='--', linewidth=1.5, color='k', alpha=0.5)
             ax.legend([b[0] for b in bar_groups], labels, fontsize=11, ncol=len(labels), loc='upper center', bbox_to_anchor=(0.5, 1.1))
-            ax.tick_params(which='both',labelsize=14)
+            ax.tick_params(which='both',labelsize=16)
             ax.axhline(y=0.0, linestyle='-', linewidth=1.0, color='k')
 
-
-            ax2.set_ylabel('Bias [%]', fontsize=14)
-            ax2.tick_params(which='both',labelsize=14)
+            ax2.set_ylabel('Bias [%]', fontsize=16)
+            ax2.tick_params(which='both',labelsize=16)
             #ax2.set_ylim(-15, 30)
             ax2.axhline(y=0.0, linestyle='-', linewidth=1.0, color='k')
 
-            ax3.set_ylabel('Precision [{}]'.format(pltInputs['sclfctName']), fontsize=14)
-            ax3.tick_params(which='both',labelsize=14)
+            ax3.set_ylabel('Precision [{}]'.format(pltInputs['sclfctName']), fontsize=16)
+            ax3.tick_params(which='both',labelsize=16)
             ax3.axhline(y=0.0, linestyle='--', linewidth=1.0, color='k', alpha=0.5)
 
-            ax4.set_ylabel('Precision [%]', fontsize=14)
+            ax4.set_ylabel('Precision [%]', fontsize=16)
             xTickMarks = [str(pcol[0])+'-'+str(pcol[1]) for pcol in pCols]
             ax4.set_xticks(ind+width*3.5)
             ax4.set_xlim(-width*0.5,len(ind)+width)
             xtickNames = ax4.set_xticklabels(xTickMarks)
-            plt.setp(xtickNames, rotation=0, fontsize=11)
-            ax4.tick_params(which='both',labelsize=14)
-            ax4.set_xlabel('Layer [km]', fontsize=14)
+            plt.setp(xtickNames, rotation=0, fontsize=12)
+            ax4.tick_params(which='both',labelsize=16)
+            ax4.set_xlabel('Layer [km]', fontsize=16)
             #ax3.text(0.01, 0.95, '(c)', va='center', ha='left', transform=ax3.transAxes,fontsize=14)
 
             fig.subplots_adjust(bottom=0.075,top=0.975, left=0.15, right=0.95)

@@ -99,10 +99,11 @@ def main():
     #-----------------------------------------------------------------------------------------
     #                 Initializations for WRF-Chem during FRAPPE (Jul - Aug 2014)
     #-----------------------------------------------------------------------------------------
-    dataDirFLX        = '/data1/ancillary_data/'+loc.lower()+'/FRAPPE/flexpart2/'
+    #dataDirFLX        = '/data1/ancillary_data/'+loc.lower()+'/FRAPPE/flexpart2/'
+    dataDirFLX        = '/ya4/Campaign/'+loc.upper()+'/FRAPPE/flexpart2/'
     
     ReadFLX           = True
-    pltFLX            = True
+    pltFLX            = False
     saveFLXFlg        = False
     
     pltFLXFile        = '/data/iortega/results/'+loc.lower()+'/fig/FLEXPART__FRAPPE.pdf'
@@ -146,7 +147,7 @@ def main():
         #if pltFLX:
         #    DataFLX.PltFLX()
 
-        with open(dataDirFLX + 'FLX_SCF_24h.txt','w') as fopen:
+        with open(dataDirFLX + 'FLX_SCF_12h.txt','w') as fopen:
             hdr = '#Results of the Fractional Contribution calculated with pltFLX.py\n'
             fopen.write(hdr)
             hdr = 'Date,  SC_NE,  SC_NW,  SC_SE,  SC_SW\n'

@@ -55,6 +55,8 @@ from mpl_toolkits.basemap import Basemap
 import sfitClasses as sc
 import glob
 
+from scipy.interpolate import interp2d, interp1d
+
 def ckDir(dirName,logFlg=False,exitFlg=False):
     ''' '''
     if not os.path.exists( dirName ):
@@ -777,10 +779,6 @@ class CAMClass():
         ckDir(dataDir, exitFlg=True)
         ckFile(self.CAMnc_f1, exitFlg=True)
 
-        #-------------SECOND NC FILE. REBECCA PROVIDED A SECOND FILE 
-        self.CAMnc_f2   = dataDir + 'CAM_chem_fmerra_FSDSSOA_2deg_2000_2014_extra_Boulder.nc'  # Your filename
-        ckFile(self.CAMnc_f2, exitFlg=True)
-        #-------------
 
         self.CAM     = {}
 
@@ -793,11 +791,11 @@ class CAMClass():
         #---------------
         # ReadOutputData
         #---------------
-    def ReadOutputCAM(self, Gases, pcol, sLat, sLon):
-        '''Function to Read out the WRF-CEHM net CDF files.'''
+    def ReadOutputCAM(self, Gases, pcol, sLat, sLon, interpFlg=False):
+        '''Function to Read out the CAM-CHEM net CDF files.'''
 
         #-------------------------------------------------
-        #CONSTANTS 
+        # CONSTANTS 
         #-------------------------------------------------
         NAv      = 6.0221415e+23                    #--- Avogadro's number
         g        = 9.81                             #--- m/s - gravity
@@ -815,23 +813,21 @@ class CAMClass():
         self.CAM['Gases'] = Gases
 
         #-------------------------------------------------
-        #Get variables
+        # First Method to find the closest pixel
         #-------------------------------------------------
         xlon          = np.squeeze(np.transpose(nc_fid1.variables['lon'][:]))
         xlat          = np.squeeze(np.transpose(nc_fid1.variables['lat'][:]))
 
         xlon = xlon - 360.0
 
-        latind = findCls(xlat[:],sLat)
-        lonind = findCls(xlon[:],sLon)
-
-        indsLoc = [latind, lonind] 
-
-        print 'CAM-Chem: Latitude of %s and Longitude of %s close to FL0:'%(str(xlat[latind]), str(xlon[lonind]) ) 
+        self.slat = sLat
+        self.slon = sLon
 
         self.CAM['xlon']       = xlon
         self.CAM['xlat']       = xlat
-        self.CAM['indsLoc']    = indsLoc
+
+
+
 
         #-------------------------------------------------
         # Get variables from file 
@@ -854,6 +850,8 @@ class CAMClass():
         print '\nNumber of times:'+ str(ntimes)
         print 'Number of dimensions:' + str(lev.shape)
 
+        exit()
+
         # -------------------------------
         # Hybrid levels to pressure levels
         # -------------------------------
@@ -861,7 +859,7 @@ class CAMClass():
         for i in range(len(hyai)):
             pi[:,i,:,:] = hyai[i]*p0 + hybi[i]*pSurf
 
-        self.CAM['pressure']  = pi
+        
 
         # -------------------------------
         # calculating dp
@@ -878,12 +876,13 @@ class CAMClass():
         #-------------------------------------------------
         dates = []
         for itime in dat:
+
             number_string = str(itime)
             
             yyyy =  int(''.join(number_string[0:4])) 
             mm =  int(''.join(number_string[4:6])) 
-            dd =  int(''.join(number_string[7:9])) 
-            
+            dd =  int(''.join(number_string[6:8])) 
+
             dates.append(dt.date(yyyy, mm, dd) )
         
         dates = np.asarray(dates)
@@ -896,19 +895,36 @@ class CAMClass():
 
         GasPrf   = {}
         GasTC    = {}
+        GasFlg   = {}
         for g in Gases:
-            GasPrf.setdefault(g, []).append(nc_fid1.variables[g][:])
-            GasPrf[g] = np.squeeze(np.asarray(GasPrf[g]))
-            GasPrf[g] = np.array(GasPrf[g])
 
-            GasTC[g]  = np.sum(GasPrf[g]*xp_const*dp, axis=1)
+            try:
+                
+                if g =='H2CO': 
+                    GasPrf.setdefault(g, []).append(nc_fid1.variables['CH2O'][:])
+               
+                else: 
+                    GasPrf.setdefault(g, []).append(nc_fid1.variables[g][:])
+                
+                GasPrf[g] = np.squeeze(np.asarray(GasPrf[g]))
+                GasPrf[g] = np.array(GasPrf[g])
 
-            self.CAM.setdefault('GasPrf_'+g.lower(), []).append(nc_fid1.variables[g][:])
-            self.CAM['GasPrf_'+g.lower()] = np.squeeze(np.asarray(self.CAM['GasPrf_'+g.lower()]))
-            self.CAM['GasPrf_'+g.lower()] = np.array(self.CAM['GasPrf_'+g.lower()])
+                GasTC[g]  = np.sum(GasPrf[g]*xp_const*dp, axis=1)
 
-            self.CAM['GasTC_'+g.lower()] = np.sum(GasPrf[g]*xp_const*dp, axis=1)
-            self.CAM['AIRMASS_'+g.lower()] = np.asarray(xp_const*dp)
+                self.CAM.setdefault('GasPrf_'+g.lower(), []).append(GasPrf[g])
+               
+                self.CAM['GasPrf_'+g.lower()] = np.squeeze(np.asarray(self.CAM['GasPrf_'+g.lower()]))
+                self.CAM['GasPrf_'+g.lower()] = np.array(self.CAM['GasPrf_'+g.lower()])
+
+                self.CAM['GasTC_'+g.lower()]  = np.sum(GasPrf[g]*xp_const*dp, axis=1)
+                self.CAM['AIRMASS_'+g.lower()] = np.asarray(xp_const*dp)
+
+                self.CAM['GasFlg_'+g.lower()] = True
+
+            except:
+                self.CAM['GasFlg_'+g.lower()] = False
+                continue
+
 
 
         #-------------------------------------------------
@@ -921,14 +937,113 @@ class CAMClass():
         self.CAM['altitude'] = altitude
 
         midpoints = np.zeros((ntimes, len(lev), len(xlat), len(xlon)))
-        dz = np.zeros((ntimes, len(lev), len(xlat), len(xlon)))
+        dz        = np.zeros((ntimes, len(lev), len(xlat), len(xlon)))
+        pressure  = np.zeros((ntimes, len(lev), len(xlat), len(xlon)))
 
         for i in range(len(lev)):
             midpoints[:,i,:,:] = (altitude[:,i+1,:,:] + altitude[:,i,:,:]) * 0.5
-            dz[:,i,:,:] = (altitude[:,i,:,:] - altitude[:,i+1,:,:])
+            dz[:,i,:,:]        = (altitude[:,i,:,:] - altitude[:,i+1,:,:])
+            pressure[:,i,:,:]  = (pi[:,i+1,:,:] + pi[:,i,:,:]) * 0.5
 
         self.CAM['midpoints'] = midpoints
+        self.CAM['pressure']  = pressure
 
+        
+        if interpFlg:
+            print 'Interpolating --> in construction, for now exit!'
+            exit()
+
+            #-------------------------------------------------
+            # Getting Gases
+            #-------------------------------------------------
+
+            #dp_interp  = interp2d(xlon[:],xlat[:], dp,kind='linear', bounds_error=True)(sLon,sLat)
+
+            #print dp.shape
+            #print dp_interp.shape
+            #exit()
+
+            GasPrf   = {}
+            
+            for g in Gases:
+
+                try:
+                    
+                    if g =='H2CO': 
+                        GasPrf.setdefault(g, []).append(nc_fid1.variables['CH2O'][:])
+                   
+                    else: 
+                        GasPrf.setdefault(g, []).append(nc_fid1.variables[g][:])
+                    
+                    GasPrf[g] = np.squeeze(np.asarray(GasPrf[g]))
+
+                    GasPrf[g] = np.array(GasPrf[g])
+
+                    Prf2dinterp = interp2d(xlon[:],xlat[:],GasPrf[g],kind='linear', bounds_error=True)(sLon,sLat)
+
+
+                    self.CAM.setdefault('GasPrf_site_'+g.lower(), []).append(Prf2dinterp)
+                   
+                    self.CAM['GasPrf_site_'+g.lower()] = np.squeeze(np.asarray(self.CAM['GasPrf_site_'+g.lower()]))
+                    self.CAM['GasPrf_site_'+g.lower()] = np.array(self.CAM['GasPrf_site_'+g.lower()])
+
+
+                    self.CAM['GasTC_site_'+g.lower()] = np.sum(Prf2dinterp*xp_const*dp_interp, axis=1)
+                    self.CAM['AIRMASS__site'+g.lower()] = np.asarray(xp_const*dp_interp)
+
+                    self.CAM['GasFlg_site_'+g.lower()] = True
+
+                except:
+                    self.CAM['GasFlg_site_'+g.lower()] = False
+                    continue
+
+
+        else:
+
+            latind = findCls(xlat[:],sLat)
+            lonind = findCls(xlon[:],sLon)
+
+            indsLoc = [latind, lonind]
+
+
+            print 'CAM-Chem: Latitude of %s and Longitude of %s close to FL0:'%(str(xlat[latind]), str(xlon[lonind]) ) 
+            distance = mf.haversine(sLon, sLat, xlon[lonind],  xlat[latind])
+            print 'Distance from FL0 to the closest Pixel %s Km:'%(str(distance) ) 
+            
+
+            #-------------------------------------------------
+            # Second Method to find the closest pixel
+            #-------------------------------------------------
+            xlon2, xlat2 = np.meshgrid(xlon, xlat)
+            
+            xlon2 = np.asarray(xlon2)
+            xlat2 = np.asarray(xlat2)
+
+            distance = np.zeros((xlon2.shape))
+
+            for xi, x in enumerate(xlon):
+                for yi, y in enumerate(xlat):
+
+                    distance[yi, xi] = mf.haversine(sLon, sLat, x,  y)
+
+            for xi, x in enumerate(xlon):
+                for yi, y in enumerate(xlat):
+
+                    if distance[yi, xi] == np.min(distance):
+                        latind = yi
+                        lonind = xi
+
+                        print 'CAM-Chem: Latitude of %s and Longitude of %s close to FL0:'%(str(xlat[latind]), str(xlon[lonind]) ) 
+                        print 'Distance from FL0 to the closest Pixel %s Km:'%(str(distance[yi, xi]) )
+
+            #-------------------------------------------------
+            #
+            #-------------------------------------------------
+            
+            self.CAM['indsLoc']    = indsLoc
+
+          
+            
 
 
         # dpmean  = np.mean(pimid[:,:,indsLoc[0], indsLoc[1]], axis=0)
@@ -990,17 +1105,146 @@ class CAMClass():
         # Defining variable
         #---------------------------
         maxalt       = 20.0
-        indsLoc = self.CAM['indsLoc']
-        pcol = self.CAM['pcol']
-        alt = self.CAM['midpoints'][0, :, indsLoc[0],indsLoc[1]]
-        indsalt = np.where(alt <= maxalt)[0]
-        alt = alt[indsalt]
-     
+        indsLoc      = self.CAM['indsLoc']
+        pcol         = self.CAM['pcol']
+        alt          = self.CAM['midpoints'][0, :, indsLoc[0],indsLoc[1]]
+        indsalt      = np.where(alt <= maxalt)[0]
+        alt          = alt[indsalt]
+
+
+        
+
+
+
+        #for gas in self.CAM['Gases']:
+
+        #    gasSTR = GasName(gas)
+
+            
+
+       
         for gas in self.CAM['Gases']:
 
             gas2plt = gas.lower()
 
             gasSTR = GasName(gas2plt)
+            #-------------------------------------------------
+            #
+            #-------------------------------------------------
+
+            #---------------------------------
+            # Defining variables (CAM-CHEM) - Data is monthly mean already
+            #---------------------------------
+
+            Dates         = np.asarray(self.CAM['dates'])
+            PrfCAM        = np.asarray(self.CAM['GasPrf_'+gas.lower()][:,:,self.CAM['indsLoc'][0],self.CAM['indsLoc'][1]])*1e9
+            AirmassCAM    = np.asarray(self.CAM['AIRMASS_'+gas.lower()][:,:,self.CAM['indsLoc'][0],self.CAM['indsLoc'][1]])
+            pressCAM      = np.asarray(self.CAM['pressure'][:,:,self.CAM['indsLoc'][0],self.CAM['indsLoc'][1]])
+            TotCol        = np.asarray(self.CAM['GasTC_'+gas.lower()][:,self.CAM['indsLoc'][0],self.CAM['indsLoc'][1]])
+
+            mnthlyVals            = mf.mnthlyAvg(PrfCAM, Dates, dateAxis=0, meanAxis=0)
+            Prf_mnth              = mnthlyVals['mnthlyAvg']
+            Prf_mnth_std          = mnthlyVals['std']
+            Dates_mnth            = mnthlyVals['dates']
+
+            mnthlyVals            = mf.mnthlyAvg(TotCol, Dates, dateAxis=0, meanAxis=0)
+            TotCol_mnth           = mnthlyVals['mnthlyAvg']
+
+            data = np.mean(self.CAM['GasPrf_'+gas.lower()][:, -1, :, :], axis=0)*1e9
+
+
+            xmin = self.CAM['dates'][0]
+            xmax = self.CAM['dates'][-1]
+
+            #-------------------------------------------------
+            #
+            #-------------------------------------------------
+
+            fig, ax = plt.subplots(figsize=(10,6))
+
+            #m = Basemap(llcrnrlon=-160,llcrnrlat=22,urcrnrlon=-64,urcrnrlat=49,
+            #           projection='lcc',lat_1=33,lat_2=45,lon_0=-95, resolution='l')
+
+            m = Basemap(llcrnrlat=10,urcrnrlat=60, llcrnrlon=-130,urcrnrlon=-55, rsphere=(6378137.00,6356752.3142),
+                resolution='l',area_thresh=1000.,projection='lcc', lat_1=10,lon_0=-55)
+
+            xfts, yfts = m(self.slon, self.slat)
+            
+            m.drawcoastlines(color='black')
+            m.drawcountries(color='lightgrey')
+            #m.fillcontinents(color='gray')
+            m.drawstates(color='gray')
+
+            m.drawparallels(np.arange(-80., 81., 5.), labels=[1,0,0,0], alpha=0.5)
+            m.drawmeridians(np.arange(-180., 181., 10.), labels=[0,0,0,1],alpha=0.5)
+
+            ax.plot(xfts, yfts, 'r^', markersize=5)
+
+            xlon2, xlat2 = np.meshgrid(self.CAM['xlon'], self.CAM['xlat'])
+            x, y = m(xlon2, xlat2)
+
+            ax.plot(x,y,'.k', markersize=2.5, alpha=0.5)
+
+            cs = m.contourf(x,y, data, cmap=mplcm.jet,extend='both') #,alpha=0.5)
+            cs.axis='tight'
+
+            cbar = fig.colorbar(cs, orientation='vertical', fraction=0.035, pad=0.05)
+            cbar.set_label(gasSTR +' [ppb]', fontsize=14)
+
+            ax.set_title('Near-surface vmr in CAM-Chem - {}\n'.format(gasSTR) + str(xmin)+' - ' +str(xmax), fontsize=14)
+            #ax.set_title('Near-surface vmr in CAM-Chem - {}\n'.format(self.CAM['midpoints'][0,-1], gasSTR) + str(xmin)+' - ' +str(xmax), fontsize=14)
+
+            if self.CAM['saveFlg']:
+                self.CAMpdfsav.savefig(fig,dpi=200)
+
+            #-------------------------------------------------
+            #
+            #-------------------------------------------------
+
+            fig2, ax = plt.subplots(figsize=(10,8))
+
+            #m = Basemap(llcrnrlon=-160,llcrnrlat=22,urcrnrlon=-64,urcrnrlat=49,
+            #           projection='lcc',lat_1=33,lat_2=45,lon_0=-95, resolution='l')
+
+
+            m = Basemap(llcrnrlat=30,urcrnrlat=45, llcrnrlon=-115,urcrnrlon=-90, rsphere=(6378137.00,6356752.3142),
+                resolution='l',area_thresh=1000.,projection='lcc', lat_1=30,lon_0=-115)
+
+            xfts, yfts = m(self.slon, self.slat)
+
+
+            xclose, yclose = m(self.CAM['xlon'][self.CAM['indsLoc'][1]],  self.CAM['xlat'][self.CAM['indsLoc'][0]])
+
+            
+            m.drawcoastlines(color='black')
+            m.drawcountries(color='lightgrey')
+            #m.fillcontinents(color='gray')
+            m.drawstates(color='gray')
+
+            #m.drawparallels(np.arange(-80., 81., 5.), labels=[1,0,0,0], alpha=0.5)
+            #m.drawmeridians(np.arange(-180., 181., 10.), labels=[0,0,0,1],alpha=0.5)
+
+            ax.plot(xfts, yfts, 'r^', markersize=10)
+            ax.plot(xclose, yclose, 'ko', markersize=10)
+
+
+            xlon2, xlat2 = np.meshgrid(self.CAM['xlon'], self.CAM['xlat'])
+            x, y = m(xlon2, xlat2)
+
+            ax.plot(x,y,'.k', markersize=5, alpha=0.5)
+
+            cs = m.contourf(x,y,data, cmap=mplcm.jet,extend='both') #,alpha=0.5)
+            cs.axis='tight'
+
+            cbar = fig2.colorbar(cs, orientation='vertical', fraction=0.035, pad=0.05)
+            cbar.set_label(gasSTR +' [ppb]', fontsize=14)
+
+            ax.set_title('Near-surface vmr in CAM-Chem - {}\n'.format(gasSTR) + str(xmin)+' - ' +str(xmax), fontsize=14)
+
+
+            if self.CAM['saveFlg']:
+                self.CAMpdfsav.savefig(fig2,dpi=200)
+
 
             #-------------------------------------------------
             # Time series of near-surface
@@ -1008,8 +1252,8 @@ class CAMClass():
 
             fig, ax = plt.subplots(1, figsize=(10,6), sharex=True)
 
-            ax.plot(self.CAM['dates'], self.CAM['GasPrf_'+gas2plt][:,-1,indsLoc[0],indsLoc[1]]*1e9, color='k')
-            ax.scatter(self.CAM['dates'], self.CAM['GasPrf_'+gas2plt][:,-1,indsLoc[0],indsLoc[1]]*1e9, facecolors='white', s=60, color='k')
+            ax.plot(Dates_mnth, Prf_mnth[:,-1]*1e9, color='k')
+            ax.scatter(Dates_mnth, Prf_mnth[:,-1]*1e9, facecolors='white', s=60, color='k')
             
             ax.grid(True)
             ax.set_ylabel('VMR [ppb$_v$]',fontsize=14)
@@ -1025,16 +1269,16 @@ class CAMClass():
             #-------------------------------------------------
             # Time series of Total Columns
             #-------------------------------------------------
-            dateYearFrac = mf.toYearFraction(self.CAM['dates'])
+            dateYearFrac = mf.toYearFraction(Dates_mnth)
             weights      = np.ones_like(dateYearFrac)
-            res          = mf.fit_driftfourier(dateYearFrac, self.CAM['GasTC_'+gas2plt][:, indsLoc[0],indsLoc[1]], weights, 2)
+            res          = mf.fit_driftfourier(dateYearFrac, TotCol_mnth, weights, 2)
             f_drift, f_fourier, f_driftfourier = res[3:6]
 
             fig1, ax = plt.subplots(1, figsize=(10,6), sharex=True)
-            ax.plot(self.CAM['dates'], self.CAM['GasTC_'+gas2plt][:, indsLoc[0],indsLoc[1]], color='k')
-            ax.scatter(self.CAM['dates'], self.CAM['GasTC_'+gas2plt][:, indsLoc[0],indsLoc[1]], facecolors='white', s=60, color='k')
-            ax.plot(self.CAM['dates'],f_drift(dateYearFrac),label='Fitted Anual Trend')
-            ax.plot(self.CAM['dates'],f_driftfourier(dateYearFrac),label='Fitted Anual Trend + intra-annual variability')
+            ax.plot(Dates_mnth, TotCol_mnth, color='k')
+            ax.scatter(Dates_mnth, TotCol_mnth, facecolors='white', s=60, color='k')
+            ax.plot(Dates_mnth,f_drift(dateYearFrac),label='Fitted Anual Trend')
+            ax.plot(Dates_mnth,f_driftfourier(dateYearFrac),label='Fitted Anual Trend + intra-annual variability')
             ax.grid(True)
             ax.set_ylabel('Total Column\n[molecules$\cdot$cm$^{-2}$]',fontsize=14)
             ax.set_title(gasSTR + ' Total Column [Monthly average]\nCAM-Chem',multialignment='center',fontsize=14)
@@ -1044,28 +1288,33 @@ class CAMClass():
             ax.xaxis.set_minor_locator(monthLc)
             ax.xaxis.set_major_formatter(DateFmt)
 
-            ax.text(0.02,0.94,"Fitted trend -- slope: {0:.3E} ({1:.3f}%)".format(res[1],res[1]/np.mean(self.CAM['GasTC_'+gas2plt][:, indsLoc[0],indsLoc[1]])*100.0),transform=ax.transAxes)
+            ax.text(0.02,0.94,"Fitted trend -- slope: {0:.3E} ({1:.3f}%)".format(res[1],res[1]/np.mean(TotCol_mnth)*100.0),transform=ax.transAxes)
             ax.text(0.02,0.9,"Fitted intercept at xmin: {:.3E}".format(res[0]),transform=ax.transAxes)
-            ax.text(0.02,0.86,"STD of residuals: {0:.3E} ({1:.3f}%)".format(res[6],res[6]/np.mean(self.CAM['GasTC_'+gas2plt][:, indsLoc[0],indsLoc[1]])*100.0),transform=ax.transAxes) 
+            ax.text(0.02,0.86,"STD of residuals: {0:.3E} ({1:.3f}%)".format(res[6],res[6]/np.mean(TotCol_mnth)*100.0),transform=ax.transAxes) 
 
             #-------------------------------------------------
             # Diurnal profiles
             #-------------------------------------------------
 
-            Prf2plt = self.CAM['GasPrf_'+gas2plt][:,:,indsLoc[0],indsLoc[1]]
+            Prf2plt = Prf_mnth
 
-            Prf2plt_interp = np.zeros( (len(alt), len(self.CAM['dates']) ) )
+            Prf2plt_interp = np.zeros( (len(alt), len(Dates_mnth) ) )
             
-            for itime in range(len(self.CAM['dates'])):
+            for itime in range(len(Dates_mnth)):
                 indsalt = np.where(self.CAM['midpoints'][itime,:,indsLoc[0],indsLoc[1]] <= maxalt)[0]
                 #Prf2plt_interp[:, itime] = np.interp(alt, self.CAM['midpoints'][itime, indsalt,indsLoc[0],indsLoc[1]], Prf2plt[itime, indsalt], right=Prf2plt[itime, indsalt[-1]])
-                Prf2plt_interp[:, itime] = np.transpose(Prf2plt[itime, indsalt])*1e9
+                Prf2plt_interp[:, itime] = np.transpose(Prf2plt[itime, indsalt])
+
+            #print Prf2plt_interp.shape
+            #print np.min(Prf2plt_interp), np.max(Prf2plt_interp)
+            #print gasSTR
 
             levels1 = np.arange(np.round(np.min(Prf2plt_interp), decimals=1)-0.1,np.round(np.max(Prf2plt_interp),decimals=1)+0.1,0.1)
+            #levels1 = np.arange(np.round(np.min(Prf2plt_interp)) ,np.round(np.max(Prf2plt_interp)) )
             
           
             fig2,ax = plt.subplots(1, figsize=(10,6))
-            cax1          = ax.contourf(self.CAM['dates'],alt,Prf2plt_interp, levels1,cmap=mplcm.jet)
+            cax1          = ax.contourf(Dates_mnth,alt,Prf2plt_interp, levels1,cmap=mplcm.jet)
             
             divider1      = make_axes_locatable(ax)
             cb1           = divider1.append_axes("right",size="5%",pad=0.04)
@@ -1105,15 +1354,15 @@ class CAMClass():
             #----------------------------
             # Plot total columns by month
             #----------------------------
-            month    = np.array([d.month for d in self.CAM['dates']])
+            month    = np.array([d.month for d in Dates_mnth])
             mnthSort = list(set(month))
             mnthMean = np.zeros(len(mnthSort))
             mnthSTD  = np.zeros(len(mnthSort))
             
             for i,m in enumerate(mnthSort):
                 inds        = np.where(month == m)[0]
-                mnthMean[i] = np.mean(self.CAM['GasTC_'+gas2plt][inds, indsLoc[0],indsLoc[1]])
-                mnthSTD[i]  = np.std(self.CAM['GasTC_'+gas2plt][inds, indsLoc[0],indsLoc[1]])   
+                mnthMean[i] = np.mean(TotCol_mnth[inds])
+                mnthSTD[i]  = np.std(TotCol_mnth[inds])   
                 
             fig4,ax1  = plt.subplots(figsize=(10,6))
             ax1.plot(mnthSort,mnthMean,'k.',markersize=12)

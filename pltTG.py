@@ -961,6 +961,8 @@ def main():
 
         if pltAK:
 
+            indAlt = np.where(alt[gasVer] < 20.)[0]
+
 
             #---------------------------------
             # Plot : Averaging Kernel Smoothing Function (row of avk)
@@ -973,15 +975,15 @@ def main():
             axb       = plt.subplot(gs[1])
             axc       = plt.subplot(gs[2])
             cm        = plt.get_cmap(clmap)
-            cNorm     = colors.Normalize(vmin=np.min(alt[gasVer]), vmax=np.max(alt[gasVer]))
+            cNorm     = colors.Normalize(vmin=np.min(alt[gasVer][indAlt]), vmax=np.max(alt[gasVer][indAlt]))
             scalarMap = mplcm.ScalarMappable(norm=cNorm,cmap=clmap)
             scalarMap.set_array(alt[gasVer])
 
             #---------------------------------
-            ax.set_color_cycle([scalarMap.to_rgba(x) for x in alt[gasVer]])
+            ax.set_color_cycle([scalarMap.to_rgba(x) for x in alt[gasVer][indAlt]])
             
-            for i in range(len(alt[gasVer])):
-                ax.plot(avkSCFav[gasVer][i,:],alt[gasVer])
+            for i in range(len(alt[gasVer][indAlt])):
+                ax.plot(avkSCFav[gasVer][indAlt[i],indAlt],alt[gasVer][indAlt])
                 
             ax.set_ylabel('Altitude [km]', fontsize=14)
             ax.set_xlabel('AK', fontsize=14)

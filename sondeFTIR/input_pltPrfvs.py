@@ -5,27 +5,31 @@
 # Purpose:
 #        This is the input file for pltsonde.py   --> Plot sonde vs FTS 
 #----------------------------------------------------------------------------------------
-loc = 'fl0'               
+loc        = 'fl0'
+gasName    = 'hcn'               
     
 if loc.lower() == 'fl0':
 
-    gasName    = 'c2h6'
-    ver        = ['sonde/Current_v2_sonde', 'sonde/Current_v2_Ret', 'sonde/Current_v2_ERA_v66', 'sonde/Current_v2_ERA', 'sonde/Current_v2_NCEP', 'sonde/Current_v2_WACCM']
-    ctlF       = ['sfit4_v2.ctl','sfit4_v2.ctl', 'sfit4_v2.ctl', 'sfit4_v2.ctl', 'sfit4_v2.ctl', 'sfit4_v2.ctl']
-    ID         = ['FPH', 'Ret', 'ERA-6', 'ERA-d', 'NCEP', 'WACCM']
-    ref        = 'FPH'
+    if gasName    == 'c2h6':
+        ver        = ['sonde/Current_v2_sonde', 'sonde/Current_v2_Ret', 'sonde/Current_v2_ERA_v66', 'sonde/Current_v2_ERA', 'sonde/Current_v2_NCEP', 'sonde/Current_v2_WACCM']
+        ctlF       = ['sfit4_v2.ctl','sfit4_v2.ctl', 'sfit4_v2.ctl', 'sfit4_v2.ctl', 'sfit4_v2.ctl', 'sfit4_v2.ctl']
+        ID         = ['FPH', 'Ret', 'ERA-6', 'ERA-d', 'NCEP', 'WACCM']
+        ref        = 'FPH'
 
-    # gasName    = 'hcn'
-    # ver        = ['sonde/Current_WP_sonde', 'sonde/Current_WP_Ret', 'sonde/Current_WP_ERA_v66', 'sonde/Current_WP_ERA', 'sonde/Current_WP_NCEP', 'sonde/Current_WP_WACCM']
-    # ctlF       = ['sfit4.ctl','sfit4.ctl', 'sfit4.ctl', 'sfit4.ctl', 'sfit4.ctl', 'sfit4.ctl']
-    # ID         = ['FPH', 'Ret', 'ERA-6', 'ERA-d', 'NCEP', 'WACCM']
-    # ref        = 'FPH'
+    elif gasName    == 'hcn':
+        ver        = ['sonde/Current_WP_sonde', 'sonde/Current_WP_Ret', 'sonde/Current_WP_ERA_v66', 'sonde/Current_WP_ERA', 'sonde/Current_WP_NCEP', 'sonde/Current_WP_WACCM']
+        ctlF       = ['sfit4.ctl','sfit4.ctl', 'sfit4.ctl', 'sfit4.ctl', 'sfit4.ctl', 'sfit4.ctl']
+        ID         = ['FPH', 'Ret', 'ERA-6', 'ERA-d', 'NCEP', 'WACCM']
+        ref        = 'FPH'
 
-    # gasName    = 'co'
-    # ver        = ['sonde/Current_v3_sonde', 'sonde/Current_v3_Ret', 'sonde/Current_v3_ERA_v66', 'sonde/Current_v3_ERA', 'sonde/Current_v3_NCEP', 'sonde/Current_v3_WACCM']
-    # ctlF       = ['sfit4_v3.ctl', 'sfit4_v3.ctl', 'sfit4_v3.ctl', 'sfit4_v3.ctl', 'sfit4_v3.ctl', 'sfit4_v3.ctl']
-    # ID         = ['FPH', 'Ret', 'ERA-6', 'ERA-d',  'NCEP', 'WACCM']
-    # ref        = 'FPH'
+    elif gasName    == 'co':
+        ver        = ['sonde/Current_v3_sonde', 'sonde/Current_v3_Ret', 'sonde/Current_v3_ERA_v66', 'sonde/Current_v3_ERA', 'sonde/Current_v3_NCEP', 'sonde/Current_v3_WACCM']
+        ctlF       = ['sfit4_v3.ctl', 'sfit4_v3.ctl', 'sfit4_v3.ctl', 'sfit4_v3.ctl', 'sfit4_v3.ctl', 'sfit4_v3.ctl']
+        ID         = ['FPH', 'Ret', 'ERA-6', 'ERA-d',  'NCEP', 'WACCM']
+        ref        = 'FPH'
+    else:
+        print 'Gas Not Found!!'
+        exit()
 
     dois        = ['20100914', '20101105', '20110728', '20120430', '20130117', '20130816', '20140722', '20150629', '20150805', '20160706']
     sdoi        = ['20140722']
@@ -60,7 +64,7 @@ if loc.lower() == 'fl0':
     latFTS     = 40.04
     lonFTS     = -105.24
 
-    pCols = [ [1.5, 3], [3, 5], [5, 7.5], [7.5, 10], [10,13], [13,17], [17,21] ]
+    pCols = [ [1.6, 3], [3, 5], [5, 7.5], [7.5, 10], [10,13], [13,17], [17,21] ]
     
 else:
     print 'You need to input the maxRMS and minDOF!'

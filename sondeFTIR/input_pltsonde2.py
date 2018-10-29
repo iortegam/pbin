@@ -29,7 +29,7 @@ else:
 #------
 #Smooth sonde profiles using AK
 #------
-smthFlg    = False
+smthFlg    = True
 
 #------
 # Time Flag: 'inc' = increasing ;  'int' = interval     
@@ -65,13 +65,13 @@ if loc.lower() == 'mlo':
     altCG      = 3.8  + 3.4                    #Altitude of center of gravity based on H2O sonde profiles
 
     if timeFlg == 'inc':
-        diffT      = [3, 10, 15, 30, 60, 90, 120, 180, 240]
+        diffT      = [3.3, 10, 15, 30, 60, 90, 120, 180, 240]
         dfValue    = 120
     elif timeFlg == 'int':
         diffT      = [60, 90, 120, 150, 180, 240]
         dfValue    = 60
 
-    pCols = [ [3, 5.5], [5.5, 7.5], [7.5, 10], [10, 13], [13, 16], [16, 20], [20.0, 24]]
+    pCols = [ [3.3, 5.5], [5.5, 7.5], [7.5, 10], [10, 13], [13, 16], [16, 20], [20.0, 24]]
 
     fleoutFlg  = False
 
@@ -91,7 +91,7 @@ elif loc.lower() == 'fl0':
         dfValue    = 30
 
     #pCols = [ [1.5, 3.5], [3.5, 5.5], [5.5, 8.], [8., 10.5], [10.5,13.5], [13.5,17], [17,21] ]
-    pCols = [ [1.5, 3], [3, 5], [5, 7.5], [7.5, 10], [10,13], [13,17], [17,21] ]
+    pCols = [ [1.6, 3], [3, 5], [5, 7.5], [7.5, 10], [10,13], [13,17], [17,21] ]
 
     fleoutFlg  = True
 

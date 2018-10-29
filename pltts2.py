@@ -29,7 +29,6 @@ import glob
 from scipy import interpolate
 
 import matplotlib.dates as md
-import matplotlib.dates as md
 from matplotlib.dates import DateFormatter, MonthLocator, YearLocator, DayLocator, WeekdayLocator, MONDAY
 
 import matplotlib.pyplot as plt
@@ -95,11 +94,9 @@ def main():
     #ver               = ['Current_v2', 'Current_v2', 'Current_v2' ]          # Name of retrieval version to process
     #ctlF              = ['sfit4_v2.ctl', 'sfit4_v2.ctl',  'sfit4_v2.ctl']            # Name of ctl file
 
-    gasName    = ['co', 'c2h2',   'c2h6',  'ch4', 'nh3']#,   'h2co', 'hcooh',  'nh3', 'o3']             
-    ver        = ['Current_v3', 'Current_v2', 'Current_v2',   'Current_WP', 'Current_v2',   'Current_WP_v6','Current_v1',   'Current_WP']          # Name of retrieval version to process
-    ctlF       = ['sfit4_v3.ctl',  'sfit4_v2.ctl',   'sfit4_v2.ctl',  'sfit4_3.ctl', 'sfit4_v2.ctl', 'sfit4_v6.ctl', 'sfit4_v1.ctl',  'sfit4.ctl'] 
-
-
+    gasName            = ['co', 'c2h2',   'c2h6',  'ch4', 'nh3']#,   'h2co', 'hcooh',  'nh3', 'o3']             
+    ver                = ['Current_v3', 'Current_v2', 'Current_v2',   'Current_WP', 'Current_v2',   'Current_WP_v6','Current_v1',   'Current_WP']          # Name of retrieval version to process
+    ctlF               = ['sfit4_v3.ctl',  'sfit4_v2.ctl',   'sfit4_v2.ctl',  'sfit4_3.ctl', 'sfit4_v2.ctl', 'sfit4_v6.ctl', 'sfit4_v1.ctl',  'sfit4.ctl'] 
 
     saveFlg           = False 
     pltFile           =  '/data/iortega/results/'+loc.lower()+'/fig/'+loc.upper()+'_Results_b.pdf'

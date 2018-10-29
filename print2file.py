@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #----------------------------------------------------------------------------------------
 # Name:
-#        icartt.py
+#        print2file.py
 #
 # Purpose:
 #        The purpose of this program is to write total column and associated data
@@ -60,14 +60,14 @@ def main():
     # Initializations
     #----------------
     #loc        = 'fl0'           
-    #gasName    = 'o3'            #'nh3'           #'hcooh'         #'hcn'           #'h2co'            #'ch4'           #'c2h2'         #'c2h6'           #'co'                 
+    #gasName    = 'ch4'            #'nh3'           #'hcooh'         #'hcn'           #'h2co'            #'ch4'           #'c2h2'         #'c2h6'           #'co'                 
     #ver        = 'Current_WP'    #'Current_v2'    #'Current_v2'    #'Current_WP'    #'Current_WP_v5'   #'Current_WP'    #'Current_v2'   #'Current_v2'     #'Current_v3'             
-    #ctlF       = 'sfit4.ctl'     #'sfit4_v2.ctl'  #'sfit4_v2.ctl'  #'sfit4.ctl'     #'sfit4_v5.ctl'    #'sfit4_3.ctl'   #'sfit4_v2.ctl' # 'sfit4_v2.ctl'  #'sfit4_v3.ctl'
+    #ctlF       = 'sfit4_3.ctl'     #'sfit4_v2.ctl'  #'sfit4_v2.ctl'  #'sfit4.ctl'     #'sfit4_v5.ctl'    #'sfit4_3.ctl'   #'sfit4_v2.ctl' # 'sfit4_v2.ctl'  #'sfit4_v3.ctl'
     
-    loc        = 'tab'
-    gasName    = 'h2o'
-    ver        = 'Current_ERA'
-    ctlF       = 'sfit4_v1.ctl'
+    loc        = 'mlo'
+    gasName    = 'hcooh'
+    ver        = 'Current_v3'
+    ctlF       = 'sfit4_v3.ctl'
 
     #------
     # Flags
@@ -82,20 +82,21 @@ def main():
     cnvrgFlg   = True                   # Flag to filter profiles that did not converge
     rmsFlg     = True                   # Flag to filter based on max RMS
     
-    maxRMS     = 2.0                         # Max Fit RMS to filter data. Data is filtered according to <= maxrms
-    minDOF     = 1.0                    # Min DOFs for filtering
+    maxRMS     = 1.0                         # Max Fit RMS to filter data. Data is filtered according to <= maxrms
+    minDOF     = 0.1                    # Min DOFs for filtering
     sclfct     = 1.0E9                  # Scale factor to apply to vmr plots (ppmv=1.0E6, ppbv=1.0E9, etc)
     sclfctName = 'ppbv'                 # Name of scale factor for labeling plots    
   
     #----------------------
     # Date range to process
     #----------------------
-    iyear      = 2016
+    iyear      = 2017
     imnth      = 1
     iday       = 1
     fyear      = 2017
     fmnth      = 12
     fday       = 31
+
 
     #------------
     # Directories
@@ -107,8 +108,8 @@ def main():
     #------
     ctlFile     = '/data1/ebaumer/'+loc.lower()+'/'+gasName.lower()+'/'+'x.'+gasName.lower()+'/'+ctlF
     outFileDir  = '/data1/ebaumer/'+loc.lower()+'/'+gasName.lower()+'/' 
+    #outFileDir  = '/data/Archive/'+loc.upper()+'/'+gasName.upper()+'/' 
     icarttHdr   = '/data1/ebaumer/icartt_Hdr.txt'
-    outFileName = outFileDir + loc.upper()+ '-FTS-'+gasName.upper()+'_mm.ascii'
 
     pltFile     =  outFileDir + loc.upper()+ '-FTS-'+gasName.upper()+'.pdf'
 
@@ -136,6 +137,17 @@ def main():
     dofs     = np.asarray(statDataCl.summary[statDataCl.PrimaryGas.upper()+'_DOFS_TRG']) 
     sza      = np.asarray(statDataCl.pbp['sza'])
     rms      = np.asarray(statDataCl.summary[statDataCl.PrimaryGas.upper()+'_FITRMS'])
+
+    #-------------------------------------
+    # Naming output file  
+    #-------------------------------------
+    idate    = dates[0]
+    fdate    = dates[-1]
+
+    idateStr = "{0:04d}{1:02d}{2:02d}T{3:02d}{4:02d}{5:02d}Z".format(idate.year,idate.month,idate.day,idate.hour,idate.minute,idate.second)
+    fdateStr = "{0:04d}{1:02d}{2:02d}T{3:02d}{4:02d}{5:02d}Z".format(fdate.year,fdate.month,fdate.day,fdate.hour,fdate.minute,fdate.second)
+
+    outFileName = outFileDir + loc.upper()+ '-FTS-'+gasName.upper()+'_'+idateStr+'_'+fdateStr+'.ascii'
 
     #----------------
     # Read Error Data
@@ -185,7 +197,7 @@ def main():
     # Construct icartt file name based on first 
     # day of data
     #------------------------------------------
-    idateStr    = '{0:04d}{1:02d}{2:02d}'.format(dates[0].year,dates[0].month,dates[0].day)
+    #idateStr    = '{0:04d}{1:02d}{2:02d}'.format(dates[0].year,dates[0].month,dates[0].day)
     
     
     #----------------------------------------
@@ -203,7 +215,7 @@ def main():
         locStr = 'Thule, Greenland'
     elif loc.lower() == 'mlo':
         locStr = 'Mauna Loa, HI USA'
-    elif locc.lower() == 'fl0':
+    elif loc.lower() == 'fl0':
         locStr = 'Boulder, Colorado USA'
 
     #--------------
@@ -213,10 +225,10 @@ def main():
         fopen.write('#Ground Based HR-FTIR Spectrometer at {}\n'.format(locStr))
         fopen.write('#CONTACT_INFO: Hannigan, Jim, jamesw@ucar.edu, 303-497-1853, NCAR, 3090 Center Green Drive, Boulder, CO 80301\n')
         fopen.write('#CONTACT_INFO: Ortega, Ivan, iortega@ucar.edu, 303-497-1861, NCAR, 3090 Center Green Drive, Boulder, CO 80301\n')
-        fopen.write('#Gas name, Version, ctlFile:{0}, {1}, {2}\n'.format( gasName.upper(), ver, ctlF ))
+        fopen.write('#Gas name, Version, ctlFile, maxRMS, minDOF:{0}, {1}, {2}, {3}, {4}\n'.format( gasName.upper(), ver, ctlF, maxRMS, minDOF  ))
         if errorFlg: 
-            #fopen.write('Index, YYYY-MM-DD, HH:MM:SS, TC [molecules cm^-2], Random_Err [molecules cm^-2], Systematic_Err [molecules cm^-2], Total_Err [molecules cm^-2], DOF [a.u], SZA [deg], RMS [%]\n')
-            fopen.write('Index, YYYY-MM-DD, HH:MM:SS, TC [mm], Random_Err [mm], Systematic_Err [mm], Total_Err [mm], DOF [a.u], SZA [deg], RMS [%]\n')
+            fopen.write('Index, YYYY-MM-DD, HH:MM:SS, TC [molecules cm^-2], Random_Err [molecules cm^-2], Systematic_Err [molecules cm^-2], Total_Err [molecules cm^-2], DOF [a.u], SZA [deg], RMS [%]\n')
+            #fopen.write('Index, YYYY-MM-DD, HH:MM:SS, TC [mm], Random_Err [mm], Systematic_Err [mm], Total_Err [mm], DOF [a.u], SZA [deg], RMS [%]\n')
             strFormat = '{0:d}, {1:>10s}, {2:>10s}, {3:.3E}, {4:.3E}, {5:.3E}, {6:.3E}, {7:.3f}, {8:.3f}, {9:.3f}\n'
         else:  
             fopen.write('Index, YYYY-MM-DD, HH:MM:SS, TC [molecules cm^-2], DOF [a.u], SZA [deg], RMS [%]\n')
@@ -224,8 +236,8 @@ def main():
 
 
         for i,sngTime in enumerate(times):
-            #if errorFlg: fopen.write(strFormat.format((i+1),YYYYMMDD[i], HHMMSS[i] ,totClmn[i],tot_rnd[i],tot_sys[i],tot_std[i],dofs[i],sza[i],rms[i]))
-            if errorFlg: fopen.write(strFormat.format((i+1),YYYYMMDD[i], HHMMSS[i] ,totClmn[i]*2.989e-22,tot_rnd[i]*2.989e-22,tot_sys[i]*2.989e-22,tot_std[i]*2.989e-22,dofs[i],sza[i],rms[i]))
+            if errorFlg: fopen.write(strFormat.format((i+1),YYYYMMDD[i], HHMMSS[i] ,totClmn[i],tot_rnd[i],tot_sys[i],tot_std[i],dofs[i],sza[i],rms[i]))
+            #if errorFlg: fopen.write(strFormat.format((i+1),YYYYMMDD[i], HHMMSS[i] ,totClmn[i]*2.989e-22,tot_rnd[i]*2.989e-22,tot_sys[i]*2.989e-22,tot_std[i]*2.989e-22,dofs[i],sza[i],rms[i]))
             else: fopen.write(strFormat.format((i+1),YYYYMMDD[i], HHMMSS[i] ,totClmn[i],dofs[i],sza[i],rms[i]))
     
 
@@ -241,12 +253,12 @@ def main():
     fig,(ax1,ax2,ax3,ax4) = plt.subplots(4, figsize=(10,10), sharex=True)
     
     #ax1.scatter(dates,totClmn*2.989e-22, facecolors='red', s=30, label='data', color='k')
-    if errorFlg: ax1.errorbar(dates,totClmn*2.989e-22, yerr=tot_std*2.989e-22, fmt='o', markersize=5, color='r', ecolor='r')
+    if errorFlg: ax1.errorbar(dates,totClmn, yerr=tot_std, fmt='o', markersize=5, color='r', ecolor='r')
     else: ax1.errorbar(dates,totClmn, yerr=totClmn*0., fmt='o', markersize=0, color='r', ecolor='r')
     
     ax1.grid(True)
-    #ax1.set_ylabel('Retrieved Total Column\n[molecules cm$^{-2}$]', multialignment='center', fontsize=14)
-    ax1.set_ylabel('Total Column [mm]', multialignment='center', fontsize=14)
+    ax1.set_ylabel('Retrieved Total Column\n[molecules cm$^{-2}$]', multialignment='center', fontsize=14)
+    #ax1.set_ylabel('Total Column [mm]', multialignment='center', fontsize=14)
     #ax1.set_title(gasName.upper() + ' For ' + loc.upper(), fontsize=14 )
     ax1.tick_params(labelsize=14)
     

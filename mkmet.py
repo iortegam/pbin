@@ -1,4 +1,4 @@
-#! /usr/local/python-2.7/bin/python
+#!/usr/bin/python
 #! /usr/bin/python2.7
 #----------------------------------------------------------------------------------------
 # Name:
@@ -70,14 +70,14 @@ def main():
     # Date Range of data to process
     #------------------------------
     # Starting 
-    iyear = 2015               # Year
+    iyear = 2018               # Year
     imnth = 1                  # Month
     iday  = 1                  # Day
     
     # Ending
-    fyear = 2016               # Year
-    fmnth = 12                 # Month
-    fday  = 31                 # Day
+    fyear = 2018               # Year
+    fmnth = 7                 # Month
+    fday  = 23                 # Day
     
     #-------------------
     # Call to date class
@@ -113,9 +113,7 @@ def main():
             houseData = hr.MLOread()
         elif (statstr.lower() == 'tab'):
             houseData = hr.TABread()
-
-
-            
+      
         #--------------------------------------
         # Loop through days/folders within year
         #--------------------------------------
@@ -187,10 +185,7 @@ def main():
                # Format B for (TAB) date >= 20150101
                 elif indvDay >= dt.date(2015,1,1):
                     houseData.formatB(houseFile,indvDay.year,indvDay.month,indvDay.day)
-
-             
-
-             
+    
         #------------------------
         # Sort data based on date
         #------------------------
@@ -321,7 +316,6 @@ def main():
             #-----------------------------
             #-----------------------------
             MET = [ houseData.data['Date'], houseData.data['Time'], houseData.data['Outside_T'], houseData.data['WindDir_W_of_S'], houseData.data['Wind_Speed_mps'], houseData.data['Atm_Press'],houseData.data['Outside_RH'] ]
-            print houseData.data['Outside_T']
             #writer.writerows(zip(*(houseData.data[k] for k in sorted(houseData.data, key=order.get))))
         
             writer.writerows(zip(*(MET)))

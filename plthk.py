@@ -26,7 +26,7 @@ def main(argv):
 
 	Dir  = '/data/Campaign/'+loc.upper()+'/House_Log_Files/'
 
-	iyear      = 2016
+	iyear      = 2018
 
 	ipolardays  = dt.datetime(iyear, 3, 1, 0, 0, 0)
 	fpolardays  = dt.datetime(iyear, 10, 15, 0, 0, 0)

@@ -158,7 +158,7 @@ def main(argv):
                    pcFlg=pltInputs['pcNegFlg'],szaFlg=pltInputs['szaFlg'],chiFlg=pltInputs['chiFlg'],cnvrgFlg=pltInputs['cnvrgFlg'],tcMMflg=pltInputs['tcMMFlg'],
                    allGas = True)
 
-        
+
         TC.append(ds['totClmn'])
         TCApr.append(ds['totClmnApr'])
         DT.append(ds['dates'])

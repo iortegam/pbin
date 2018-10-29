@@ -24,6 +24,8 @@ from scipy import linspace, polyval, polyfit, sqrt, stats, randn
 #matplotlib.use('Agg')
 #
 
+
+
 import matplotlib.dates as md
 from matplotlib.dates import DateFormatter, MonthLocator, YearLocator
 
@@ -50,6 +52,9 @@ from math import acos, asin, atan2, hypot
 from math import degrees, pi as PI, tan
 from collections import deque,Counter
 from itertools import islice
+
+from scipy import interpolate
+from pylab import setp
 
 
 
@@ -289,6 +294,98 @@ def t2dt(atime):
     seconds = remainder * (eoy - boy).total_seconds()
     return boy + dt.timedelta(seconds=seconds)
 
+def perdelta(start, end, delta):
+    curr = start
+    while curr < end:
+        yield curr
+        curr += delta
+
+def findCls(dataArray, val):
+    ''' Returns the indice and closest value in dataArray to val'''
+    return np.argmin(abs(val-dataArray))
+
+    
+def findCls2(dataArray, val):
+    return min(dataArray, key=lambda p:dist_sq(val, p))
+
+
+def ndaysAvg(data, dates, dateAxis=1, meanAxis=0, quad=0, deltaDays = dt.timedelta(days=7)):
+    ''' Creates daily averages of specified quantity'''
+
+    #-----------------------------
+    # Initialize output dictionary
+    #-----------------------------
+    outdata = {}
+    dataAvg = []
+    cnt     = []
+    std     = []
+    dataMin = []
+    days    = []
+
+    #-----------------------------------------
+    # Convert date time input to strictly date
+    #-----------------------------------------
+    dates_daily    = np.asarray([dt.date(d.year,d.month,d.day) for d in dates])
+
+    dates_interval = [d for d in perdelta(dates_daily[0], dates_daily[-1], deltaDays)]
+    Ndates_interval = len(dates_interval)
+
+
+
+
+    #-----------------------------
+    # Ensure data is a numpy array
+    #-----------------------------
+    data = np.asarray(data)
+
+
+    #-------------------------
+    # Loop through unique days
+    #-------------------------
+    for indDay in range(Ndates_interval-1):
+
+        inds = np.where( (dates_daily >= dates_interval[indDay]) &  (dates_daily < dates_interval[indDay+1]) )[0]
+
+        #print dates_daily[inds]
+        #exit()
+
+        if len(inds) >1:    
+                            
+       
+            if data.ndim == 1:                                                              # For single dimension array   
+                if quad == 1: dataAvg.append( np.sqrt(np.sum(data[inds]**2)) / len(inds) )  # Find daily average (sqrt(sum(x^2))/N)
+                else:         dataAvg.append( np.mean(data[inds]) )                         # Find daily average (straight mean)
+                std.append(np.std(data[inds]))                                              # Find standard deviation
+                dataMin.append(np.min(data[inds]))
+                days.append(dates_daily[inds[int(len(inds)/2)]])
+                
+            else:                                                                           # For multi-Dimension array
+                s           = [slice(None)] * data.ndim
+                s[dateAxis] = inds
+                tempMat     = data[s]
+                if quad == 1: dataAvg.append( np.sqrt(np.sum(tempMat,axis=meanAxis) / len(inds)))
+                else:         dataAvg.append( np.mean(tempMat,axis=meanAxis) )
+                std.append(np.std(tempMat,axis=meanAxis))                                  # Find standard deviation
+                dataMin.append(np.min(tempMat,axis=meanAxis))
+                days.append(dates_daily[inds[int(len(inds)/2)]])
+            
+            cnt.append(len(inds))                                                         # Number of observations used in daily average
+
+    cnt     = np.asarray(cnt)
+    dataAvg = np.asarray(dataAvg)
+    std     = np.asarray(std)
+    dataMin = np.asarray(dataMin)
+    days = np.asarray(days)
+
+
+    outdata['Avg'] = dataAvg
+    outdata['dates']    = days
+    outdata['cnt']      = cnt
+    outdata['std']      = std
+    outdata['Min'] = dataMin
+
+    return outdata
+
 
 def dailyAvg(data, dates, dateAxis=1, meanAxis=0, quad=0):
     ''' Creates daily averages of specified quantity'''
@@ -462,7 +559,7 @@ def allMnthAvg(data, dates):
 def clrplt():
     ''' Colors for plots in order for for loops'''
     
-    clr = ('green', 'red', 'maroon', 'blue', 'gray', 'orange', 'cyan', 'yellow', 'black')
+    clr = ('green', 'red', 'maroon', 'blue', 'gray', 'yellow', 'cyan', 'orange', 'black')
     return clr
 
 
@@ -628,6 +725,66 @@ def fourier_basis(x, degree, half_period):
         A[:, 2*d]   = np.sin(d * np.pi * x / half_period)
 
     return A
+
+def basis_qbo(x, degree, half_period, x2):
+    """Returns a 2-d array of fourier basis."""
+    A = np.ones((x.size, 2 * degree + 1))
+    
+    for d in range(1, degree + 1):
+        A[:, 2*d-1] = np.cos(d * np.pi * x / half_period)
+        A[:, 2*d]   = np.sin(d * np.pi * x / half_period)
+
+    #-------------------------------------
+    # QBO
+    #-------------------------------------
+
+    Dir        = '/data1/projects/ocs/'                 # Name of station location
+    file       = 'QBO.dat' 
+
+    fileName  = Dir + file
+
+    cols, indexToName = getColumns(fileName, headerrow=8, delim=' ', header=True)
+
+    site  = cols[indexToName[0]]
+    YYMM  = cols[indexToName[1]]
+    qbo50 = cols[indexToName[3]]
+    qbo30 = cols[indexToName[5]]
+
+    qboDate = []
+
+    for i in YYMM:
+        YY = i[0:2]
+        MM = i[2:4]
+
+        if int(YY) <= 20 :
+            YYYY = '20'+YY
+        else:
+            YYYY = '19'+YY
+
+        qboDate.append(dt.date(int(YYYY), int(MM), 15))
+
+    qboDate     = np.asarray(qboDate)
+    qbo50       = np.asarray(qbo50, dtype=float) + 500.
+    qbo30       = np.asarray(qbo30, dtype=float) + 500.
+
+    qboDateFrac = toYearFraction(qboDate)
+
+    xminqbo     = qboDateFrac.min()
+    xnormqbo    = qboDateFrac - xminqbo
+
+    qbo30Int = np.asarray(interpolate.interp1d(xnormqbo, qbo30, kind='linear')(x))
+
+    return qbo30Int
+
+    #-------------------------------------
+    # Return
+    #-------------------------------------
+    # B = np.ones((x.size, 2 * degree + 1))
+
+    # for i in range(0, 2 * degree + 1):
+    #     B[:, i] = A[:, i]*qbo30Int
+    
+    # return B
 
 def fit_driftfourier_poly(x, data, weights, degree, half_period=0.5):
     """
@@ -796,6 +953,86 @@ def fit_driftfourier(x, data, weights, degree, half_period=0.5):
             f_drift, f_fourier, f_driftfourier,
             residual_std, A, df_drift)
 
+def fit_qbo(x, data, weights, degree, half_period=0.5):
+    """
+    Fit y = f(x - x.min()) to data where f is given by
+    fourier series + drift.
+    
+    Parameters
+    ----------
+    x : 1-d array
+        x-coordinates
+    data : 1-d array
+        data values
+    weights : 1-d array
+        weights (>=0)
+    degree : int
+        degree of fourier series
+    half_period : float
+        half period
+    
+    Returns
+    -------
+    intercept : float
+        intercept at x.min()
+    slope : float
+        slope (drift) for the normalized data
+        (x - x.min())
+    pfourier : 1-d array
+        Fourier series parameters for the
+        normalized data
+    f_drift : callable
+        Can be used to calculate the drift
+        given any (non-normalized) x
+    f_fourier : callable
+        Can be used to calculate fourier series
+    f_driftfourier : callable
+        Can be used to calculate drift + fourier
+    residual_std : float
+        estimated standard deviation of residuals
+    A : 2-d array
+        matrix of "coefficients"
+    
+    """
+    xmin  = x.min()
+    xnorm = x - xmin
+    
+    # coefficient matrix
+    #A = np.ones((x.size, 2 * degree + 2))
+    A       = np.ones((x.size, 1 + 2))
+    A[:, 1] = xnorm
+    A[:, 2] = basis_qbo(xnorm, degree, half_period, x)
+    
+    # linear weighted least squares
+    results = np.linalg.lstsq(A * weights[:, np.newaxis],
+                              data * weights)
+
+
+    params    = results[0]
+    intercept = params[0]
+    slope     = params[1]
+    pfourier  = params[2]
+    
+    f_drift   = lambda t: slope * (t - xmin) + intercept
+
+    df_drift  = lambda t: slope*t/t
+    
+    f_fourier = lambda t: basis_qbo(t - xmin, degree,half_period, t)* pfourier + intercept
+
+    #f_fourier = lambda t: np.sum(fourier_basis(t - xmin, degree,
+    #                                           half_period)[:, 1:]
+    #                             * pfourier[np.newaxis, :],
+    #                             axis=1) + intercept
+    
+    f_driftfourier = lambda t: f_drift(t) + f_fourier(t) - intercept
+    
+    residual_std = np.sqrt(results[1][0] / (x.size - 2 * degree + 2)) 
+    
+    return (intercept, slope, pfourier,
+            f_drift, f_fourier, f_driftfourier,
+            residual_std, A, df_drift)
+
+
 
 def cf_driftfourier(x, data, weights, degree,
                     half_period=0.5, nboot=5000,
@@ -959,11 +1196,13 @@ def getgasname(rawname):
     elif rawname.upper() == 'HCHO': gasname = 'H2CO'
     elif rawname.upper() == 'H2CO': gasname = 'H2CO'
     elif rawname.upper() == 'HCOOH': gasname = 'HCOOH'
-    else: gasname = rawname
+    elif rawname.upper() == 'HCN': gasname = 'HCN'
+    elif rawname.upper() == 'COF2': gasname = 'COF$_2$'
+    else: gasname = rawname.upper()
 
     return gasname
 
-def getColumns(inFile, headerrow=0, delim=' ', header=True):
+def getColumns(FileName, headerrow=0, delim=' ', header=True):
     """
     Get columns of data from inFile. The order of the rows is respected
     
@@ -976,6 +1215,11 @@ def getColumns(inFile, headerrow=0, delim=' ', header=True):
     header is False, then column indices (starting from 0) are used for the 
     heading names (i.e. the keys in the cols dict)
     """
+
+    f = open(FileName, 'r')
+    inFile = f.readlines()
+
+
     cols = {}
     indexToName = {}
     for lineNum, line in enumerate(inFile):
@@ -988,6 +1232,7 @@ def getColumns(inFile, headerrow=0, delim=' ', header=True):
             i = 0
             for heading in headings:
                 heading = heading.strip()
+         
                 if header:
                     cols[heading] = []
                     indexToName[i] = heading
@@ -1496,6 +1741,57 @@ def smooth(x,window_len=11,window='hanning'):
     #return y
     return y[(window_len/2-1):-(window_len/2)]
 
+def getseason(dates):
+    
+    #seas2get = {'Summer':(dt.date(2014,6,21), dt.date(2014,9,22)),
+    #           'Autumn':(dt.date(2014,9,23), dt.date(2014,12,20)),
+    #           'Spring':(dt.date(2014,3,21), dt.date(2014,6,20))}
+
+    seas2get = {'Summer':(dt.date(2014,5,1), dt.date(2014,11,1))}
+               #'Autumn':(dt.date(2014,9,23), dt.date(2014,12,20)),
+               #'Spring':(dt.date(2014,3,21), dt.date(2014,6,20))}
+    
+    dd = np.asarray([dt.date(2014,d.month,d.day) for d in dates])
+    
+    season = []
+
+    for indDay in dd: 
+
+        for seas,(season_start, season_end) in seas2get.items():
+            if indDay>=season_start and indDay<= season_end:
+                season.append(seas)
+            else:
+                season.append('Winter')
+
+    return season
+
+def setBoxColors(bp):
+    setp(bp['boxes'][0], color='blue')
+    setp(bp['caps'][0], color='blue')
+    setp(bp['caps'][1], color='blue')
+    setp(bp['whiskers'][0], color='blue')
+    setp(bp['whiskers'][1], color='blue')
+    #setp(bp['fliers'][0], color='blue')
+    #setp(bp['fliers'][1], color='blue')
+    setp(bp['medians'][0], color='blue')
+
+    setp(bp['boxes'][1], color='red')
+    setp(bp['caps'][2], color='red')
+    setp(bp['caps'][3], color='red')
+    setp(bp['whiskers'][2], color='red')
+    setp(bp['whiskers'][3], color='red')
+    #setp(bp['fliers'][2], color='red')
+    #setp(bp['fliers'][3], color='red')
+    setp(bp['medians'][1], color='red')
+
+
+# Total Column to mm
+def TC2mm(TC):
+
+    mm = TC*2.989e-22
+
+    return mm
+
 
 
                                                 #----------------#
@@ -1505,7 +1801,7 @@ def smooth(x,window_len=11,window='hanning'):
 
 
 #------------------------------------------------------------------------------------------------------------------------------    
-class _DateRange(object):
+class DateRange(object):
     '''
     This is an extension of the datetime module.
     Adds functionality to create a list of days.

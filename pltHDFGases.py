@@ -48,7 +48,7 @@ from numpy import *
 import myfunctions as mf
 from collections                     import OrderedDict
 import PltClass as mp
-import sondeclass as rs
+#import sondeclass as rs
 import HDFClassRead as dc
 import scipy.stats.mstats as stats
 from mpl_toolkits.basemap import Basemap
@@ -85,21 +85,21 @@ def main():
     #-------------------------------------
     #three letter ID
     #-------------------------------------
-    #locs         = ['eur']
+    #locs         = ['ldr', 'ldr', 'bld']#, 'kir', 'mai', 'std']
     #locs         = ['kir', 'iza', 'bld', 'stp', 'jfj', 'wlo']
     locs         = ['bld', 'wlo', 'jfj', 'mlo', 'tab', 'tor', 'eur', 'stp', 'ldr', 'rkb', 'tsk', 'ldr', 'mai', 'std', 'zgp', 'kir', 'iza', 'par', 'bre', 'nya', 'pmb', 'alt']
 
     #-------------------------------------
     #ID in the HDF Files
     #-------------------------------------
-    locID        = ['_eureka_']
+    #locID        = ['ahts', 'laud_120hr', 'boulder']#, 'kiruna', 'maido' , 'stdenis']
     #locID        = ['kiruna', 'izana', 'boulder', 'st.petersburg', 'jungfraujoch', 'wollongong']
     locID        = ['boulder', 'wollongong', 'jungfraujoch', 'mauna.loa.h', 'thule', '_toronto_', '_eureka_', 'st.petersburg', 'laud_120hr', 'rikubetsu', 
                    'tsukuba', 'ahts',  'maido' , 'stdenis', 'zugspitze', 'kiruna', 'izana', 'paris', 'bremen', 'ny.alesund', 'paramaribo', 'altzomoni']                       
     #-------------------------------------
     #Names in Plots
     #-------------------------------------   
-    #pltID        = [ 'Eureka']
+    #pltID        = [ 'AHTS', 'Lauder', 'Boulder']#, 'Kiruna', 'Maido', 'StD-Maido']
     #pltID        = ['Kiruna', 'Izana', 'Boulder', 'St Petersburg', 'Jungfraujoch', 'Wollongong']
     pltID        = ['Boulder', 'Wollongong', 'Jungfraujoch', 'Mauna Loa', 'Thule', 'Toronto', 'Eureka', 'St Petersburg', 'Lauder', 'Rikubetsu', 
                    'Tsukuba', 'AHTS', 'Maido', 'StD-Maido', 'Zugspitze', 'Kiruna', 'Izana', 'Paris', 'Bremen', 'Ny Alesund', 'Paramaribo', 'Altzomoni'] 
@@ -109,11 +109,17 @@ def main():
     #-------------------------------------
     gasName        = 'ocs'
 
+    AvgType        = 'Monthly'   #'Monthly'  'Daily'
+    smthFlg        = True
+    period         = 1.0
+
+
+
     #------
     # Flags
     #------
     saveFlg       = False                  # Flag to either save data to pdf file (saveFlg=True) or plot to screen (saveFlg=False)
-    errorFlg      = False                  # Flag to process error data
+    errorFlg      = True                  # Flag to process error data
     fltrFlg       = True                   # Flag to filter the data
 
     dateFlg       = True                  # Flag to filter based on min and max dates
@@ -165,9 +171,9 @@ def main():
     #-------------------------------------
     #Name of PDF with Figures
     #-------------------------------------
-    if (pltPcol) and not (pltWvmr):      pltFile =  '/data1/projects/ocs/figures/HDF_'+gasName.upper()+'_tpp_'+str('2std')+'_pCol.pdf'
-    elif (pltWvmr) and not (pltPcol):    pltFile  =  '/data1/projects/ocs/figures/HDF_'+gasName.upper()+'_tpp_'+str('std')+'_wVMR.pdf'
-    elif (pltPcol) & (pltWvmr):          pltFile  =  '/data1/projects/ocs/figures/HDF_'+gasName.upper()+'_tpp_'+str('std')+'_pCol_wVMR.pdf'
+    if (pltPcol) and not (pltWvmr):      pltFile =  '/data1/projects/ocs/figures/HDF_'+gasName.upper()+'_tpp_'+str('2std')+'_pCol'+'_'+AvgType+'.pdf'
+    elif (pltWvmr) and not (pltPcol):    pltFile  =  '/data1/projects/ocs/figures/HDF_'+gasName.upper()+'_tpp_'+str('std')+'_wVMR'+'_'+AvgType+'.pdf'
+    elif (pltPcol) & (pltWvmr):          pltFile  =  '/data1/projects/ocs/figures/HDF_'+gasName.upper()+'_tpp_'+str('std')+'_pCol_wVMR'+'_'+AvgType+'.pdf'
     else: pltFile = 'test.pdf'
 
     #-------------------------------------
@@ -482,16 +488,19 @@ def main():
             vmr_sys_err[idhdf]  = np.zeros((npnts,nlvls))
 
             for i in range(npnts):
-                conv    = sstatDataCl[idhdf].HDF[statDataCl[idhdf].PrimaryGas.upper()+'.'+statDataCl[idhdf].getMixingRatioAbsorptionSolarUncertaintyRandomName()+'VAR_SI_CONVERSION']  
+                conv    = statDataCl[idhdf].HDF[statDataCl[idhdf].PrimaryGas.upper()+'.'+statDataCl[idhdf].getMixingRatioAbsorptionSolarUncertaintyRandomName()+'VAR_SI_CONVERSION']  
                 cov_rnd = statDataCl[idhdf].HDF[statDataCl[idhdf].PrimaryGas.upper()+'.'+statDataCl[idhdf].getMixingRatioAbsorptionSolarUncertaintyRandomName()]
-                cov_sys = statDataCl[idhdf].HDF[statDataCl[idhdf].PrimaryGas.upper()+'.'+statDataCl[idhdf].getMixingRatioAbsorptionSolarUncertaintyRandomName()]
+                cov_sys = statDataCl[idhdf].HDF[statDataCl[idhdf].PrimaryGas.upper()+'.'+statDataCl[idhdf].getMixingRatioAbsorptionSolarUncertaintySystematicName()]
 
-                vmr_rnd_err[idhdf][i,:] = np.diag(cov_rnd[i][:,:])*float(conv[0][1])*sclfct**2
-                vmr_sys_err[idhdf][i,:] = np.diag(cov_sys[i][:,:])*float(conv[0][1])*sclfct**2
+                #vmr_rnd_err[idhdf][i,:] = np.diag(cov_rnd[i][:,:])*float(conv[0][1])*sclfct**2
+                #vmr_sys_err[idhdf][i,:] = np.diag(cov_sys[i][:,:])*float(conv[0][1])*sclfct**2
 
-            vmr_tot_err[idhdf]  = np.sqrt(vmr_rnd_err[idhdf]**2 + vmr_sys_err[idhdf]**2) 
-            vmr_rnd_err[idhdf]  = np.sqrt(vmr_rnd_err[idhdf]**2)
-            vmr_sys_err[idhdf]  = np.sqrt(vmr_sys_err[idhdf]**2)
+                vmr_rnd_err[idhdf][i,:] = np.diag(cov_rnd[i][:,:])*float(conv[0][1])
+                vmr_sys_err[idhdf][i,:] = np.diag(cov_sys[i][:,:])*float(conv[0][1])
+
+            vmr_tot_err[idhdf]  = np.sqrt(vmr_rnd_err[idhdf]+ vmr_sys_err[idhdf]) *sclfct
+            vmr_rnd_err[idhdf]  = np.sqrt(vmr_rnd_err[idhdf])*sclfct
+            vmr_sys_err[idhdf]  = np.sqrt(vmr_sys_err[idhdf])*sclfct
 
         #----------------------------------------
         # FILTER DATA
@@ -554,44 +563,44 @@ def main():
             #
             #----------------------------------------------------
             if float(Lat_i[0]) >=70.: 
-                meanTpp = 8.78
-                stdTpp  = 1.14
+                meanTpp = 8.8
+                stdTpp  = 1.2
             
             elif (float(Lat_i[0]) >= 60.0) & (float(Lat_i[0]) < 70.0):
-                meanTpp = 9.75
+                meanTpp = 9.8
                 stdTpp  = 1.3
             
             elif (float(Lat_i[0]) >= 50.0) & (float(Lat_i[0]) < 60.0):
-                meanTpp = 10.84
-                stdTpp  = 1.18
+                meanTpp = 10.9
+                stdTpp  = 1.2
 
             elif (float(Lat_i[0]) >= 40.0) & (float(Lat_i[0]) < 50.0):
-                meanTpp = 11.86
-                stdTpp  = 1.64
+                meanTpp = 11.6
+                stdTpp  = 1.6
 
             elif (float(Lat_i[0]) >= 30.0) & (float(Lat_i[0]) < 40.0):
-                meanTpp = 11.86 #12.58
-                stdTpp  = 1.64  #2.72
+                meanTpp = 12.9 #12.58
+                stdTpp  = 2.4  #2.72
 
             elif (float(Lat_i[0]) >= 20.0) & (float(Lat_i[0]) < 30.0):
-                meanTpp = 15.07
-                stdTpp  = 1.32
+                meanTpp = 15.0
+                stdTpp  = 1.3
 
-            elif (float(Lat_i[0]) >= -25.0) & (float(Lat_i[0]) < 25.0):
-                meanTpp = 16.46
-                stdTpp  = 0.42
+            elif (float(Lat_i[0]) >= -25.0) & (float(Lat_i[0]) < 20.0):
+                meanTpp = 16.5
+                stdTpp  = 0.4
 
             elif (float(Lat_i[0]) >= -40.0) & (float(Lat_i[0]) < -25.0):
-                meanTpp = 12.31
-                stdTpp  = 2.25
+                meanTpp = 12.3
+                stdTpp  = 2.2
 
             elif (float(Lat_i[0]) >= -50.0) & (float(Lat_i[0]) < -40.0):
                 meanTpp = 11.1
-                stdTpp  = 1.34
+                stdTpp  = 1.3
 
             elif float(Lat_i[0]) < -50:
-                meanTpp = 8.81
-                stdTpp  = 1.66
+                meanTpp = 8.8
+                stdTpp  = 1.7
 
 
             partialCols  = [ [0.0, 4.0], [4.0, (meanTpp - stdTpp*2.)], [(meanTpp+stdTpp*2.), 40.] ]
@@ -968,6 +977,103 @@ def main():
         #user_input = raw_input('Press any key to exit >>> ')
         #sys.exit()
 
+    #---------------------------------------------------
+    # Mean Error vertical profiles
+    #---------------------------------------------------
+    fig = plt.figure(figsize=(12,12))
+
+    outer_grid = gridspec.GridSpec(npanels2, 4, wspace=0.11, hspace=0.085)
+
+    for i, idhdf in enumerate(pltID):
+
+        ax = plt.Subplot(fig, outer_grid[i])
+
+        Lat[i] = float(Lat[i])
+
+        if Lat[i] >= 50.:     
+            ax.set_axis_bgcolor('lightcyan')
+            
+        elif (Lat[i] >= 20.) & (Lat[i] < 50.):
+            ax.set_axis_bgcolor('lightgreen')
+           
+        elif (Lat[i] >= -20.)  & (Lat[i] < 20.):
+            ax.set_axis_bgcolor('mistyrose')
+            
+        elif (Lat[i] >= -50.)  & (Lat[i] < -20.):
+            ax.set_axis_bgcolor('cornsilk')
+            
+        elif (Lat[i] < -50.):
+            ax.set_axis_bgcolor('lightgrey')
+        
+        else:
+            ax.set_axis_bgcolor('lightgrey')
+
+        if int(nobs) > 1:
+
+            vmr_rnd_err_Mean  = np.nanmean(vmr_rnd_err[idhdf],axis=0)   
+            vmr_sys_err_Mean  = np.nanmean(vmr_sys_err[idhdf],axis=0)
+            vmr_tot_err_Mean  = np.nanmean(vmr_tot_err[idhdf],axis=0)
+
+            vmr_tot_err_std   = np.nanstd(vmr_tot_err[idhdf],axis=0)
+
+           
+            ax.plot(vmr_rnd_err_Mean,alt[idhdf],label='Random Error', color='r')
+            ax.plot(vmr_sys_err_Mean,alt[idhdf],label='Systematic Error', color='b')
+            ax.plot(vmr_tot_err_Mean,alt[idhdf],label='Total Error', color='k')
+            #ax.fill_betweenx(alt[idhdf],vmr_tot_err_Mean-vmr_tot_err_std,vmr_tot_err_Mean+vmr_tot_err_std,alpha=0.25, color='k')
+          
+        else:
+            ax.plot(rPrf[0],alt,label='Retrieved')
+
+        ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
+
+        ax.grid(True,which='both')    
+        #ax.legend(prop={'size':10})    
+        #ax.set_ylabel('Altitude [km]')
+        ax.tick_params(which='both',labelsize=10)
+        ax.set_ylim(0,50)
+        ax.set_xlim(0,60) 
+        #ax.set_title('Mean profile of'+ gasName.upper())
+      
+        fig.add_subplot(ax)
+
+    all_axes = fig.get_axes()
+    #show only the outside spines
+    for ax in all_axes:
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+            plt.setp(ax.get_xticklabels(), visible=False)
+        if ax.is_first_row():
+            ax.spines['top'].set_visible(True)
+        if ax.is_last_row():
+            ax.spines['bottom'].set_visible(True)
+            plt.setp(ax.get_xticklabels(), visible=True)
+        if ax.is_first_col():
+            ax.spines['left'].set_visible(True)
+        if ax.is_last_col():
+            ax.spines['right'].set_visible(True)
+
+    if (npanels % 2 == 1): #even
+
+        all_axes[-2].spines['bottom'].set_visible(True)
+        plt.setp(all_axes[-2].get_xticklabels(), visible=True)
+        all_axes[-2].set_zorder(1)
+
+    all_axes[-1].set_xlabel('VMR ['+sclfctName+']')
+    all_axes[-2].set_xlabel('VMR ['+sclfctName+']')
+
+    fig.text(0.03, 0.5, 'Altitude [km]', fontsize=16, va='center', rotation='vertical')
+    plt.suptitle('{} Uncertainty Vertical Profiles'.format(gasName.upper()), fontsize=16  )
+    #plt.tight_layout(h_pad=0.25) #w_pad=1.75 pad=1.75,
+    fig.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
+
+    
+    if saveFlg: pdfsav.savefig(fig,dpi=200)
+    else: 
+        plt.show(block=False)
+        #user_input = raw_input('Press any key to exit >>> ')
+        #sys.exit()
+
     #----------------------------
     #CONCATENATE st denis and maido
     #---------------------------- 
@@ -1004,12 +1110,14 @@ def main():
     # alttpp2['MaSDenis']  = np.concatenate( (alttpp2['St Denis'], alttpp2['Maido']))
 
     npanels2  = int(math.ceil(npanels/3.0))
+    print npanels2
 
     #---------------------------------------------------
     # Tropopause Height
     #---------------------------------------------------
     print '\nPlot: Tropopause height:\n' 
-    resTH = AnalTS(npanels2-1, dates2, dtp2, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Tropopause height', unitsStr=' km', yData2=alttpp12, yData3=alttpp22, yData4=dtp2, ymin=4 ,ymax=19)
+    ##resTH = AnalTS(npanels2-1, dates2, dtp2, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Tropopause height', unitsStr=' km', yData2=alttpp12, yData3=alttpp22, yData4=dtp2, ymin=4 ,ymax=19)
+    resTH = AnalTS(npanels2-1, dates2, dtp2, pltID2, Lat2, fits = True, AvgType=AvgType, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Tropopause height', unitsStr=' km', ymin=4 ,ymax=19)
     resTH = np.asarray(resTH)
     
     if pltPcol:
@@ -1025,7 +1133,7 @@ def main():
         # Time Series of Total Columns (multiple panels) -- Averaged values
         #---------------------------------------------------
         print '\nPlot: Averaged Total Columns:\n' 
-        resTC = AnalTS(npanels2-1, dates2, totClmn2, pltID2, Lat2, fits=True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Total Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', ymin=5.0 ,ymax=11)
+        resTC = AnalTS(npanels2-1, dates2, totClmn2, pltID2, Lat2, fits=True, AvgType=AvgType, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Total Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', ymin=5.0 ,ymax=11)
         resTC = np.asarray(resTC)
 
         #---------------------------------------------------
@@ -1042,34 +1150,33 @@ def main():
             # Boundary Layer Columns ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Boundary Layer Column:\n' 
-            resLC = AnalTS(npanels2-1, dates2, PcolTrop12, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$')#, ymin=0.9 ,ymax=6.0)
+            resLC = AnalTS(npanels2-1, dates2, PcolTrop12, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)#, ymin=0.9 ,ymax=6.0)
             resLC = np.asarray(resLC)
 
             print '\nPlot: Boundary Layer Column Anomalies:\n' 
-            resLCAnom = AnalTSAnom(npanels2-1, dates2, PcolTrop12, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$')
+            resLCAnom = AnalTSAnom(npanels2-1, dates2, PcolTrop12, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$',period=period)
             resLCAnom = np.asarray(resLCAnom)
-
 
             #---------------------------------------------------
             # Free Tropospheric Columns ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Free Tropospheric Column:\n' 
-            resLC2 = AnalTS(npanels2-1, dates2, PcolTrop22, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$')#, ymin=0.9, ymax=6.0)
+            resLC2 = AnalTS(npanels2-1, dates2, PcolTrop22, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)#, ymin=0.9, ymax=6.0)
             resLC2 = np.asarray(resLC2)
 
             print '\nPlot: Boundary Layer Column Anomalies:\n' 
-            resLC2Anom = AnalTSAnom(npanels2-1, dates2, PcolTrop22, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$')
+            resLC2Anom = AnalTSAnom(npanels2-1, dates2, PcolTrop22, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)
             resLC2Anom = np.asarray(resLC2Anom)
 
             #---------------------------------------------------
             # Stratospheric Columns ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Stratospheric Column:\n' 
-            resSC = AnalTS(npanels2-1, dates2, PcolStrat2, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$')#, ymin=0.001 ,ymax=2.5)
+            resSC = AnalTS(npanels2-1, dates2, PcolStrat2, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)#, ymin=0.001 ,ymax=2.5)
             resSC = np.asarray(resSC)
 
             print '\nPlot: Stratospheric Column Anomalies:\n' 
-            resSCAnom = AnalTSAnom(npanels2-1, dates2, PcolStrat2, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$')
+            resSCAnom = AnalTSAnom(npanels2-1, dates2, PcolStrat2, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)
             resSCAnom = np.asarray(resSCAnom)
 
             #---------------------------------------------------
@@ -1530,37 +1637,39 @@ def main():
             # Tropospheric Weighted VMR ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Tropospheric Weighted VMR:\n' 
-            resvmrLC = AnalTS(npanels2-1, dates2, WvmrTrop12, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Weighted VMR', unitsStr=sclfctName)#, ymin=340 ,ymax=600)
+            resvmrLC = AnalTS(npanels2-1, dates2, WvmrTrop12, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Weighted VMR', unitsStr=sclfctName, period=period)#, ymin=340 ,ymax=600)
             resvmrLC = np.asarray(resvmrLC)
 
             print '\nPlot: Tropospheric Weighted VMR Anomalies:\n' 
-            resvmrLCAnom = AnalTSAnom(npanels2-1, dates2, WvmrTrop12, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Weighted VMR Anomalies', unitsStr=sclfctName)
+            resvmrLCAnom = AnalTSAnom(npanels2-1, dates2, WvmrTrop12, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Weighted VMR Anomalies', unitsStr=sclfctName, period=period, qboFlg=False)
             resvmrLCAnom = np.asarray(resvmrLCAnom)
+
+            #user_input = raw_input('Press any key to exit >>> ')
+            #sys.exit()
 
             
             #---------------------------------------------------
             # Free Tropospheric Weighted VMR ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Free Tropospheric Weighted VMR:\n' 
-            resvmrLC2 = AnalTS(npanels2-1, dates2, WvmrTrop22, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column', unitsStr=sclfctName)#, ymin=0.9, ymax=6.0)
+            resvmrLC2 = AnalTS(npanels2-1, dates2, WvmrTrop22, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column', unitsStr=sclfctName, period=period)#, ymin=0.9, ymax=6.0)
             resvmrLC2 = np.asarray(resvmrLC2)
 
             print '\nPlot: Free Tropospheric Weighted VMR Anomalies:\n' 
-            resvmrLCAnom2 = AnalTSAnom(npanels2-1, dates2, WvmrTrop22, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column Anomalies', unitsStr=sclfctName)
+            resvmrLCAnom2 = AnalTSAnom(npanels2-1, dates2, WvmrTrop22, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column Anomalies', unitsStr=sclfctName, period=period, qboFlg=False)
             resvmrLCAnom2 = np.asarray(resvmrLCAnom2)
 
-            user_input = raw_input('Press any key to exit >>> ')
-            sys.exit()
-
+            #user_input = raw_input('Press any key to exit >>> ')
+            #sys.exit()
             #---------------------------------------------------
             # Stratospheric Weighted VMR ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Stratospheric Weighted VMR:\n' 
-            resvmrSC = AnalTS(npanels2-1, dates2, WvmrStrat2, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Weighted VMR', unitsStr=sclfctName)#, ymin=50 ,ymax=450)
+            resvmrSC = AnalTS(npanels2-1, dates2, WvmrStrat2, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Weighted VMR', unitsStr=sclfctName, period=period)#, ymin=50 ,ymax=450)
             resvmrSC = np.asarray(resvmrSC)
 
             print '\nPlot: Stratospheric Weighted VMR Anomalies:\n' 
-            resvmrSCAnom = AnalTSAnom(npanels2-1, dates2, WvmrStrat2, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Weighted VMR Anomalies', unitsStr=sclfctName)
+            resvmrSCAnom = AnalTSAnom(npanels2-1, dates2, WvmrStrat2, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Weighted VMR Anomalies', unitsStr=sclfctName, period=period, qboFlg=False)
             resvmrSCAnom = np.asarray(resvmrSCAnom)
 
             #user_input = raw_input('Press any key to exit >>> ')
@@ -1777,7 +1886,7 @@ def main():
             #---------------------------------------------------
             # Bar plot: Three different periods ==> Retrieval
             #---------------------------------------------------
-            hbarplt3(resvmrLC, resvmrLC2, resvmrSC, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval', saveFlg=saveFlg, pdfsav=pdfsav)
+            #hbarplt3(resvmrLC, resvmrLC2, resvmrSC, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval', saveFlg=saveFlg, pdfsav=pdfsav)
             hbarplt3(resvmrLCAnom, resvmrLCAnom2, resvmrSCAnom, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval - Anomalies', saveFlg=saveFlg, pdfsav=pdfsav)
 
 
@@ -2317,7 +2426,7 @@ def ckFile(fName,logFlg=False,exit=False):
 def squiggle_xy(a, b, c, d, i=np.arange(0.0, 2*np.pi, 0.05)):
     return np.sin(i*a)*np.cos(i*b), np.sin(i*c)*np.cos(i*d)
 
-def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFig=False, saveFlg=False, pdfsav=' ', ytypeStr=' ', unitsStr=' ', ymin=False, ymax=False, yData2=False, yData3=False, yData4=False):
+def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthFlg=True, pltFig=False, saveFlg=False, pdfsav=' ', ytypeStr=' ', unitsStr=' ', ymin=False, ymax=False, yData2=False, yData3=False, yData4=False, period=1, qboFlg=False):
     
     #--------------------
     #Slope and Amplitude of time series
@@ -2351,14 +2460,17 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
     xmin      = dt.date(1993, 1, 1)
     xmax      = dt.date(2016, 12, 31)
 
+
     if pltFig:    
         
         fig  = plt.figure(figsize=(18,13))
         fig2 = plt.figure(figsize=(18,13))  
         
-        outer_grid = gridspec.GridSpec(npanels, 3, wspace=0.1, hspace=0.075)
+        outer_grid = gridspec.GridSpec(npanels, 3, wspace=0.2, hspace=0.075)
 
     for i, idhdf in enumerate(pltID):
+
+        print idhdf
 
         #----------------------------
         if AvgType == 'Daily':
@@ -2383,74 +2495,180 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
             print 'Error: Define average type: Daily, Monthly, or none'
             exit()
 
-        #--------------------
-        #Apply savitzky golay filter (Comment out if not wated)
-        #--------------------
-        AvgData = mf.savitzky_golay(AvgData, 7, 3)
+        #---------------------------------------------------
+        #To make a continuous fit
+        #---------------------------------------------------
+        numdays = (Dates.max() + dt.timedelta(days=1) - Dates.min()).days
+        dates2  = [Dates.min() + dt.timedelta(days=x) for x in range(0, numdays)]
+        dates2  = np.asarray(dates2)
+        dateYearFrac2 = mf.toYearFraction(dates2)
+        #---------------------------------------------------
+
+        yyyy = [sngdate.year for sngdate in Dates]
+        yyyy = np.asarray(yyyy)
+
 
         #--------------------
-        #Anomalies based on annual cycle of Fourier Series
+        # Apply savitzky golay filter (Comment out if not wanted)
         #--------------------
+        if smthFlg: AvgData = mf.savitzky_golay(AvgData, 7, 3)
 
-        weights      = np.ones_like(dateYearFrac)
+        #--------------------
+        # Anomalies
+        #--------------------
+        if AvgType == 'Monthly':
 
-        res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
-        f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
+            weights      = np.ones_like(dateYearFrac)
 
-        AnnualCy        = f_fourier(dateYearFrac)
-        Anomaly         = AvgData - AnnualCy
+            res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=period)
+            f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
 
-        ax = plt.Subplot(fig, outer_grid[i])
-        ax.plot(Dates, Anomaly,'k.',markersize=0)
-        ax.scatter(Dates, Anomaly, s=10, facecolor='lightgray', edgecolor='k',alpha=0.85)
+            AnnualCy        = f_fourier(dateYearFrac)
+            Anomaly         = AvgData - AnnualCy
 
-        ax2 = plt.Subplot(fig2, outer_grid[i])
 
-        #print idhdf
+            # Anomaly  = np.zeros(len(Dates))
+
+            # month    = np.array([d.month for d in Dates])
+            # mnthSort = list(set(month))
+            
+            # mnthMean = np.zeros(len(mnthSort))
+            # mnthSTD  = np.zeros(len(mnthSort))
+            
+            # for j,m in enumerate(mnthSort):
+            #     inds        = np.where(month == m)[0]
+            #     mnthMean[j] = np.mean(AvgData[inds])
+            #     mnthSTD[j]  = np.std(AvgData[inds])
+
+            #     Anomaly[inds]   = AvgData[inds]  - mnthMean[j]
+
+        if AvgType == 'Daily':
+            weights      = np.ones_like(dateYearFrac)
+
+            res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=period)
+            f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
+
+            AnnualCy        = f_fourier(dateYearFrac)
+            Anomaly         = AvgData - AnnualCy
+
+        #--------------------
+        # Removing Additional Modulation (QBO, solar cycle, etc) --> TO BE IMPROVED
+        #--------------------
+        if qboFlg:
+            weights      = np.ones_like(dateYearFrac)
+
+            #res          = mf.fit_driftfourier_qbo(dateYearFrac, Anomaly, weights, 2, half_period=2.3)
+            res          = mf.fit_qbo(dateYearFrac, Anomaly+300., weights, 2, half_period=2.33)
+            f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
+
+            Mdl         = f_fourier(dateYearFrac)
+            Anomaly2    = Anomaly - Mdl + 300.
+
+        else:
+
+            Anomaly2    = Anomaly
+
+        #--------------------
+        # Plot Initial Anomalies (removing seasonal cycle)
+        #--------------------
+        if pltFig:
+            ax  = plt.Subplot(fig, outer_grid[i])
+            fig.add_subplot(ax)
+            ax.plot(Dates, Anomaly,'k.',markersize=0)
+            ax.scatter(Dates, Anomaly, s=20, facecolor='lightgray', edgecolor='k',alpha=0.85)
+            #print len(Dates)
+            #print len(f_fourier(dateYeardateYearFracFrac))
+            if qboFlg: ax.plot(dates2,f_fourier(dateYearFrac2)-300.,label='Fitted Anual Trend',linewidth=2.0)
+
+
+            ax2 = plt.Subplot(fig2, outer_grid[i])
+            ax2.plot(Dates, Anomaly2,'k.',markersize=0)
+            ax2.scatter(Dates, Anomaly2, s=20, facecolor='lightgray', edgecolor='k',alpha=0.85)
+
+            #--------------------
+            #
+            #--------------------
+
+            if qboFlg:
+                qboDir        = '/data1/projects/ocs/'                 # Name of station location
+                qbofile       = 'QBO.dat' 
+
+                cols, indexToName = mf.getColumns(qboDir + qbofile, headerrow=8, delim=' ', header=True)
+
+                YYMM  = cols[indexToName[1]]
+                qbo50 = cols[indexToName[3]]
+                qbo30 = cols[indexToName[5]]
+
+                qboDate = []
+
+                for q in YYMM:
+                    YY = q[0:2]
+                    MM = q[2:4]
+
+                    if int(YY) <= 20 :
+                        YYYY = '20'+YY
+                    else:
+                        YYYY = '19'+YY
+
+                    qboDate.append(dt.date(int(YYYY), int(MM), 15))
+
+                qboDate    = np.asarray(qboDate)
+                qbo50   = np.asarray(qbo50, dtype=float)
+                qbo30   = np.asarray(qbo30, dtype=float)
+
+                axx = ax.twinx()
+                axx.plot(qboDate, qbo30, color= 'gray')
+            #fig.add_subplot(axx)
 
         #--------------------
 
         if fits:
-
-            weights      = np.ones_like(dateYearFrac)
-
-            #---------------------------------------------------
-            #To make a continuous fit
-            #---------------------------------------------------
-            numdays = (Dates.max() + dt.timedelta(days=1) - Dates.min()).days
-            dates2  = [Dates.min() + dt.timedelta(days=x) for x in range(0, numdays)]
-            dates2  = np.asarray(dates2)
-            dateYearFrac2 = mf.toYearFraction(dates2)
-            #---------------------------------------------------
-
-            yyyy = [sngdate.year for sngdate in Dates]
-            yyyy = np.asarray(yyyy)
             
             #---------------------------------------------------
             #LINEAR FIT AND DRIFT FOR ALL YEARS
             #---------------------------------------------------
             #if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'St Denis') or (idhdf == 'Paris'):
+            yoi    = [1996, 2016]
+            indx1  = np.where( (yyyy >= yoi[0]) &  (yyyy <= yoi[1]))[0]
 
-            res          = mf.fit_driftfourier(dateYearFrac, Anomaly, weights, 2, half_period=1.0)
-            f_drift, f_fourier, f_driftfourier,  res_std, A, df_drift= res[3:9]
+            weights      = np.ones_like(dateYearFrac)
 
-            res_b        = mf.cf_driftfourier(dateYearFrac, Anomaly, weights, 2, half_period=1.0)
+            res    = mf.fit_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
+            f_drift, f_fourier, f_driftfourier,  res_std, A, df_drift = res[3:9]
+
+            res_b        = mf.cf_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
             perc, intercept_b, slope_b, pfourier_b = res_b
 
-            #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
-            #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData)*100.0, np.std(slope_b)/np.mean(AvgData)*100.0, yyyy[0], yyyy[-1])
+            print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yoi[0], yoi[-1])
 
-            slope.append(res[1]/np.mean(AvgData)*100.0)
-            slope_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+            if (idhdf == 'Zugspitze') or (idhdf == 'Jungfraujoch') or (idhdf == 'Mauna Loa') or (idhdf == 'Wollongong') or (idhdf == 'AHTS'):
 
-            #print res[1]/np.mean(AvgData)*100.0
+                #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
+                
 
-            Amp   = np.sum(res[2]**2)
-            Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
-            amp.append(Amp)
+                slope.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                slope_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
 
-            avgD.append(np.mean(AvgData))
-            stdD.append(np.std(AvgData))
+                #print res[1]/np.mean(AvgData)*100.0
+
+                Amp   = np.sum(res[2]**2)
+                Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
+                amp.append(Amp)
+
+                avgD.append(np.mean(AvgData[indx1]))
+                stdD.append(np.std(AvgData[indx1]))
+
+                ax2.plot(Dates,f_drift(dateYearFrac),label='Fitted Anual Trend',linewidth=2.0, color='k')
+
+            else:
+
+                slope.append(float('nan'))
+                slope_e.append(float('nan'))
+
+                avgD.append(float('nan'))
+                stdD.append(float('nan'))
+
+            
 
             # else:
 
@@ -2474,11 +2692,11 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
             #     stdD.append(np.std(AvgData))
 
             #---------------------------------------------------
-            #POLY FIT FOR STATIONS WITH LONG TIME SERIES
+            # POLY FIT FOR STATIONS WITH LONG TIME SERIES (TO KNOW INFLECTION POINTS)
             #---------------------------------------------------
             if (idhdf != 'Eureka') & (idhdf != 'St Petersburg') & (idhdf != 'Boulder') & (idhdf != 'Maido') &  (idhdf != 'StD-Maido') & (idhdf != 'Bremen') & (idhdf != 'Paris') & (idhdf != 'Altzomoni'):
 
-                res          = mf.fit_driftfourier_poly(dateYearFrac, Anomaly, weights, 2, half_period=1.0)
+                res          = mf.fit_driftfourier_poly(dateYearFrac, Anomaly2, weights, 2, half_period=period)
                 f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
 
         #---------------------------------------------------
@@ -2486,10 +2704,8 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
         roc  = df_drift(dateYearFrac2)/np.mean(AvgData)*100.0
         roc  = np.asarray(roc)
 
-
         zero_crossings = np.where(np.diff(np.sign(roc)))[0]
     
-
         print idhdf
         print 'Number of crossings = {}'.format(len(dates2[zero_crossings]))
         print 'Dates of crossings  = {}'.format(dates2[zero_crossings])
@@ -2550,19 +2766,21 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
  
         if fits:
 
-            if pltFig:
+            #if pltFig:
                 #ax.plot(dates2,f_fourier(dateYearFrac2),label='Fitted Anual Trend', linewidth=2.0)
                 #ax.plot(dates2,f_driftfourier(dateYearFrac2),label='Fitted Anual Trend + intra-annual variability',linewidth=2.0)
-                ax.plot(dates2,f_drift(dateYearFrac2),label='Fitted Anual Trend + intra-annual variability',linewidth=2.0)
+                #ax2.plot(dates2,f_drift(dateYearFrac2),label='Fitted Anual Trend',linewidth=2.0)
 
-                ax2.plot(dates2, roc, linewidth=2.0)
+                #ax2.plot(dates2, roc, linewidth=2.0)
 
             indsmin = np.where(f_drift(dateYearFrac2) == np.min(f_drift(dateYearFrac2)))[0]
             indsmax = np.where(f_drift(dateYearFrac2) == np.max(f_drift(dateYearFrac2)))[0]
 
             #---------------------------------------------------
 
-            if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Bremen') or  (idhdf == 'Paris') or (idhdf == 'Altzomoni'):
+
+            if (idhdf == 'Paris') or (idhdf == 'Altzomoni'):
+
 
                 slope_p1.append(float('nan'))
                 slope_p1_e.append(float('nan'))
@@ -2570,8 +2788,8 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
                 slope_p2.append(float('nan'))
                 slope_p2_e.append(float('nan'))
 
-                slope_p3.append(res[1]/np.mean(AvgData)*100.0)
-                slope_p3_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+                slope_p3.append(float('nan'))
+                slope_p3_e.append(float('nan'))
 
                 avgD_p1.append(float('nan'))
                 stdD_p1.append(float('nan'))
@@ -2579,26 +2797,27 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
                 avgD_p2.append(float('nan'))
                 stdD_p2.append(float('nan'))
 
-                avgD_p3.append(np.mean(AvgData))
-                stdD_p3.append(np.std(AvgData))
+                avgD_p3.append(float('nan'))
+                stdD_p3.append(float('nan'))
 
 
-            elif (idhdf == 'Tsukuba'):
 
-                yoi  = [[2008, 2016]]
+            elif (idhdf == 'Eureka') or (idhdf == 'Kiruna') or (idhdf == 'St Petersburg') or (idhdf == 'Bremen') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Tsukuba')  or (idhdf == 'Izana') or (idhdf == 'Paramaribo'):
+
+                yoi  = [[2009, 2016]]
 
                 for y in yoi:
                     
                     indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
 
-                    res    = mf.fit_driftfourier(dateYearFrac[indx1], Anomaly[indx1], weights[indx1], 2, half_period=1.0)
+                    res    = mf.fit_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
                     f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
 
-                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], Anomaly[indx1], weights[indx1], 2, half_period=1.0)
+                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
                     perc, intercept_b, slope_b, pfourier_b = res_b
 
                     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
-                    #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+                    print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
 
                     slope_p1.append(float('nan'))
                     slope_p1_e.append(float('nan'))
@@ -2607,7 +2826,7 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
                     slope_p2_e.append(float('nan'))
 
                     slope_p3.append(res[1]/np.mean(AvgData[indx1])*100.0)
-                    slope_p3_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+                    slope_p3_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
 
 
                     avgD_p1.append(float('nan'))
@@ -2619,9 +2838,12 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
                     avgD_p3.append(np.mean(AvgData[indx1]))
                     stdD_p3.append(np.std(AvgData[indx1]))
 
-            elif (idhdf == 'Thule') or (idhdf == 'Lauder') or (idhdf == 'Toronto') or (idhdf == 'Kiruna') or (idhdf == 'Izana')  or (idhdf == 'Paramaribo') or (idhdf == 'Ny Alesund'):
+                    ax2.plot(Dates[indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend',linewidth=2.0, color='red')
 
-                yoi  = [[2001, 2008], [2008, 2016]]
+
+            elif (idhdf == 'Thule') or (idhdf == 'Lauder') or (idhdf == 'Toronto')  or (idhdf == 'Ny Alesund'):
+
+                yoi  = [[2002, 2008], [2009, 2016]]
 
                 slope_p1.append(float('nan'))
                 slope_p1_e.append(float('nan'))
@@ -2629,24 +2851,26 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
                 avgD_p1.append(float('nan'))
                 stdD_p1.append(float('nan'))
 
+                clr_yoi = ['green', 'red']
+
                 for ii, y in enumerate(yoi):
                     
                     indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
 
-                    res          = mf.fit_driftfourier_poly(dateYearFrac, Anomaly, weights, 2, half_period=1.0)
-                    f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
+                    #res          = mf.fit_driftfourier_poly(dateYearFrac, Anomaly, weights, 2, half_period=period)
+                    #f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
     
                     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Poly)".format(pltID[i], np.mean(roc), np.std(roc), yyyy[indx1[0]], yyyy[indx1[-1]])
                     #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Poly)".format(pltID[i], np.mean(roc)/np.mean(AvgData[indx1])*100.0, np.std(roc)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
 
-                    res    = mf.fit_driftfourier(dateYearFrac[indx1], Anomaly[indx1], weights[indx1], 2, half_period=1.0)
+                    res    = mf.fit_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
                     f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
                   
-                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], Anomaly[indx1], weights[indx1], 2, half_period=1.0)
+                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
                     perc, intercept_b, slope_b, pfourier_b = res_b
 
                     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
-                    #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+                    print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
 
                     if ii == 0:
                         slope_p2.append(res[1]/np.mean(AvgData[indx1])*100.0)
@@ -2661,31 +2885,84 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
 
                         avgD_p3.append(np.mean(AvgData[indx1]))
                         stdD_p3.append(np.std(AvgData[indx1]))
+
+                    ax2.plot(Dates[indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend',linewidth=2.0, color=clr_yoi[ii])
               
                     #ax.plot(dailyVals['dates'][indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend', linewidth=2.0)
 
-            elif (idhdf == 'Jungfraujoch') or (idhdf == 'Rikubetsu') or (idhdf == 'Mauna Loa') or (idhdf == 'Wollongong') or (idhdf == 'AHTS') or (idhdf == 'Zugspitze')  :
+            elif (idhdf == 'Rikubetsu') or (idhdf == 'Mauna Loa'):
 
-                yoi  = [[1995, 2002], [2002, 2008], [2008, 2016]]
+                yoi  = [[1996, 2002], [2002, 2008]]
+
+                slope_p3.append(float('nan'))
+                slope_p3_e.append(float('nan'))
+
+                avgD_p3.append(float('nan'))
+                stdD_p3.append(float('nan'))
+
+                clr_yoi = ['blue', 'green']
             
                 for ii, y in enumerate(yoi):
 
                     indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
 
-                    res          = mf.fit_driftfourier_poly(dateYearFrac, Anomaly, weights, 2, half_period=1.0)
-                    f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
+                    #res          = mf.fit_driftfourier_poly(dateYearFrac, Anomaly, weights, 2, half_period=period)
+                    #f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
                    
                     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Poly)".format(pltID[i], np.mean(roc), np.std(roc), yyyy[indx1[0]], yyyy[indx1[-1]])
                     #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Poly)".format(pltID[i], np.mean(roc)/np.mean(AvgData[indx1])*100.0, np.std(roc)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
 
-                    res    = mf.fit_driftfourier(dateYearFrac[indx1], Anomaly[indx1], weights[indx1], 2, half_period=1.0)
+                    res    = mf.fit_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
                     f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
 
-                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], Anomaly[indx1], weights[indx1], 2, half_period=1.0)
+                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
                     perc, intercept_b, slope_b, pfourier_b = res_b
 
                     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
-                    #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+                    print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                    if ii == 0:
+                        slope_p1.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                        slope_p1_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                        avgD_p1.append(np.mean(AvgData[indx1]))
+                        stdD_p1.append(np.std(AvgData[indx1]))
+
+                    if ii == 1:
+                        slope_p2.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                        slope_p2_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                        avgD_p2.append(np.mean(AvgData[indx1]))
+                        stdD_p2.append(np.std(AvgData[indx1]))
+
+                    ax2.plot(Dates[indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend',linewidth=2.0, color=clr_yoi[ii])
+
+
+
+            elif (idhdf == 'Jungfraujoch')  or (idhdf == 'Wollongong') or (idhdf == 'AHTS') or (idhdf == 'Zugspitze') :
+
+                yoi  = [[1996, 2002], [2002, 2008], [2009, 2016]]
+
+                clr_yoi = ['blue', 'green', 'red']
+            
+                for ii, y in enumerate(yoi):
+
+                    indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
+
+                    #res          = mf.fit_driftfourier_poly(dateYearFrac, Anomaly, weights, 2, half_period=period)
+                    #f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
+                   
+                    #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Poly)".format(pltID[i], np.mean(roc), np.std(roc), yyyy[indx1[0]], yyyy[indx1[-1]])
+                    #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Poly)".format(pltID[i], np.mean(roc)/np.mean(AvgData[indx1])*100.0, np.std(roc)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                    res    = mf.fit_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
+                    f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
+
+                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], Anomaly2[indx1], weights[indx1], 2, half_period=period)
+                    perc, intercept_b, slope_b, pfourier_b = res_b
+
+                    #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
+                    print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
 
                     if ii == 0:
                         slope_p1.append(res[1]/np.mean(AvgData[indx1])*100.0)
@@ -2708,6 +2985,8 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
                         avgD_p3.append(np.mean(AvgData[indx1]))
                         stdD_p3.append(np.std(AvgData[indx1]))
 
+                    ax2.plot(Dates[indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend',linewidth=2.0, color=clr_yoi[ii])
+
                 #ax.plot(dailyVals['dates'][indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend', linewidth=2.0)
 
         if pltFig:
@@ -2727,15 +3006,29 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
 
             if (ymin and ymax):
                 ax.set_ylim(ymin, ymax)
-    
-            fig.add_subplot(ax)
+
+            if qboFlg:
+                axx.set_xlim(xmin, xmax) 
+                axx.tick_params(which='both',labelsize=10)
+                axx.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+                axx.set_ylim(-400, 300) 
+
+
+
+
+
+
+            #axx.set_xlim(xmin, xmax)
+
+            #fig.add_subplot(axx, ax)
+            #fig.add_subplot(axx)
 
             #---------------------------------------------------
             #
             #---------------------------------------------------
             ax2.set_xlim(xmin, xmax)
-            ax2.set_ylim(-7, 7)
-            ax2.axhline(y=0, linestyle='--', color='k')
+            #ax2.set_ylim(-7, 7)
+            #ax2.axhline(y=0, linestyle='--', color='k')
             ax2.grid(True, color='gray', alpha=0.5)
             ax2.tick_params(which='both',labelsize=10)
             ax2.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
@@ -2832,7 +3125,7 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', p
             avgD, stdD, avgD_p1, stdD_p1 , avgD_p2, stdD_p2 , avgD_p3, stdD_p3)
 
 
-def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFig=False, saveFlg=False, pdfsav=' ', ytypeStr=' ', unitsStr=' ', ymin=False, ymax=False, yData2=False, yData3=False, yData4=False):
+def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthFlg=True, pltFig=False, saveFlg=False, pdfsav=' ', ytypeStr=' ', unitsStr=' ', ymin=False, ymax=False, yData2=False, yData3=False, yData4=False, period=1):
     
     #--------------------
     #Slope and Amplitude of time series
@@ -2863,13 +3156,12 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
     avgD_p3     = []
     stdD_p3     = []
 
-
-
     xmin      = dt.date(1993, 1, 1)
     xmax      = dt.date(2016, 12, 31)
 
     if pltFig:    
         fig = plt.figure(figsize=(18,13))  
+
         outer_grid = gridspec.GridSpec(npanels, 3, wspace=0.1, hspace=0.075)
 
     for i, idhdf in enumerate(pltID):
@@ -2917,14 +3209,14 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
         #--------------------
         #Apply savitzky golay filter (Comment out if not wated)
         #--------------------
-        AvgData = mf.savitzky_golay(AvgData, 7, 3)
+        if smthFlg: AvgData = mf.savitzky_golay(AvgData, 7, 3)
 
         if fits:
 
             weights      = np.ones_like(dateYearFrac)
 
             #---------------------------------------------------
-            #To make a continuous fit
+            # To make a continuous fit
             #---------------------------------------------------
             numdays = (Dates.max() + dt.timedelta(days=1) - Dates.min()).days
             dates2  = [Dates.min() + dt.timedelta(days=x) for x in range(0, numdays)]
@@ -2936,50 +3228,73 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
             yyyy = np.asarray(yyyy)
             
             #---------------------------------------------------
-            if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Bremen') or (idhdf == 'Paris') or (idhdf == 'Altzomoni'):
+            # Calculate the linear regression of all years and estimate Fourier seris
+            #---------------------------------------------------
+            
+            res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=period)
+            f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
 
-                res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
-                f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
+            res_b        = mf.cf_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=period)
+            perc, intercept_b, slope_b, pfourier_b = res_b
 
-                res_b        = mf.cf_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
-                perc, intercept_b, slope_b, pfourier_b = res_b
+            #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
+            #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData)*100.0, np.std(slope_b)/np.mean(AvgData)*100.0, yyyy[0], yyyy[-1])
 
-                #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
-                #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData)*100.0, np.std(slope_b)/np.mean(AvgData)*100.0, yyyy[0], yyyy[-1])
+            slope.append(res[1]/np.mean(AvgData)*100.0)
+            slope_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
 
-                slope.append(res[1]/np.mean(AvgData)*100.0)
-                slope_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+            Amp   = np.sum(res[2]**2)
+            Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
+            amp.append(Amp)
 
-                Amp   = np.sum(res[2]**2)
-                Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
-                amp.append(Amp)
+            avgD.append(np.mean(AvgData))
+            stdD.append(np.std(AvgData))
 
-                avgD.append(np.mean(AvgData))
-                stdD.append(np.std(AvgData))
 
-            else:
+            # if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Bremen') or (idhdf == 'Paris') or (idhdf == 'Altzomoni'):
 
-                res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
-                f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
+            #     res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+            #     f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
 
-                res_b        = mf.cf_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
-                perc, intercept_b, slope_b, pfourier_b = res_b
+            #     res_b        = mf.cf_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+            #     perc, intercept_b, slope_b, pfourier_b = res_b
 
-                #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
-                #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData)*100.0, np.std(slope_b)/np.mean(AvgData)*100.0, yyyy[0], yyyy[-1])
+            #     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
+            #     #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData)*100.0, np.std(slope_b)/np.mean(AvgData)*100.0, yyyy[0], yyyy[-1])
 
-                slope.append(res[1]/np.mean(AvgData)*100.0)
-                slope_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+            #     slope.append(res[1]/np.mean(AvgData)*100.0)
+            #     slope_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
 
-                Amp   = np.sum(res[2]**2)
-                Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
-                amp.append(Amp)
+            #     Amp   = np.sum(res[2]**2)
+            #     Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
+            #     amp.append(Amp)
 
-                avgD.append(np.mean(AvgData))
-                stdD.append(np.std(AvgData))
+            #     avgD.append(np.mean(AvgData))
+            #     stdD.append(np.std(AvgData))
 
-                res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=1.0)
-                f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
+            # else:
+
+            #     res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+            #     f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
+
+            #     res_b        = mf.cf_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+            #     perc, intercept_b, slope_b, pfourier_b = res_b
+
+            #     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
+            #     #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData)*100.0, np.std(slope_b)/np.mean(AvgData)*100.0, yyyy[0], yyyy[-1])
+
+            #     slope.append(res[1]/np.mean(AvgData)*100.0)
+            #     slope_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+
+            #     Amp   = np.sum(res[2]**2)
+            #     Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
+            #     amp.append(Amp)
+
+            #     avgD.append(np.mean(AvgData))
+            #     stdD.append(np.std(AvgData))
+
+                #res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+                #f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
 
 
         #---------------------------------------------------
@@ -2988,7 +3303,7 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
         if pltFig:    
             ax = plt.Subplot(fig, outer_grid[i])
             ax.plot(Dates, AvgData,'k.',markersize=0)
-            ax.scatter(Dates,AvgData, s=10, facecolor='lightgray', edgecolor='k',alpha=0.85)
+            ax.scatter(Dates,AvgData, s=20, facecolor='lightgray', edgecolor='k',alpha=0.85)
 
             if yData2:
                 ax.plot(xDates[idhdf], yData2[idhdf], color='green')
@@ -3026,47 +3341,24 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
         if fits:
 
             if pltFig:
-                ax.plot(dates2,f_fourier(dateYearFrac2),label='Fitted Anual Trend', linewidth=2.0)
+                #ax.plot(dates2,f_fourier(dateYearFrac2),label='Intra-annual variability', linewidth=1.0)
                 ax.plot(dates2,f_driftfourier(dateYearFrac2),label='Fitted Anual Trend + intra-annual variability',linewidth=2.0)
             #---------------------------------------------------
 
-            if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Bremen') or (idhdf == 'Paris') or (idhdf == 'Altzomoni'):
-                df_drift     = res[1]
-                roc          = df_drift
+            if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Bremen') or  (idhdf == 'Paris') or (idhdf == 'Altzomoni') or (idhdf == 'Tsukuba') or (idhdf == 'Kiruna') or (idhdf == 'Izana') or (idhdf == 'Paramaribo'):
 
-                slope_p1.append(float('nan'))
-                slope_p1_e.append(float('nan'))
-
-                slope_p2.append(float('nan'))
-                slope_p2_e.append(float('nan'))
-
-                slope_p3.append(res[1]/np.mean(AvgData)*100.0)
-                slope_p3_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
-
-                avgD_p1.append(float('nan'))
-                stdD_p1.append(float('nan'))
-
-                avgD_p2.append(float('nan'))
-                stdD_p2.append(float('nan'))
-
-                avgD_p3.append(np.mean(AvgData))
-                stdD_p3.append(np.std(AvgData))
-
-
-            elif (idhdf == 'Tsukuba'):
-
-                yoi  = [[2008, 2016]]
+                yoi  = [[2010, 2016]]
 
                 for y in yoi:
                     
                     indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
 
-                    res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=1.0)
+                    res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
                     f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
                     df_drift     = res[1]
                     roc          = df_drift
 
-                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=1.0)
+                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
                     perc, intercept_b, slope_b, pfourier_b = res_b
 
                     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
@@ -3091,9 +3383,11 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
                     avgD_p3.append(np.mean(AvgData[indx1]))
                     stdD_p3.append(np.std(AvgData[indx1]))
 
-            elif (idhdf == 'Thule') or (idhdf == 'Lauder') or (idhdf == 'Toronto') or (idhdf == 'Kiruna') or (idhdf == 'Izana') or (idhdf == 'Paramaribo') or (idhdf == 'Ny Alesund'):
 
-                yoi  = [[2001, 2008], [2008, 2016]]
+
+            elif (idhdf == 'Thule') or (idhdf == 'Lauder') or (idhdf == 'Toronto')  or (idhdf == 'Ny Alesund'):
+
+                yoi  = [[2002, 2008], [2010, 2016]]
 
                 slope_p1.append(float('nan'))
                 slope_p1_e.append(float('nan'))
@@ -3105,7 +3399,7 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
                     
                     indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
 
-                    res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+                    res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=period)
                     f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
                     roc    = df_drift(dateYearFrac[indx1[0]:indx1[-1]])
                     roc    =  np.mean(roc)
@@ -3114,12 +3408,12 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
                     #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Poly)".format(pltID[i], np.mean(roc)/np.mean(AvgData[indx1])*100.0, np.std(roc)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
 
 
-                    res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=1.0)
+                    res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
                     f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
                     df_drift     = res[1]
                     roc          = df_drift
 
-                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=1.0)
+                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
                     perc, intercept_b, slope_b, pfourier_b = res_b
 
                     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
@@ -3138,30 +3432,77 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
 
                         avgD_p3.append(np.mean(AvgData[indx1]))
                         stdD_p3.append(np.std(AvgData[indx1]))
-              
-                    #ax.plot(dailyVals['dates'][indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend', linewidth=2.0)
 
-            elif (idhdf == 'Jungfraujoch') or (idhdf == 'Rikubetsu') or (idhdf == 'Mauna Loa') or (idhdf == 'Wollongong') or (idhdf == 'AHTS') or (idhdf == 'Zugspitze'):
+            elif (idhdf == 'Rikubetsu'):
 
-                yoi  = [[1995, 2002], [2002, 2008], [2008, 2016]]
+                yoi  = [[1996, 2002], [2002, 2008]]
+
+                slope_p3.append(float('nan'))
+                slope_p3_e.append(float('nan'))
+
+                avgD_p3.append(float('nan'))
+                stdD_p3.append(float('nan'))
             
                 for ii, y in enumerate(yoi):
 
                     indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
 
-                    res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+                    res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=period)
                     f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
                     roc    = df_drift(dateYearFrac[indx1[0]:indx1[-1]])
                    
                     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Poly)".format(pltID[i], np.mean(roc), np.std(roc), yyyy[indx1[0]], yyyy[indx1[-1]])
                     #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Poly)".format(pltID[i], np.mean(roc)/np.mean(AvgData[indx1])*100.0, np.std(roc)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
 
-                    res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=1.0)
+                    res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
                     f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
                     df_drift     = res[1]
                     roc          = df_drift
 
-                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=1.0)
+                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                    perc, intercept_b, slope_b, pfourier_b = res_b
+
+                    #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
+                    #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                    if ii == 0:
+                        slope_p1.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                        slope_p1_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                        avgD_p1.append(np.mean(AvgData[indx1]))
+                        stdD_p1.append(np.std(AvgData[indx1]))
+
+                    if ii == 1:
+                        slope_p2.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                        slope_p2_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                        avgD_p2.append(np.mean(AvgData[indx1]))
+                        stdD_p2.append(np.std(AvgData[indx1]))
+
+              
+                    #ax.plot(dailyVals['dates'][indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend', linewidth=2.0)
+
+            elif (idhdf == 'Jungfraujoch')  or (idhdf == 'Mauna Loa') or (idhdf == 'Wollongong') or (idhdf == 'AHTS') or (idhdf == 'Zugspitze'):
+
+                yoi  = [[1995, 2002], [2002, 2008], [2010, 2016]]
+            
+                for ii, y in enumerate(yoi):
+
+                    indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
+
+                    res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=period)
+                    f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
+                    roc    = df_drift(dateYearFrac[indx1[0]:indx1[-1]])
+                   
+                    #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Poly)".format(pltID[i], np.mean(roc), np.std(roc), yyyy[indx1[0]], yyyy[indx1[-1]])
+                    #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Poly)".format(pltID[i], np.mean(roc)/np.mean(AvgData[indx1])*100.0, np.std(roc)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                    res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                    f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
+                    df_drift     = res[1]
+                    roc          = df_drift
+
+                    res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
                     perc, intercept_b, slope_b, pfourier_b = res_b
 
                     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
@@ -3245,8 +3586,11 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', pltFi
             plt.setp(all_axes[-2].get_xticklabels(), visible=True)
             all_axes[-2].set_zorder(1)
 
+        
         all_axes[-1].set_xlabel('Year')
         all_axes[-2].set_xlabel('Year')
+        all_axes[-3].set_xlabel('Year')
+
         
         fig.autofmt_xdate()
 
@@ -3274,6 +3618,7 @@ def hbarplt3(b1, b2, b3, pltID, b1_label='', b2_label='', b3_label='', subtitle=
     ind = np.arange(len(b1[0]))
     
     fig, (ax, ax2, ax3, ax4) = plt.subplots(1, 4, sharey=True, figsize=(15, 8.5))
+    #fig, (ax2, ax3, ax4) = plt.subplots(1, 3, sharey=True, figsize=(15, 8.5))
     
     ax.barh(ind-0.27, b1[0], 0.27, xerr=b1[1], align='center', color = 'r', ecolor = 'k', label = b1_label)
     ax.barh(ind, b2[0], 0.27, xerr=b2[1], align='center', color = 'b', ecolor = 'k', label = b2_label)
@@ -3283,25 +3628,27 @@ def hbarplt3(b1, b2, b3, pltID, b1_label='', b2_label='', b3_label='', subtitle=
     ax.set_xlabel('Rate of change (%/y)')
     ax.set_yticks(ind)
     ax.set_yticklabels(np.transpose(pltID), rotation=0)
-    ax.set_title(subtitle+'\n(years submitted)', multialignment='center')
+    ax.set_title(subtitle+'\n(1996 - 2016)', multialignment='center')
     #ax.set_xlabel('Site')
     ax.set_xlim(-2.0, 2.0)
     ax.axvline(0, color='black', lw=1)
     ax.legend(prop={'size':8}, loc = 1)
     #ax.invert_yaxis()
 
-    ax2.barh(ind-0.27, b1[2], 0.27, xerr=b1[3], align='center', color = 'r', ecolor = 'k')
-    ax2.barh(ind, b2[2], 0.27, xerr=b2[3], align='center', color = 'b', ecolor = 'k')
-    ax2.barh(ind+0.27, b3[2], 0.27, xerr=b3[3], align='center', color = 'g', ecolor = 'k')  
+    ax2.barh(ind-0.27, b1[2], 0.27, xerr=b1[3], align='center', color = 'r', ecolor = 'k', label = b1_label)
+    ax2.barh(ind, b2[2], 0.27, xerr=b2[3], align='center', color = 'b', ecolor = 'k', label = b2_label)
+    ax2.barh(ind+0.27, b3[2], 0.27, xerr=b3[3], align='center', color = 'g', ecolor = 'k', label = b3_label)  
     ax2.xaxis.grid(True)
     ax2.yaxis.grid(True)
     ax2.set_xlabel('Rate of change (%/y))')
-    ax2.set_title(subtitle+'\n(1995 - 2002)', multialignment='center')
+    ax2.set_title(subtitle+'\n(1996 - 2002)', multialignment='center')
     ax2.set_yticks(ind)
-    #ax2.set_yticklabels(np.transpose(pltID), rotation=0)
+    ax2.set_yticklabels(np.transpose(pltID), rotation=0)
     #ax.set_xlabel('Site')
+    #ax2.legend(prop={'size':8}, loc = 1)
     ax2.set_xlim(-2.0, 2.0)
     ax2.axvline(0, color='black', lw=1)
+    #ax2.invert_yaxis()
 
     #ax2.invert_yaxis()
     #ax2.yticks([])
@@ -3327,7 +3674,7 @@ def hbarplt3(b1, b2, b3, pltID, b1_label='', b2_label='', b3_label='', subtitle=
     ax4.xaxis.grid(True)
     ax4.yaxis.grid(True)
     ax4.set_xlabel('Rate of change (%/y))')
-    ax4.set_title(subtitle+'\n(2008 - 2016)', multialignment='center')
+    ax4.set_title(subtitle+'\n(2009 - 2016)', multialignment='center')
     ax4.set_yticks(ind)
     #ax4.set_yticklabels(np.transpose(pltID), rotation=0)
     #ax.set_xlabel('Site')
