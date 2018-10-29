@@ -1,0 +1,84 @@
+#-------------------------------------------------------------------
+# Commands to move an OLD Repository to a NEW Repository
+# Copy the entire repository, tags, branches
+# Links: 
+#       https://gist.github.com/niksumeiko/8972566
+#       https://developer.atlassian.com/blog/2016/01/totw-copying-a-full-git-repo/
+# in otserver: /data/iortega/tools/git
+# in iMac: Docs/Projects/gitdir/
+#-------------------------------------------------------------------
+
+
+>> git clone --mirror <url of ORI repo> temp-dir
+>> cd temp-dir
+>> git tag
+>> git branch -a
+>> git remote add origin <url to NEW repo>
+>> git push origin --mirror
+
+
+#-------------------------------------------------------------------
+# Exact Details to Clone sfit-processing-environment
+#-------------------------------------------------------------------
+
+Note: the temp-dir does not need to be created first (git will create it)
+
+>> git clone --mirror https://git.ucar.edu/sfit-processing-environment.git temp-dir
+>> cd temp-dir
+>> git tag
+>> git branch -a
+>> git remote add new-origin https://github.com/NCAR/-sfit-processing-environment.git
+>> git push new-origin --mirror
+
+#-------------------------------------------------------------------
+# Exact details to clone and push sfit-core-code
+#-------------------------------------------------------------------
+
+>> git clone https://git.ucar.edu/sfit-core-code.git
+>> git remote rename origin upstream
+>> git remote add origin https://github.com/NCAR/sfit-core-code.git
+
+#---Below I have to filter and remove the linelist----
+>> git filter-branch --force --index-filter "git rm --cached -r --ignore-unmatch linelist" --prune-empty --tag-name-filter cat -- --all
+
+#---Additionally I have to filter and remove test_cases_features/x.co2.tccon/kb.out because is too large----
+>> git filter-branch --force --index-filter "git rm --cached  --ignore-unmatch test_cases_features/x.co2.tccon/kb.out" --prune-empty --tag-name-filter cat -- --all
+>> git checkout -b Dev_Jim_ILS upstream/Dev_Jim_ILS
+>> git push new-origin Dev_Jim_ILS --force
+
+#---Then I changed branch, e.g:
+git checkout -b Dev_Eric upstream/Dev_Eric
+>> git push new-origin Dev_Eric --force
+
+#-------------------------------------------------------------------
+#Below are useful commands and links but 
+#-------------------------------------------------------------------
+https://help.github.com/articles/versioning-large-files/
+https://rtyley.github.io/bfg-repo-cleaner/
+https://confluence.atlassian.com/bitbucket/use-bfg-to-migrate-a-repo-to-git-lfs-834233484.html
+https://gist.github.com/ryantang/52710a9f557956557211aac9ee90418b
+https://www.atlassian.com/git/tutorials/git-lfs#moving-between-hosts
+
+#-------------------------------------------------------------------
+# Below are attempts to use git lfs
+#-------------------------------------------------------------------
+
+>> git clone --mirror https://git.ucar.edu/sfit-core-code.git
+>> cp -r sfit-core-code.git sfit-core-code.git-copy
+>> java -jar bfg-1.13.0.jar --delete-files id_{par} sfit-core-code.git
+>> java -jar bfg-1.13.0.jar --strip-blobs-bigger-than 45M sfit-core-code.git
+>> java -jar bfg-1.13.0.jar --delete-folders .git --delete-files .git  --no-blob-protection  sfit-core-code.git
+>> cd sfit-core-code.git
+>> git reflog expire --expire=now --all && git gc --prune=now --aggressive
+>> git remote add new-origin https://github.com/NCAR/sfit-core-code.git
+>> git push new-origin --mirror --force
+
+
+>> rm -r -f sfit-core-code.git.bfg-report
+>> rm -r -f sfit-core-code.git
+>> cp -r sfit-core-code.git-copy sfit-core-code.git
+
+
+
+
+

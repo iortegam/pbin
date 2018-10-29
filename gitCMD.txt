@@ -1,0 +1,78 @@
+#-------------------------------------------
+#USEFUL GIT COMMANDS
+#-------------------------------------------
+- CREATE A LOCAL GIT REPOSITORY
+
+>> git init
+
+>> git status
+
+- ADD THE FILENAME (Stage changes)
+>> git add Filename (if all use >> git add -A)
+
+- COMMIT THE FILE
+>> git commit -m 'Message about the commit'
+
+- PUSH TO GITHUB
+>> git remote add new-origin https://github.com/iortegam/Manuscripts
+>> git push -u new-origin master
+
+- IF THERE IS A "fatal: remote origin already exists" USE THE FOLLOWING AND TRY AGAIN
+
+>> git remote rm new-origin
+
+- TO FORCE IT USE: git push -u new-origin master -f
+
+#-------------------------------------------
+# WORKING WITH BRANCHES
+# http://dont-be-afraid-to-commit.readthedocs.io/en/latest/git/commandlinegit.html
+#-------------------------------------------
+>> git init
+
+-TO SEE BRANCHES
+>> git branch
+
+-CREATE A NEW BRANCH AND SWITCH 
+>> git checkout -b branchname
+
+-IF BRANCH ALREADY EXISTS SWITCH WITH:
+>> git checkout branchname
+
+-CHECK STATUS
+>> git status
+
+-STAGE CHANGES
+>> git add Filename (if all use >> git add -A)
+
+-COMMIT THE FILE
+>> git commit -m "added my github name"
+
+-TO MERGE A BRANCH IN MASTER MODIFY WHATEVER IN THE BRANCH AND:
+>> git checkout master
+>> git merge branchname
+
+-PUSH TO GITHUB
+>> git remote add new-origin https://github.com/iortegam/Manuscripts
+>> git push new-origin branchname
+
+-TO SEE LAST COMMIT OF ALL BRANCHES
+>> git branch -v
+
+-TO SEE ARE MERGET INTO THE CURRENT BRANCH
+>> git branch --merged
+
+-To delete a branch
+>> git branch -d branchName
+
+
+#-------------------------------------------
+# Creating a new Pre-relase branch starting from Bavo's branch
+#-------------------------------------------
+
+>> git fetch https://github.com/NCAR/sfit-processing-environment.git
+
+>> git branch -a
+
+>> git checkout -b Pre-release-Test remotes/origin/Dev_BavoUncert
+
+>> git checkout otherbranch myfile.txt
