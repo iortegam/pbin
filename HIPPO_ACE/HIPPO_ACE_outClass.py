@@ -155,9 +155,9 @@ class HIPPOClass():
     def ReadOutputHIPPO(self, gasname=''):
         '''Function to Read out the FLX-CEHM net CDF files.'''
 
-        infile = file(self.dirLst, 'r')
-        cols, indextoname = mf.getColumns(infile, headerrow=0, delim=' ', header=True)
-        infile.close()
+        #infile = file(self.dirLst, 'r')
+        cols, indextoname = mf.getColumns(self.dirLst, headerrow=0, delim=' ', header=True)
+        #infile.close()
 
         #---------------
         # ReadOutputData
@@ -345,7 +345,7 @@ class HIPPOClass():
         #READING THE STATION LAYER FILE: THULE
         #-----------------------------------------------
         ckFile(stfile)
-        stfile = file(stfile, 'r')
+        #stfile = file(stfile, 'r')
         cols, indexToName = mf.getColumns(stfile, headerrow=2, delim=' ', header=True)
         midpointTAB = np.asarray(cols['midpnt'][0:-1]).astype(np.float)
 
@@ -377,7 +377,7 @@ class HIPPOClass():
         #READING THE STATION LAYER FILE: MLO
         #-----------------------------------------------
         ckFile(stfile)
-        stfile = file(stfile, 'r')
+        #stfile = file(stfile, 'r')
         cols, indexToName = mf.getColumns(stfile, headerrow=2, delim=' ', header=True)
         midpointMLO = np.asarray(cols['midpnt'][0:-1]).astype(np.float)
 
@@ -409,7 +409,7 @@ class HIPPOClass():
         #READING THE STATION LAYER FILE: MLO
         #-----------------------------------------------
         ckFile(stfile)
-        stfile = file(stfile, 'r')
+        #stfile = file(stfile, 'r')
         cols, indexToName = mf.getColumns(stfile, headerrow=2, delim=' ', header=True)
         midpointFL0 = np.asarray(cols['midpnt'][0:-1]).astype(np.float)
 
@@ -428,6 +428,8 @@ class HIPPOClass():
 
     
         for i, b in enumerate(BinLat):
+
+            numprfs = 0
             
             for hn in HiPPO_Number:
 
@@ -452,6 +454,7 @@ class HIPPOClass():
                     alt_i     = np.asarray(alt[inds2])/1000.
                     lat_i     = np.asarray(lat[inds2])
 
+
                     if ((np.mean(lat_i) >= b[0]) & (np.mean(lat_i) < b[1]) ):
 
                         gas_mean_i  = []
@@ -473,14 +476,17 @@ class HIPPOClass():
                         gas_std_i  = np.asarray(gas_std_i, dtype=float)
 
                         PrfLat.setdefault(BinID[i]+'_Prf',[]).append(gas_mean_i)
+
+                    numprfs += 1
                     
-            PrfLatbi = np.asarray(PrfLat[BinID[i]+'_Prf'])
+            PrfLatbi   = np.asarray(PrfLat[BinID[i]+'_Prf'])
             gas_mean_i = np.nanmean(PrfLatbi, axis=0)
             gas_var_i  = np.nanvar(PrfLatbi, axis=0)
             gas_std_i  = np.nanstd(PrfLatbi, axis=0)
             gas_med_i  = np.nanmedian(PrfLatbi, axis=0)
 
             print 'Number of HIPPO profiles in {0}: {1} '.format(b, PrfLatbi.shape)
+            print 'Total of HIPPO profiles in {0}: {1}'.format(b, numprfs)
 
             self.PrfLat.setdefault(BinID[i]+'_Prf_mean',[]).append(gas_mean_i)
             self.PrfLat.setdefault(BinID[i]+'_Prf_std',[]).append(gas_std_i)
@@ -566,6 +572,9 @@ class HIPPOClass():
             
         else:           
             plt.show(block=False)
+
+        #user_input = raw_input('Press any key to exit >>> ')
+        #sys.exit()   
                
 
     def pltMapRF(self):

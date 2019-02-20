@@ -168,7 +168,7 @@ def main():
     dataDir       = '/data1/Campaign/HIPPO/'
     file          = 'HIPPO_discrete_continuous_merge_20121129.tbl'   #MERGE FILE: http://data.eol.ucar.edu/master_list/?project=HIPPO-2
     
-    HIPPOFlg       = True
+    HIPPOFlg       = False
 
     pltPr2Flg      = True    #PLOT PROFILES BINNED BY LATITUDE
     pltRFFlg       = False   #PLOT OF MAP AWITH RESEARCH FLIGHT
@@ -231,6 +231,9 @@ def main():
         if pltRFFlg:   Data.pltMapRF()
         if pltPrFlg:   Data.pltPrf()
         if pltPr2Flg:  Data.pltPrf2(BinLat=BinLat, BinID=BinID, ClrID=ClrID)
+
+        user_input = raw_input('Press any key to exit >>> ')
+        sys.exit()
         
        
     if ACEFlg:
@@ -239,6 +242,10 @@ def main():
         ####DataACE.ReadASCIIACE(gasname=gas)     #ASCII FILES FROM v3.5 (DO NOT CONTAIN IMPORTANT FLAGS)
         DataACE.ReadNCDFACE2(gasname=gas)         #NETCDF FROM v3.5 (CONTAINS IMPORTANT FLAGS)
         if pltPrACEFlg:   DataACE.pltPrfACE(BinLat=BinLat, BinID=BinID, ClrID=ClrID)
+
+        user_input = raw_input('Press any key to exit >>> ')
+        sys.exit()
+
 
 
     if HIPPOFlg & ACEFlg:

@@ -138,7 +138,7 @@ def main():
     sclfctName         = 'ppbv'                 # Name of scale factor for labeling plots
 
     pColsFlg           = True
-    pCols              = [1.6, 8.0]         #--ALTITUDE TO CALCULATE PARTIAL COLUMNS AND WEIGHTED VMR
+    pCols              = [1.6, 8.0]              #--ALTITUDE TO CALCULATE PARTIAL COLUMNS AND WEIGHTED VMR
 
     #-----------------------------------------------------------------------------------------
     #                 Initializations for CAM-CHEM
@@ -146,8 +146,11 @@ def main():
     #dataDirCAM        = '/data1/ancillary_data/'+loc.lower()+'/'
     #fileCAM           = 'CAM_chem_fmerra_FSDSSOA_2deg_2000_2014_extra_Boulder.nc'       
 
-    dataDirCAM        = '/net/modeling1/data16a/buchholz/CAM_chem_output/CAM_chem_fmerra2_FCSD_1deg_Boulder/'
-    fileCAM           = 'CAM_chem_fmerra2_FCSD_1deg_Boulder_2009_2017.nc'
+    #dataDirCAM        = '/net/modeling1/data16a/buchholz/CAM_chem_output/CAM_chem_fmerra2_FCSD_1deg_Boulder/'  # 
+    dataDirCAM        = '/net/modeling1/data16a/buchholz/CAM_chem_output/CAM_chem_fmerra2_FCSD_1deg_Boulder_finn/'  # 
+
+    #fileCAM           = 'CAM_chem_fmerra2_FCSD_1deg_Boulder_2009_2017.nc'
+    fileCAM           = 'CAM_chem_fmerra2_FCSD_1deg_FINN_Boulder_2009_2017.nc'
 
     sLat              = 40.4             #--LATITUDE OF BOULDER
     sLon              = -105.24          #--LONGITUDE OF BOULDER
@@ -330,7 +333,7 @@ def main():
             #----------------------------
             # Print in Dat 
             #---------------------------- 
-            with open(dataPath + g+'_CAM-CHEM_v2.dat','w') as fopen:
+            with open(dataPath + g+'_CAM-CHEM_v2_finn.dat','w') as fopen:
 
                 YYYYMMDD = np.asarray(['{0:4d}-{1:02d}-{2:02d}'.format(d.year, d.month, d.day)    for d in DatesCAM_mnth])
          

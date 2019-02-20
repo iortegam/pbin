@@ -85,24 +85,24 @@ def main():
     #-------------------------------------
     #three letter ID
     #-------------------------------------
-    #locs         = ['ldr', 'ldr', 'bld']#, 'kir', 'mai', 'std']
+    #locs         = ['par']
     #locs         = ['kir', 'iza', 'bld', 'stp', 'jfj', 'wlo']
-    locs         = ['bld', 'wlo', 'jfj', 'mlo', 'tab', 'tor', 'eur', 'stp', 'ldr', 'rkb', 'tsk', 'ldr', 'mai', 'std', 'zgp', 'kir', 'iza', 'par', 'bre', 'nya', 'pmb', 'alt']
+    locs         = ['bld', 'wlo', 'jfj', 'mlo', 'tab', 'tor', 'eur', 'stp', 'ldr', 'rkb', 'tsk', 'ahs', 'mai', 'std', 'zgp', 'kir', 'iza', 'par', 'bre', 'nya', 'pmb', 'alt']
 
     #-------------------------------------
     #ID in the HDF Files
     #-------------------------------------
-    #locID        = ['ahts', 'laud_120hr', 'boulder']#, 'kiruna', 'maido' , 'stdenis']
+    #locID        = ['paris']#, 'kiruna', 'maido' , 'stdenis']
     #locID        = ['kiruna', 'izana', 'boulder', 'st.petersburg', 'jungfraujoch', 'wollongong']
     locID        = ['boulder', 'wollongong', 'jungfraujoch', 'mauna.loa.h', 'thule', '_toronto_', '_eureka_', 'st.petersburg', 'laud_120hr', 'rikubetsu', 
                    'tsukuba', 'ahts',  'maido' , 'stdenis', 'zugspitze', 'kiruna', 'izana', 'paris', 'bremen', 'ny.alesund', 'paramaribo', 'altzomoni']                       
     #-------------------------------------
     #Names in Plots
     #-------------------------------------   
-    #pltID        = [ 'AHTS', 'Lauder', 'Boulder']#, 'Kiruna', 'Maido', 'StD-Maido']
+    #pltID        = [ 'Paris']
     #pltID        = ['Kiruna', 'Izana', 'Boulder', 'St Petersburg', 'Jungfraujoch', 'Wollongong']
     pltID        = ['Boulder', 'Wollongong', 'Jungfraujoch', 'Mauna Loa', 'Thule', 'Toronto', 'Eureka', 'St Petersburg', 'Lauder', 'Rikubetsu', 
-                   'Tsukuba', 'AHTS', 'Maido', 'StD-Maido', 'Zugspitze', 'Kiruna', 'Izana', 'Paris', 'Bremen', 'Ny Alesund', 'Paramaribo', 'Altzomoni'] 
+                   'Tsukuba', 'AHTS', 'Maido', 'St Denis', 'Zugspitze', 'Kiruna', 'Izana', 'Paris', 'Bremen', 'Ny Alesund', 'Paramaribo', 'Altzomoni'] 
      
     #-------------------------------------
     #Inputs
@@ -110,15 +110,16 @@ def main():
     gasName        = 'ocs'
 
     AvgType        = 'Monthly'   #'Monthly'  'Daily'
-    smthFlg        = True
+    smthFlg        = False
     period         = 1.0
+    fitFlg         = True
 
 
 
     #------
     # Flags
     #------
-    saveFlg       = False                  # Flag to either save data to pdf file (saveFlg=True) or plot to screen (saveFlg=False)
+    saveFlg       = True                  # Flag to either save data to pdf file (saveFlg=True) or plot to screen (saveFlg=False)
     errorFlg      = True                  # Flag to process error data
     fltrFlg       = True                   # Flag to filter the data
 
@@ -141,7 +142,7 @@ def main():
     fday          = 31
     
     sclfct        = 1.0E12                  # Scale factor to apply to vmr plots (ppmv=1.0E6, ppbv=1.0E9, etc)
-    sclfctName    = 'pptv'                 # Name of scale factor for labeling plots
+    sclfctName    = 'ppt'                 # Name of scale factor for labeling plots
     TCsclfct      = 1.0e15
     TCsclfctName  = 'x10$^{15}$'
 
@@ -188,11 +189,13 @@ def main():
     # Create instance of output data class   
     #-------------------------------------
     statDataCl = OrderedDict()
-    Group = zip(dataDir,locID, pltID)
+    Group = zip(dataDir,locID, pltID, locs)
     Group.sort(key=lambda Group: Group[2])
     pltID.sort()
+    locs = [l for dd, id, pl, l in Group]
 
-    for dd, id, pl in Group:
+
+    for dd, id, pl, l in Group:
         #-------------------------------------
         # Some HDF files are in specific folder: change here accordingly
         #-------------------------------------
@@ -206,6 +209,7 @@ def main():
         elif pl == 'Kiruna':        dd = dd + 'OCS_Kiruna/'
         elif pl == 'Izana':         dd = dd + 'OCS_Izana/'
         elif pl == 'St Petersburg': dd = dd + 'HDF_OCS_SPb_O3_atm16/'
+        elif pl == 'Paris':         dd = dd + '2019_Paris/'
         else: dd = dd
 
         statDataCl[pl] = dc.ReadHDFData(dd, id, gasName)
@@ -726,16 +730,17 @@ def main():
     pltID2        = []
     Lat2          = []
     Lon2          = []
+    locID2        = []
 
     for i, idhdf in enumerate(pltID):
 
         if idhdf == 'Maido': continue
         
-        if idhdf  == 'StD-Maido':
+        if idhdf  == 'St Denis':
+            
             dates2[idhdf]          = np.concatenate( (dates[idhdf], dates['Maido']))
 
             totClmn2[idhdf]       = np.concatenate( (totClmn[idhdf], totClmn['Maido']))
-
 
             PcolTrop12[idhdf]       = np.concatenate( (PcolTrop1[idhdf], PcolTrop1['Maido']))
             PcolTrop22[idhdf]       = np.concatenate( (PcolTrop2[idhdf], PcolTrop2['Maido']))
@@ -760,7 +765,10 @@ def main():
             pltID2.append(pltID[i])
             Lat2.append(Lat[i])
             Lon2.append(Lon[i])
+            locID2.append('STD-MAI')
+
         else:
+
             dates2[idhdf]         = dates[idhdf]
             totClmn2[idhdf]       = totClmn[idhdf]
             PcolTrop12[idhdf]     = PcolTrop1[idhdf] 
@@ -784,6 +792,8 @@ def main():
             pltID2.append(pltID[i])
             Lat2.append(Lat[i])
             Lon2.append(Lon[i])
+            locID2.append(locs[i])
+
 
     #----------------------------------------------------------------------------------------------------------------------------------------------------------------
     #                                                           PLOTS
@@ -823,15 +833,20 @@ def main():
     #---------------------------------------------------
     # Order data based on +Lat to -Lat
     #---------------------------------------------------
-    pltID = [y for (x,y) in sorted(zip(Lat,pltID), reverse=True)]
-    Lon = [y for (x,y) in sorted(zip(Lat,Lon), reverse=True)]
-    Lat   = sorted(Lat, reverse=True)
-    pltID = np.asarray(pltID)
+    pltID  = [y for (x, y) in sorted(zip(Lat,pltID), reverse=True)]
+    locsID = [y for (x, y) in sorted(zip(Lat,locs), reverse=True)]
+    Lon    = [y for (x, y) in sorted(zip(Lat,Lon), reverse=True)]
+    
+    Lat    = sorted(Lat, reverse=True)
+    pltID  = np.asarray(pltID)
+    locsID = np.asarray(locsID)
 
     pltID2 = [y for (x,y) in sorted(zip(Lat2,pltID2), reverse=True)]
-    Lon2 = [y for (x,y) in sorted(zip(Lat2,Lon2), reverse=True)]
+    Lon2   = [y for (x,y) in sorted(zip(Lat2,Lon2), reverse=True)]
+    locID2 = [y for (x,y) in sorted(zip(Lat2,locID2), reverse=True)]
     Lat2   = sorted(Lat2, reverse=True)
     pltID2 = np.asarray(pltID2)
+    locID2 = np.asarray(locID2)
 
     
     #---------------------------------------------------
@@ -840,25 +855,58 @@ def main():
     fig = plt.figure(figsize=(11,7))
 
     eq_map = Basemap(projection='robin', resolution = 'l', area_thresh = 1000.0, lat_0=0, lon_0=-130)
-    eq_map.drawcoastlines()
-    eq_map.drawcountries()
+    eq_map.drawcoastlines(linewidth =0.25, color = 'gray', )
+    #eq_map.drawcountries()
     eq_map.fillcontinents(color = 'gray', alpha=0.5)
     eq_map.drawmapboundary()
-    eq_map.drawmeridians(np.arange(0, 360, 30))
-    eq_map.drawparallels(np.arange(-90, 90, 30))
+    eq_map.drawmeridians(np.arange(0, 360, 30), color='gray', linewidth=0.5, alpha = 0.5)
+    eq_map.drawparallels(np.arange(-90, 90, 30), color='gray', linewidth=0.5, labels=[1,0,0,0], alpha = 0.5)
      
-    for lo, la, idhdf in zip(Lon, Lat, pltID):
+    for lo, la, idhdf in zip(Lon, Lat, locsID):
+
+        if la >= 50.:     
+            clr = 'lightcyan'
+            
+        elif (la >= 20.) & (Lat[i] < 50.):
+            clr = 'lightgreen'
+           
+        elif (la >= -20.)  & (Lat[i] < 20.):
+            clr = 'mistyrose'
+            
+        elif (la >= -50.)  & (Lat[i] < -20.):
+            clr = 'cornsilk'
+            
+        elif (la < -50.):
+            clr = 'lightgrey'
+        
+        else:
+            clr = 'lightgrey'
+
         x,y = eq_map(lo, la)
-        eq_map.plot(x, y, 'yo', markersize=10.0)
-        plt.text(x+10000,y-800000, idhdf, fontsize=12, color='red')
+        eq_map.plot(x, y, 'yo', markersize=0)
+        eq_map.scatter(x, y, s=80, facecolor='yellow', edgecolor='k', zorder=7)
 
-    plt.title("IRWG-NDACC Sites participating in the OCS global study")
+        if idhdf.upper() == 'BRE': plt.text(x-1000000,y+300000, idhdf.upper(), fontsize=12, color='r', weight='bold')
+        elif idhdf.upper() == 'EUR': plt.text(x-1800000,y-100000, idhdf.upper(), fontsize=12, color='r', weight='bold')
+        elif idhdf.upper() == 'KIR': plt.text(x+50000,y+200000, idhdf.upper(), fontsize=12, color='r', weight='bold')
+        elif idhdf.upper() == 'MAI': plt.text(x-30000,y+300000, idhdf.upper(), fontsize=12, color='r', weight='bold')
+        elif idhdf.upper() == 'PAR': plt.text(x-1800000,y, idhdf.upper(), fontsize=12, color='r', weight='bold')
+        elif idhdf.upper() == 'AHS': plt.text(x+250000,y-200000, idhdf.upper(), fontsize=12, color='r', weight='bold')
+        elif idhdf.upper() == 'JFJ': plt.text(x-1000000,y-800000, idhdf.upper(), fontsize=12, color='r', weight='bold')
+        elif idhdf.upper() == 'ZGP': plt.text(x+100000,y+200000, idhdf.upper(), fontsize=12, color='r', weight='bold')
+        elif idhdf.upper() == 'STP': plt.text(x+30000,y+200000, idhdf.upper(), fontsize=12, color='r', weight='bold')
+        else: plt.text(x+10000,y-800000, idhdf.upper(), fontsize=12, color='r', weight='bold')
+              
 
-    if saveFlg: pdfsav.savefig(fig,dpi=200)
+    #plt.title("IRWG-NDACC Sites participating in the OCS global study")
+
+    if saveFlg: 
+        pdfsav.savefig(fig,dpi=200)
+        #fig.savefig('/data1/projects/ocs/figures/fig/'+'Map_OCS.pdf', bbox_inches='tight')
     else: 
         plt.show(block=False)
-       #user_input = raw_input('Press any key to exit >>> ')
-       #sys.exit()
+    fig.savefig('/data1/projects/ocs/figures/fig/'+'Map.pdf', bbox_inches='tight')
+    
 
     #---------------------------------------------------
     # Defining variable for plots
@@ -869,6 +917,7 @@ def main():
     xmax      = dt.date(fyear, fmonth, fday)
     clmap     = 'jet'
 
+    
     #---------------------------------------------------
     # Mean vertical profiles
     #---------------------------------------------------
@@ -883,22 +932,23 @@ def main():
         Lat[i] = float(Lat[i])
 
         if Lat[i] >= 50.:     
-            ax.set_axis_bgcolor('lightcyan')
+            ax.set_facecolor('lightcyan')
             
         elif (Lat[i] >= 20.) & (Lat[i] < 50.):
-            ax.set_axis_bgcolor('lightgreen')
+            #ax.set_axis_bgcolor('lightgreen')
+            ax.set_facecolor('lightgreen')
            
         elif (Lat[i] >= -20.)  & (Lat[i] < 20.):
-            ax.set_axis_bgcolor('mistyrose')
+            ax.set_facecolor('mistyrose')
             
         elif (Lat[i] >= -50.)  & (Lat[i] < -20.):
-            ax.set_axis_bgcolor('cornsilk')
+            ax.set_facecolor('cornsilk')
             
         elif (Lat[i] < -50.):
-            ax.set_axis_bgcolor('lightgrey')
+            ax.set_facecolor('lightgrey')
         
         else:
-            ax.set_axis_bgcolor('lightgrey')
+            ax.set_facecolor('lightgrey')
 
         if int(nobs) > 1:
 
@@ -912,15 +962,15 @@ def main():
             dtpMean    = np.nanmean(dtp[idhdf])
             dtpStd     = np.nanstd(dtp[idhdf])
 
-            ax.axhline(y=dtpMean, linewidth=1.5, color='r', alpha=0.5)  
-            ax.axhline(y=dtpMean - dtpStd*2., linewidth=1.5, color='r', alpha=0.5)  
-            ax.axhline(y=dtpMean + dtpStd*2, linewidth=1.5, color='r', alpha=0.5)
+            ax.axhline(y=dtpMean, linewidth=1.5, color='gray', alpha=0.5)  
+            ax.axhline(y=dtpMean - dtpStd*2., linewidth=1.5, color='gray', alpha=0.5)  
+            ax.axhline(y=dtpMean + dtpStd*2, linewidth=1.5, color='gray', alpha=0.5)
 
             altftmean  =   np.nanmean(alttpp[idhdf])
             altstmean  =   np.nanmean(alttpp2[idhdf])
 
-            ax.axhline(y=altftmean, linewidth=1.5, color='green', alpha=0.5) 
-            ax.axhline(y=altstmean, linewidth=1.5, color='green', alpha=0.5)
+            #ax.axhline(y=altftmean, linewidth=1.5, color='green', alpha=0.5) 
+            #ax.axhline(y=altstmean, linewidth=1.5, color='green', alpha=0.5)
 
         else:
             ax.plot(rPrf[0],alt,label='Retrieved')
@@ -928,9 +978,10 @@ def main():
 
         ax.plot(aPrf[idhdf][0],alt[idhdf],linestyle='--', label='-Apriori', color='r')
 
-        ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
+        #ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
+        ax.annotate(locsID[i].upper() + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
 
-        ax.grid(True,which='both')    
+        ax.grid(True,which='both', alpha=0.5)    
         #ax.legend(prop={'size':10})    
         #ax.set_ylabel('Altitude [km]')
         ax.tick_params(which='both',labelsize=10)
@@ -943,18 +994,35 @@ def main():
     all_axes = fig.get_axes()
     #show only the outside spines
     for ax in all_axes:
+        # for sp in ax.spines.values():
+        #     sp.set_visible(False)
+        #     plt.setp(ax.get_xticklabels(), visible=False)
+        # if ax.is_first_row():
+        #     ax.spines['top'].set_visible(True)
+        # if ax.is_last_row():
+        #     ax.spines['bottom'].set_visible(True)
+        #     plt.setp(ax.get_xticklabels(), visible=True)
+        # if ax.is_first_col():
+        #     ax.spines['left'].set_visible(True)
+        # if ax.is_last_col():
+        #     ax.spines['right'].set_visible(True)
+
         for sp in ax.spines.values():
             sp.set_visible(False)
             plt.setp(ax.get_xticklabels(), visible=False)
-        if ax.is_first_row():
+            plt.setp(ax.get_yticklabels(), visible=False)
             ax.spines['top'].set_visible(True)
-        if ax.is_last_row():
-            ax.spines['bottom'].set_visible(True)
-            plt.setp(ax.get_xticklabels(), visible=True)
-        if ax.is_first_col():
             ax.spines['left'].set_visible(True)
-        if ax.is_last_col():
             ax.spines['right'].set_visible(True)
+            ax.spines['bottom'].set_visible(True)
+            #ax.set_tick_params(which='major',labelsize=16)
+            if ax.is_last_row():
+                ax.spines['bottom'].set_visible(True)
+                plt.setp(ax.get_xticklabels(), visible=True)
+
+            if ax.is_first_col():
+                ax.spines['left'].set_visible(True)
+                plt.setp(ax.get_yticklabels(), visible=True)
 
     if (npanels % 2 == 1): #even
 
@@ -962,20 +1030,33 @@ def main():
         plt.setp(all_axes[-2].get_xticklabels(), visible=True)
         all_axes[-2].set_zorder(1)
 
-    all_axes[-1].set_xlabel('VMR ['+sclfctName+']')
-    all_axes[-2].set_xlabel('VMR ['+sclfctName+']')
 
-    fig.text(0.03, 0.5, 'Altitude [km]', fontsize=16, va='center', rotation='vertical')
-    plt.suptitle('{} Vertical Profiles'.format(gasName.upper()), fontsize=16  )
+    all_axes[-3].spines['bottom'].set_visible(True)
+    plt.setp(all_axes[-3].get_xticklabels(), visible=True)
+    all_axes[-3].set_zorder(1)
+
+    all_axes[-4].spines['bottom'].set_visible(True)
+    plt.setp(all_axes[-4].get_xticklabels(), visible=True)
+    all_axes[-4].set_zorder(1)
+
+    all_axes[-1].set_xlabel('VMR ['+sclfctName+']', fontsize=14)
+    all_axes[-2].set_xlabel('VMR ['+sclfctName+']', fontsize=14)
+    all_axes[-3].set_xlabel('VMR ['+sclfctName+']', fontsize=14)
+    all_axes[-4].set_xlabel('VMR ['+sclfctName+']', fontsize=14)
+
+
+    fig.text(0.01, 0.5, 'Altitude [km]', fontsize=16, va='center', rotation='vertical')
+    #plt.suptitle('{} Vertical Profiles'.format(gasName.upper()), fontsize=16  )
     #plt.tight_layout(h_pad=0.25) #w_pad=1.75 pad=1.75,
-    fig.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
+    fig.subplots_adjust(left=0.06, bottom=0.05, right=0.975, top=0.975)
 
     
-    if saveFlg: pdfsav.savefig(fig,dpi=200)
+    if saveFlg: 
+        pdfsav.savefig(fig,dpi=200)
     else: 
         plt.show(block=False)
-        #user_input = raw_input('Press any key to exit >>> ')
-        #sys.exit()
+
+    fig.savefig('/data1/projects/ocs/figures/fig/'+'Profiles.pdf', bbox_inches='tight')
 
     #---------------------------------------------------
     # Mean Error vertical profiles
@@ -991,22 +1072,22 @@ def main():
         Lat[i] = float(Lat[i])
 
         if Lat[i] >= 50.:     
-            ax.set_axis_bgcolor('lightcyan')
+            ax.set_facecolor('lightcyan')
             
         elif (Lat[i] >= 20.) & (Lat[i] < 50.):
-            ax.set_axis_bgcolor('lightgreen')
+            ax.set_facecolor('lightgreen')
            
         elif (Lat[i] >= -20.)  & (Lat[i] < 20.):
-            ax.set_axis_bgcolor('mistyrose')
+            ax.set_facecolor('mistyrose')
             
         elif (Lat[i] >= -50.)  & (Lat[i] < -20.):
-            ax.set_axis_bgcolor('cornsilk')
+            ax.set_facecolor('cornsilk')
             
         elif (Lat[i] < -50.):
-            ax.set_axis_bgcolor('lightgrey')
+            ax.set_facecolor('lightgrey')
         
         else:
-            ax.set_axis_bgcolor('lightgrey')
+            ax.set_facecolor('lightgrey')
 
         if int(nobs) > 1:
 
@@ -1025,7 +1106,8 @@ def main():
         else:
             ax.plot(rPrf[0],alt,label='Retrieved')
 
-        ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
+        #ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
+        ax.annotate(locsID[i].upper() + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
 
         ax.grid(True,which='both')    
         #ax.legend(prop={'size':10})    
@@ -1040,18 +1122,35 @@ def main():
     all_axes = fig.get_axes()
     #show only the outside spines
     for ax in all_axes:
+        # for sp in ax.spines.values():
+        #     sp.set_visible(False)
+        #     plt.setp(ax.get_xticklabels(), visible=False)
+        # if ax.is_first_row():
+        #     ax.spines['top'].set_visible(True)
+        # if ax.is_last_row():
+        #     ax.spines['bottom'].set_visible(True)
+        #     plt.setp(ax.get_xticklabels(), visible=True)
+        # if ax.is_first_col():
+        #     ax.spines['left'].set_visible(True)
+        # if ax.is_last_col():
+        #     ax.spines['right'].set_visible(True)
+
         for sp in ax.spines.values():
             sp.set_visible(False)
             plt.setp(ax.get_xticklabels(), visible=False)
-        if ax.is_first_row():
+            plt.setp(ax.get_yticklabels(), visible=False)
             ax.spines['top'].set_visible(True)
-        if ax.is_last_row():
-            ax.spines['bottom'].set_visible(True)
-            plt.setp(ax.get_xticklabels(), visible=True)
-        if ax.is_first_col():
             ax.spines['left'].set_visible(True)
-        if ax.is_last_col():
             ax.spines['right'].set_visible(True)
+            ax.spines['bottom'].set_visible(True)
+            #ax.set_tick_params(which='major',labelsize=16)
+            if ax.is_last_row():
+                ax.spines['bottom'].set_visible(True)
+                plt.setp(ax.get_xticklabels(), visible=True)
+
+            if ax.is_first_col():
+                ax.spines['left'].set_visible(True)
+                plt.setp(ax.get_yticklabels(), visible=True)
 
     if (npanels % 2 == 1): #even
 
@@ -1059,13 +1158,25 @@ def main():
         plt.setp(all_axes[-2].get_xticklabels(), visible=True)
         all_axes[-2].set_zorder(1)
 
-    all_axes[-1].set_xlabel('VMR ['+sclfctName+']')
-    all_axes[-2].set_xlabel('VMR ['+sclfctName+']')
 
-    fig.text(0.03, 0.5, 'Altitude [km]', fontsize=16, va='center', rotation='vertical')
-    plt.suptitle('{} Uncertainty Vertical Profiles'.format(gasName.upper()), fontsize=16  )
+    all_axes[-3].spines['bottom'].set_visible(True)
+    plt.setp(all_axes[-3].get_xticklabels(), visible=True)
+    all_axes[-3].set_zorder(1)
+
+    all_axes[-4].spines['bottom'].set_visible(True)
+    plt.setp(all_axes[-4].get_xticklabels(), visible=True)
+    all_axes[-4].set_zorder(1)
+
+    all_axes[-1].set_xlabel('VMR ['+sclfctName+']', fontsize=14)
+    all_axes[-2].set_xlabel('VMR ['+sclfctName+']', fontsize=14)
+    all_axes[-3].set_xlabel('VMR ['+sclfctName+']', fontsize=14)
+    all_axes[-4].set_xlabel('VMR ['+sclfctName+']', fontsize=14)
+
+
+    fig.text(0.01, 0.5, 'Altitude [km]', fontsize=16, va='center', rotation='vertical')
+    #plt.suptitle('{} Vertical Profiles'.format(gasName.upper()), fontsize=16  )
     #plt.tight_layout(h_pad=0.25) #w_pad=1.75 pad=1.75,
-    fig.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
+    fig.subplots_adjust(left=0.06, bottom=0.05, right=0.975, top=0.975)
 
     
     if saveFlg: pdfsav.savefig(fig,dpi=200)
@@ -1073,6 +1184,200 @@ def main():
         plt.show(block=False)
         #user_input = raw_input('Press any key to exit >>> ')
         #sys.exit()
+
+    fig.savefig('/data1/projects/ocs/figures/fig/'+'Profiles_Error.pdf', bbox_inches='tight')
+
+    #---------------------------------------------------
+    # Averaging Kernel Smoothing Function (row of avk)
+    #--------------------------------------------------
+    fig = plt.figure(figsize=(12,12))
+    outer_grid = gridspec.GridSpec(npanels2, 4, wspace=0.12, hspace=0.085)
+
+    for i, idhdf in enumerate(pltID):
+
+        if pltWvmr: pltAKAv   = np.nanmean(avkVMR[idhdf], axis=0)
+        else: pltAKAv   = np.nanmean(avkSCF[idhdf], axis=0)
+        
+        avkSCFAv   = np.nanmean(avkSCF[idhdf], axis=0)
+
+        #---------
+        #Total Column AK
+        #---------
+        avkTCAv    = np.nanmean(avkTC[idhdf], axis=0)
+        
+        dtpMean    = np.nanmean(dtp[idhdf])
+        dtpStd     = np.nanstd(dtp[idhdf])
+        Pcol       = [dtpMean, 120.]
+
+        Lat[i] = float(Lat[i])
+        gs        = gridspec.GridSpecFromSubplotSpec(1,3,subplot_spec=outer_grid[i], width_ratios=[3,1,1])
+        axa       = plt.subplot(gs[0])
+        axb       = plt.subplot(gs[1])
+        axc       = plt.subplot(gs[2])
+        cm        = plt.get_cmap(clmap)
+        cNorm     = colors.Normalize(vmin=np.min(alt[idhdf]), vmax=np.max(alt[idhdf]))
+        
+        scalarMap = mplcm.ScalarMappable(norm=cNorm,cmap=clmap)
+        scalarMap.set_array(alt[idhdf])
+        axa.set_color_cycle([scalarMap.to_rgba(x) for x in alt[idhdf]])
+
+        if Lat[i] >= 50.:     
+            axa.set_facecolor('lightcyan')
+            axb.set_facecolor('lightcyan')
+            axc.set_facecolor('lightcyan')
+            
+        elif (Lat[i] >= 20.) & (Lat[i] < 50.):
+            #ax.set_axis_bgcolor('lightgreen')
+            axa.set_facecolor('lightgreen')
+            axb.set_facecolor('lightgreen')
+            axc.set_facecolor('lightgreen')
+           
+        elif (Lat[i] >= -20.)  & (Lat[i] < 20.):
+            axa.set_facecolor('mistyrose')
+            axb.set_facecolor('mistyrose')
+            axc.set_facecolor('mistyrose')
+            
+        elif (Lat[i] >= -50.)  & (Lat[i] < -20.):
+            axa.set_facecolor('cornsilk')
+            axb.set_facecolor('cornsilk')
+            axc.set_facecolor('cornsilk')
+            
+        elif (Lat[i] < -50.):
+            axa.set_facecolor('lightgrey')
+            axb.set_facecolor('lightgrey')
+            axc.set_facecolor('lightgrey')
+        
+        else:
+            axa.set_facecolor('lightgrey')
+            axb.set_facecolor('lightgrey')
+            axc.set_facecolor('lightgrey')
+
+        for j in range(len(alt[idhdf])):
+            axa.plot(pltAKAv[j,:],alt[idhdf])
+
+        axa.axhline(y=dtpMean, linewidth=1.5, color='r')  
+        axa.axhline(y=dtpMean - dtpStd, linewidth=1.5, color='r', alpha=0.5)  
+        axa.axhline(y=dtpMean + dtpStd, linewidth=1.5, color='r', alpha=0.5)  
+        axa.set_ylim(0, 40)
+        axa.set_xlim(-0.15, 0.25)
+        axa.xaxis.set_ticks(np.arange(-0.15, 0.25, 0.1))
+        axa.tick_params(axis = 'both', which = 'major', labelsize = 8)
+        axa.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+
+        if pltWvmr:
+            if i == npanels-1: axa.set_xlabel('VMR AK')
+            if i == npanels-2: axa.set_xlabel('VMR AK')
+            if i == npanels-3: axa.set_xlabel('VMR AK')
+            if i == npanels-4: axa.set_xlabel('VMR AK')
+        else:
+            if i == npanels-1: axa.set_xlabel('AK')
+            if i == npanels-2: axa.set_xlabel('AK')
+            if i == npanels-3: axa.set_xlabel('AK')
+            if i == npanels-4: axa.set_xlabel('AK')
+
+        axa.annotate(locsID[i].upper(), xy=(0.025, 0.875), xycoords='axes fraction', fontsize=10, ha='left')
+
+        #---------------------------------------------------
+        # Total Column AK
+        #---------------------------------------------------
+        axb.plot(avkTCAv,alt[idhdf],color='k')
+        axb.axhline(y=dtpMean, linewidth=1.5, color='r')  
+        axb.axhline(y=dtpMean - dtpStd, linewidth=1.5, color='r', alpha=0.5)  
+        axb.axhline(y=dtpMean + dtpStd, linewidth=1.5, color='r', alpha=0.5)
+        axb.set_ylim(0, 40)
+        axb.set_xlim(0, 2)
+        axb.xaxis.set_ticks(np.arange(0,2,1))
+        axb.tick_params(axis = 'both', which = 'major', labelsize = 8)
+        axb.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+        if i == npanels-1: axb.set_xlabel('TC AK')
+        if i == npanels-2: axb.set_xlabel('TC AK')
+        if i == npanels-3: axb.set_xlabel('TC AK')
+        if i == npanels-4: axb.set_xlabel('TC AK')
+
+        #---------------------------------------------------
+        # Cum Sum of DOF
+        #---------------------------------------------------
+        if alt[idhdf][0] > alt[idhdf][-1]:
+            dofs_cs = np.cumsum(np.diag(avkSCFAv)[::-1])[::-1]
+        else:
+            dofs_cs = np.cumsum(np.diag(avkSCFAv))
+
+        axc.plot(dofs_cs,alt[idhdf],color='k',label='Cumulative Sum of DOFS (starting at surface)')
+
+        axc.axhline(y=dtpMean, linewidth=1.5, color='r')  
+        axc.axhline(y=dtpMean - dtpStd, linewidth=1.5, color='r', alpha=0.5)  
+        axc.axhline(y=dtpMean + dtpStd, linewidth=1.5, color='r', alpha=0.5) 
+        
+        try:
+            xval = range(0,int(np.ceil(max(dofs_cs)))+3)
+
+        except Exception as errmsg:
+            print '\nError: ', errmsg
+            xval = range(0, 2)
+
+        ind1         = mf.nearestind(Pcol[0], alt[idhdf])
+        ind2         = mf.nearestind(Pcol[1], alt[idhdf])
+
+        dofsPcol = dofs_cs[ind2] - dofs_cs[ind1]
+ 
+        axc.set_ylim((0,40))
+        axc.set_ylim(0, 40)
+        axc.set_xlim(0, 3)
+        axc.xaxis.set_ticks(np.arange(0,3,1))
+        axc.tick_params(axis='x',which='both',labelsize=8)
+        axc.tick_params(axis = 'both', which = 'major', labelsize = 8)
+        axc.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+        if i == npanels-1: axc.set_xlabel('Cum\nsum of DOFS')
+        if i == npanels-2: axc.set_xlabel('Cum\nsum of DOFS')
+        if i == npanels-3: axc.set_xlabel('Cum\nsum of DOFS')
+        if i == npanels-4: axc.set_xlabel('Cum\nsum of DOFS')
+
+        print idhdf
+        print 'DOFs for layer {0:.1f}-{1:.1f}[km] = {2:.2f}'.format(alt[idhdf][ind1],alt[idhdf][ind2],dofsPcol)
+        print 'DOFs all = {0:.2f}'.format(np.trace(avkSCFAv))
+      
+        fig.add_subplot(axa)
+        fig.add_subplot(axb)
+        fig.add_subplot(axc)  
+
+    all_axes = fig.get_axes()
+    #show only the outside spines
+    for i, ax in enumerate(all_axes):
+
+        for sp in ax.spines.values():
+            sp.set_visible(False)
+            plt.setp(ax.get_xticklabels(), visible=False)
+            plt.setp(ax.get_yticklabels(), visible=False)
+            ax.spines['top'].set_visible(True)
+            ax.spines['left'].set_visible(True)
+            ax.spines['right'].set_visible(True)
+            ax.spines['bottom'].set_visible(True)
+
+    for i in range(-1, -13, -1):
+
+        all_axes[i].spines['bottom'].set_visible(True)
+        plt.setp(all_axes[i].get_xticklabels(), visible=True)
+        all_axes[i].set_zorder(1)
+
+    for i in range(0, 64, 12):
+        all_axes[i].spines['left'].set_visible(True)
+        plt.setp(all_axes[i].get_yticklabels(), visible=True)
+        all_axes[i].set_zorder(1)
+
+    cbaxes = fig.add_axes([0.55, 0.1, 0.4, 0.015]) 
+    cbar   = fig.colorbar(scalarMap, orientation='horizontal', cax = cbaxes)
+    cbar.set_label('Altitude [km]', fontsize=14)
+
+
+    fig.text(0.01, 0.5, 'Altitude [km]', fontsize=16, va='center', rotation='vertical')
+    fig.subplots_adjust(left=0.06, bottom=0.05, right=0.975, top=0.975)
+
+    if saveFlg: pdfsav.savefig(fig,dpi=200)
+    else: 
+        plt.show(block=False)
+
+    if pltWvmr: fig.savefig('/data1/projects/ocs/figures/fig/AK_VMR.pdf', bbox_inches='tight')
+    else: fig.savefig('/data1/projects/ocs/figures/fig/AK_SC.pdf', bbox_inches='tight')
 
     #----------------------------
     #CONCATENATE st denis and maido
@@ -1109,16 +1414,25 @@ def main():
     # alttpp['MaSDenis']  = np.concatenate( (alttpp['St Denis'], alttpp['Maido']))
     # alttpp2['MaSDenis']  = np.concatenate( (alttpp2['St Denis'], alttpp2['Maido']))
 
-    npanels2  = int(math.ceil(npanels/3.0))
-    print npanels2
+    
 
     #---------------------------------------------------
     # Tropopause Height
     #---------------------------------------------------
     print '\nPlot: Tropopause height:\n' 
     ##resTH = AnalTS(npanels2-1, dates2, dtp2, pltID2, Lat2, fits = True, AvgType='Daily', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Tropopause height', unitsStr=' km', yData2=alttpp12, yData3=alttpp22, yData4=dtp2, ymin=4 ,ymax=19)
-    resTH = AnalTS(npanels2-1, dates2, dtp2, pltID2, Lat2, fits = True, AvgType=AvgType, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Tropopause height', unitsStr=' km', ymin=4 ,ymax=19)
+    resTH = AnalTS2(npanels2, dates, dtp, pltID, Lat, locsID, fits = True, AvgType=AvgType, pltFig=fitFlg, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Tropopause height', unitsStr=' km', ymin=4 ,ymax=19)
     resTH = np.asarray(resTH)
+    
+    #---------------------------------------------------
+    # Time Series of Total Columns (multiple panels) -- Averaged values
+    #---------------------------------------------------
+    print '\nPlot: Averaged Total Columns:\n' 
+    resTC = AnalTS2(npanels2, dates, totClmn, pltID, Lat, locsID, fits=True, AvgType=AvgType, pltFig=fitFlg, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Total Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', ymin=5.0 ,ymax=12)
+    resTC = np.asarray(resTC)
+
+    npanels2  = int(math.ceil(npanels/3.0))
+
     
     if pltPcol:
         
@@ -1128,13 +1442,6 @@ def main():
         #---------------------------------------------------
         #print '\nPlot: All Total Columns:\n'
         #res    = AnalTS(npanels2, dates, totClmn, pltID, Lat, fits=False, AvgType='none', pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Total Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$')
-
-        #---------------------------------------------------
-        # Time Series of Total Columns (multiple panels) -- Averaged values
-        #---------------------------------------------------
-        print '\nPlot: Averaged Total Columns:\n' 
-        resTC = AnalTS(npanels2-1, dates2, totClmn2, pltID2, Lat2, fits=True, AvgType=AvgType, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Total Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', ymin=5.0 ,ymax=11)
-        resTC = np.asarray(resTC)
 
         #---------------------------------------------------
         # Time Series of Total Columns Apriori (multiple panels) -- Averaged values
@@ -1150,33 +1457,34 @@ def main():
             # Boundary Layer Columns ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Boundary Layer Column:\n' 
-            resLC = AnalTS(npanels2-1, dates2, PcolTrop12, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)#, ymin=0.9 ,ymax=6.0)
+            resLC = AnalTS(npanels2-1, dates2, PcolTrop12, pltID2, Lat2, locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)#, ymin=0.9 ,ymax=6.0)
             resLC = np.asarray(resLC)
 
             print '\nPlot: Boundary Layer Column Anomalies:\n' 
-            resLCAnom = AnalTSAnom(npanels2-1, dates2, PcolTrop12, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$',period=period)
+            resLCAnom = AnalTSAnom(npanels2-1, dates2, PcolTrop12, pltID2, Lat2, locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$',period=period)
             resLCAnom = np.asarray(resLCAnom)
+
 
             #---------------------------------------------------
             # Free Tropospheric Columns ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Free Tropospheric Column:\n' 
-            resLC2 = AnalTS(npanels2-1, dates2, PcolTrop22, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)#, ymin=0.9, ymax=6.0)
+            resLC2 = AnalTS(npanels2-1, dates2, PcolTrop22, pltID2, Lat2, locID2,  fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)#, ymin=0.9, ymax=6.0)
             resLC2 = np.asarray(resLC2)
 
             print '\nPlot: Boundary Layer Column Anomalies:\n' 
-            resLC2Anom = AnalTSAnom(npanels2-1, dates2, PcolTrop22, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)
+            resLC2Anom = AnalTSAnom(npanels2-1, dates2, PcolTrop22, pltID2, Lat2, locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)
             resLC2Anom = np.asarray(resLC2Anom)
 
             #---------------------------------------------------
             # Stratospheric Columns ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Stratospheric Column:\n' 
-            resSC = AnalTS(npanels2-1, dates2, PcolStrat2, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)#, ymin=0.001 ,ymax=2.5)
+            resSC = AnalTS(npanels2-1, dates2, PcolStrat2, pltID2, Lat2, locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Partial Column', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)#, ymin=0.001 ,ymax=2.5)
             resSC = np.asarray(resSC)
 
             print '\nPlot: Stratospheric Column Anomalies:\n' 
-            resSCAnom = AnalTSAnom(npanels2-1, dates2, PcolStrat2, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)
+            resSCAnom = AnalTSAnom(npanels2-1, dates2, PcolStrat2, pltID2, Lat2, locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Partial Column Anomalies', unitsStr=TCsclfctName+' molecules$\cdot$cm$^{-2}$', period=period)
             resSCAnom = np.asarray(resSCAnom)
 
             #---------------------------------------------------
@@ -1400,6 +1708,8 @@ def main():
             if saveFlg: pdfsav.savefig(fig,dpi=200)
             else: 
                 plt.show(block=False)
+
+            fig.savefig('/data1/projects/ocs/figures/fig/mnthly_pCols.pdf', bbox_inches='tight')
                 #user_input = raw_input('Press any key to exit >>> ')
                 #sys.exit()
 
@@ -1407,8 +1717,9 @@ def main():
             # Bar plot: Three different periods ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Trends Columns:\n'
-            hbarplt3(resLC, resLC2, resSC, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval', saveFlg=saveFlg, pdfsav=pdfsav)
-            hbarplt3(resLCAnom, resLC2Anom, resSCAnom, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval - Anomalies', saveFlg=saveFlg, pdfsav=pdfsav)
+            #hbarplt3(resLC, resLC2, resSC, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval pCols', saveFlg=saveFlg, pdfsav=pdfsav)
+            hbarplt3(resLCAnom, resLC2Anom, resSCAnom, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval Pcols Anomalies', saveFlg=saveFlg, pdfsav=pdfsav)
+            #hbarplt3(resvmrLCAnom, resvmrLCAnom2, resvmrSCAnom, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval - Anomalies', saveFlg=saveFlg, pdfsav=pdfsav)
 
             #---------------------------------------------------
             # Bar plot: Three different periods ==> Apriori
@@ -1584,6 +1895,8 @@ def main():
             if saveFlg: pdfsav.savefig(fig,dpi=200)
             else:       plt.show(block=False)
 
+            fig.savefig('/data1/projects/ocs/figures/fig/Hemispheric_pCols.pdf', bbox_inches='tight')
+
             #----------------------------------------
             #Amplitude (Bar plot)
             #----------------------------------------
@@ -1607,6 +1920,8 @@ def main():
 
             if saveFlg: pdfsav.savefig(fig,dpi=200)
             else:       plt.show(block=False)
+
+            fig.savefig('/data1/projects/ocs/figures/fig/Amplitude_pCols.pdf', bbox_inches='tight')
 
     #user_input = raw_input('Press any key to exit >>> ')
     #sys.exit()
@@ -1637,12 +1952,13 @@ def main():
             # Tropospheric Weighted VMR ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Tropospheric Weighted VMR:\n' 
-            resvmrLC = AnalTS(npanels2-1, dates2, WvmrTrop12, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Weighted VMR', unitsStr=sclfctName, period=period)#, ymin=340 ,ymax=600)
+            resvmrLC = AnalTS(npanels2-1, dates2, WvmrTrop12, pltID2, Lat2, locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric wVMR', unitsStr=sclfctName, period=period, ymin=340 ,ymax=600)
             resvmrLC = np.asarray(resvmrLC)
 
             print '\nPlot: Tropospheric Weighted VMR Anomalies:\n' 
-            resvmrLCAnom = AnalTSAnom(npanels2-1, dates2, WvmrTrop12, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric Weighted VMR Anomalies', unitsStr=sclfctName, period=period, qboFlg=False)
+            resvmrLCAnom = AnalTSAnom(npanels2-1, dates2, WvmrTrop12, pltID2, Lat2,locID2,  fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Low Tropospheric wVMR Anomalies', unitsStr=sclfctName, period=period, qboFlg=False, ymin=-80 ,ymax=100)
             resvmrLCAnom = np.asarray(resvmrLCAnom)
+
 
             #user_input = raw_input('Press any key to exit >>> ')
             #sys.exit()
@@ -1652,11 +1968,11 @@ def main():
             # Free Tropospheric Weighted VMR ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Free Tropospheric Weighted VMR:\n' 
-            resvmrLC2 = AnalTS(npanels2-1, dates2, WvmrTrop22, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column', unitsStr=sclfctName, period=period)#, ymin=0.9, ymax=6.0)
+            resvmrLC2 = AnalTS(npanels2-1, dates2, WvmrTrop22, pltID2, Lat2, locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric wVMR', unitsStr=sclfctName, period=period, ymin=380, ymax=600)
             resvmrLC2 = np.asarray(resvmrLC2)
 
             print '\nPlot: Free Tropospheric Weighted VMR Anomalies:\n' 
-            resvmrLCAnom2 = AnalTSAnom(npanels2-1, dates2, WvmrTrop22, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric Partial Column Anomalies', unitsStr=sclfctName, period=period, qboFlg=False)
+            resvmrLCAnom2 = AnalTSAnom(npanels2-1, dates2, WvmrTrop22, pltID2, Lat2,locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Free Tropospheric wVMR Anomalies', unitsStr=sclfctName, period=period, qboFlg=False, ymin=-70, ymax=70)
             resvmrLCAnom2 = np.asarray(resvmrLCAnom2)
 
             #user_input = raw_input('Press any key to exit >>> ')
@@ -1665,11 +1981,11 @@ def main():
             # Stratospheric Weighted VMR ==> Retrieval
             #---------------------------------------------------
             print '\nPlot: Stratospheric Weighted VMR:\n' 
-            resvmrSC = AnalTS(npanels2-1, dates2, WvmrStrat2, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Weighted VMR', unitsStr=sclfctName, period=period)#, ymin=50 ,ymax=450)
+            resvmrSC = AnalTS(npanels2-1, dates2, WvmrStrat2, pltID2, Lat2, locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric  wVMR', unitsStr=sclfctName, period=period, ymin=130 ,ymax=400)
             resvmrSC = np.asarray(resvmrSC)
 
             print '\nPlot: Stratospheric Weighted VMR Anomalies:\n' 
-            resvmrSCAnom = AnalTSAnom(npanels2-1, dates2, WvmrStrat2, pltID2, Lat2, fits = True, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric Weighted VMR Anomalies', unitsStr=sclfctName, period=period, qboFlg=False)
+            resvmrSCAnom = AnalTSAnom(npanels2-1, dates2, WvmrStrat2, pltID2, Lat2, locID2, fits = fitFlg, AvgType=AvgType, smthFlg=smthFlg, pltFig=True, saveFlg=saveFlg, pdfsav=pdfsav, ytypeStr='Stratospheric wVMR Anomalies', unitsStr=sclfctName, period=period, qboFlg=False,ymin=-70 ,ymax=70)
             resvmrSCAnom = np.asarray(resvmrSCAnom)
 
             #user_input = raw_input('Press any key to exit >>> ')
@@ -1883,11 +2199,13 @@ def main():
                 #user_input = raw_input('Press any key to exit >>> ')
                 #sys.exit()
 
+            fig.savefig('/data1/projects/ocs/figures/fig/mnthly_wVMR.pdf', bbox_inches='tight')
+
             #---------------------------------------------------
             # Bar plot: Three different periods ==> Retrieval
             #---------------------------------------------------
-            #hbarplt3(resvmrLC, resvmrLC2, resvmrSC, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval', saveFlg=saveFlg, pdfsav=pdfsav)
-            hbarplt3(resvmrLCAnom, resvmrLCAnom2, resvmrSCAnom, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval - Anomalies', saveFlg=saveFlg, pdfsav=pdfsav)
+            #hbarplt3(resvmrLCAnom, resvmrLCAnom2, resvmrSCAnom, pltID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='Retrieval - Anomalies wVMR', saveFlg=saveFlg, pdfsav=pdfsav)
+            hbarplt3(resvmrLCAnom, resvmrLCAnom2, resvmrSCAnom, locID2, b1_label='Low Tropospheric', b2_label='Free Tropospheric', b3_label='Stratospheric', subtitle='ROC - Anomalies wVMR', saveFlg=saveFlg, pdfsav=pdfsav)
 
 
             #---------------------------------------------------
@@ -2055,6 +2373,9 @@ def main():
             if saveFlg: pdfsav.savefig(fig,dpi=200)
             else:       plt.show(block=False)
 
+            fig.savefig('/data1/projects/ocs/figures/fig/Hemispheric_wVMR.pdf', bbox_inches='tight')
+
+
             #---------------------------------------------------
             #Hemispheric Columns
             #---------------------------------------------------
@@ -2128,6 +2449,8 @@ def main():
 
             if saveFlg: pdfsav.savefig(fig,dpi=200)
             else:       plt.show(block=False)
+
+            fig.savefig('/data1/projects/ocs/figures/fig/Hemispheric_wVMR_allY.pdf', bbox_inches='tight')
 
 
 
@@ -2203,195 +2526,7 @@ def main():
     # if saveFlg: pdfsav.savefig(fig,dpi=200)
     # else:       plt.show(block=False)
 
-    #---------------------------------------------------
-    # Averaging Kernel Smoothing Function (row of avk)
-    #---------------------------------------------------
-    npanels2  = int(math.ceil(npanels/4.0))
-
-    fig = plt.figure(figsize=(15,15))
-
-    outer_grid = gridspec.GridSpec(npanels2, 4, wspace=0.17, hspace=0.135)
-
-    for i, idhdf in enumerate(pltID):
-
-        if pltWvmr: pltAKAv   = np.nanmean(avkVMR[idhdf], axis=0)
-        else: pltAKAv   = np.nanmean(avkSCF[idhdf], axis=0)
-        
-        avkSCFAv   = np.nanmean(avkSCF[idhdf], axis=0)
-
-        #---------
-        #Total Column AK
-        #---------
-        avkTCAv    = np.nanmean(avkTC[idhdf], axis=0)
-        
-        dtpMean    = np.nanmean(dtp[idhdf])
-        dtpStd     = np.nanstd(dtp[idhdf])
-        Pcol       = [dtpMean, 120.]
-
-        #ax = plt.Subplot(fig, outer_grid[i])
-        #gs        = gridspec.GridSpec(1,3,width_ratios=[3,1,1])
-        gs        = gridspec.GridSpecFromSubplotSpec(1,3,subplot_spec=outer_grid[i], width_ratios=[3,1,1])
-        axa       = plt.subplot(gs[0])
-        axb       = plt.subplot(gs[1])
-        axc       = plt.subplot(gs[2])
-        cm        = plt.get_cmap(clmap)
-        cNorm     = colors.Normalize(vmin=np.min(alt[idhdf]), vmax=np.max(alt[idhdf]))
-        scalarMap = mplcm.ScalarMappable(norm=cNorm,cmap=clmap)
-        scalarMap.set_array(alt[idhdf])
-        axa.set_color_cycle([scalarMap.to_rgba(x) for x in alt[idhdf]])
-        
-        for j in range(len(alt[idhdf])):
-            axa.plot(pltAKAv[j,:],alt[idhdf])
-
-        axa.axhline(y=dtpMean, linewidth=1.5, color='r')  
-        axa.axhline(y=dtpMean - dtpStd, linewidth=1.5, color='r', alpha=0.5)  
-        axa.axhline(y=dtpMean + dtpStd, linewidth=1.5, color='r', alpha=0.5)  
-            
-        #axa.set_ylabel('Altitude [km]')
-        #axa.set_xlabel('Averaging Kernels')
-        axa.grid(True, alpha=0.5)
-        axa.set_ylim(0, 40)
-        axa.set_xlim(-0.15, 0.25)
-        axa.xaxis.set_ticks(np.arange(-0.15, 0.25, 0.1))
-        #axa.xaxis.set_major_formatter(ticker.FormatStrFormatter('%0.1f'))
-        #axa.xticks(np.arange(-0.15, 0.25, 0.1))
-
-        axa.tick_params(axis = 'both', which = 'major', labelsize = 8)
-        axa.tick_params(axis = 'both', which = 'minor', labelsize = 0)
-
-        if pltWvmr:
-            if i == npanels-1: axa.set_xlabel('VMR AK')
-            if i == npanels-2: axa.set_xlabel('VMR AK')
-            if i == npanels-3: axa.set_xlabel('VMR AK')
-        else:
-            if i == npanels-1: axa.set_xlabel('AK')
-            if i == npanels-2: axa.set_xlabel('AK')
-            if i == npanels-3: axa.set_xlabel('AK')
-
-        axa.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.875), xycoords='axes fraction', fontsize=10, ha='left')
-        #all_axes[-2].set_xlabel('Averaging Kernels')
-        #axa.set_xticks([])
-        #axa.set_yticks([])
-
-        #cbaxes = fig.add_axes([0.45, 0.47, 0.02, 0.35])
-        #cbar = fig.colorbar(scalarMap,orientation='vertical', cax = cbaxes)
-        #cbar.set_label('Altitude [km]')
-        #ax.set_title('Averaging Kernels Scale Factor - ' +str(pltID[i]))
-        #plt.suptitle('Averaging Kernels Scale Factor - ' +str(pltID[i]), fontsize=16)
-        
-        #axb.plot(np.sum(avkSCFAv,axis=0),alt[idhdf],color='k')
-        axb.plot(avkTCAv,alt[idhdf],color='k')
-        
-        axb.grid(True)
-        axb.axhline(y=dtpMean, linewidth=1.5, color='r')  
-        axb.axhline(y=dtpMean - dtpStd, linewidth=1.5, color='r', alpha=0.5)  
-        axb.axhline(y=dtpMean + dtpStd, linewidth=1.5, color='r', alpha=0.5)
-        axb.set_ylim(0, 40)
-        axb.set_xlim(0, 2)
-        axb.xaxis.set_ticks(np.arange(0,2,1))
-        #axb.xaxis.set_major_formatter(ticker.FormatStrFormatter('%1f'))
-        #axb.xticks(np.arange(0, 2, 1.0))
-
-        axb.tick_params(axis = 'both', which = 'major', labelsize = 8)
-        axb.tick_params(axis = 'both', which = 'minor', labelsize = 0)
-        if i == npanels-1: axb.set_xlabel('TC AK')
-        if i == npanels-2: axb.set_xlabel('TC AK')
-        if i == npanels-3: axb.set_xlabel('TC AK')
-
-        if alt[idhdf][0] > alt[idhdf][-1]:
-            dofs_cs = np.cumsum(np.diag(avkSCFAv)[::-1])[::-1]
-        else:
-            dofs_cs = np.cumsum(np.diag(avkSCFAv))
-
-        
-        axc.plot(dofs_cs,alt[idhdf],color='k',label='Cumulative Sum of DOFS (starting at surface)')
-        
-
-        try:
-            xval = range(0,int(np.ceil(max(dofs_cs)))+3)
-
-        except Exception as errmsg:
-            print '\nError: ', errmsg
-            xval = range(0, 2)
-
-        ind1         = mf.nearestind(Pcol[0], alt[idhdf])
-        ind2         = mf.nearestind(Pcol[1], alt[idhdf])
-
-        axc.fill_between(xval,alt[idhdf][ind1],alt[idhdf][ind2],alpha=0.5,color='0.75')  
-        axc.axhline(alt[idhdf][ind2],color='k',linestyle='--')
-        dofsPcol = dofs_cs[ind2] - dofs_cs[ind1]
-        #axc.text(0.15,(alt[idhdf][ind1]+alt[idhdf][ind2])/2.0, 
-        #         'DOFs for layer {0:.2f}-{1:.2f}[km] = {2:.3f}'.format(alt[idhdf][ind1],alt[idhdf][ind2],dofsPcol),
-        #         fontsize=9)
-        #axc.set_title('DOFs Profile - ' +str(pltID[i]))
-        #axc.set_ylabel('Altitude [km]')
-        
-        #axc.set_xlabel('Cumulative\nSum of DOFS')  
-        #axc.set_title('sDOF = {:.2f}'.format(dofsPcol), fontsize=9)    
-        axc.set_ylim((0,40))
-        axc.grid(True,which='both')
-        axc.set_ylim(0, 40)
-        axc.set_xlim(0, 3)
-        axc.xaxis.set_ticks(np.arange(0,3,1))
-        #axc.xaxis.set_major_formatter(ticker.FormatStrFormatter('%1f'))
-        #axb.xticks(np.arange(0, 3, 1.0))
-        axc.tick_params(axis='x',which='both',labelsize=8)
-        axc.tick_params(axis = 'both', which = 'major', labelsize = 8)
-        axc.tick_params(axis = 'both', which = 'minor', labelsize = 0)
-        if i == npanels-1: axc.set_xlabel('Cumulative\nSum of DOFS')
-        if i == npanels-2: axc.set_xlabel('Cumulative\nSum of DOFS')
-        if i == npanels-3: axc.set_xlabel('Cumulative\nSum of DOFS')
-
-        print idhdf
-        print 'DOFs for layer {0:.1f}-{1:.1f}[km] = {2:.2f}'.format(alt[idhdf][ind1],alt[idhdf][ind2],dofsPcol)
-        print 'DOFs all = {0:.2f}'.format(np.trace(avkSCFAv))
-      
-        fig.add_subplot(axa)
-        fig.add_subplot(axb)
-        fig.add_subplot(axc)  
-
-        all_axes = fig.get_axes()
-        #show only the outside spines
-        for ax in all_axes:
-            for sp in ax.spines.values():
-                sp.set_visible(False)
-                
-            if ax.is_first_row():
-                ax.spines['top'].set_visible(True)
-            if ax.is_last_row():
-                ax.spines['bottom'].set_visible(True)
-                plt.setp(ax.get_xticklabels(), visible=True)
-            if ax.is_first_col():
-                ax.spines['left'].set_visible(True)
-            if ax.is_last_col():
-                ax.spines['right'].set_visible(True)
-
-    #if (npanels % 2 == 1): #even
-
-    #    all_axes[-2].spines['bottom'].set_visible(True)
-    #    plt.setp(all_axes[-2].get_xticklabels(), visible=True)
-    #    all_axes[-2].set_zorder(1)
-
     
-
-    fig.text(0.03, 0.5, 'Altitude [km]', fontsize=16, va='center', rotation='vertical')
-    plt.suptitle('{} Averaging Kernels'.format(gasName.upper()), fontsize=16  )
-    #plt.tight_layout(h_pad=0.25) #w_pad=1.75 pad=1.75,
-    fig.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
-
-    
-    if saveFlg: pdfsav.savefig(fig,dpi=200)
-    else: 
-        plt.show(block=False)
-        #user_input = raw_input('Press any key to exit >>> ')
-        #sys.exit()
-        
-
-    if saveFlg: pdfsav.close()
-    else:
-        plt.show(block=False)
-        user_input = raw_input('Press any key to exit >>> ')
-        sys.exit()
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------
 #                                                                END
@@ -2426,7 +2561,7 @@ def ckFile(fName,logFlg=False,exit=False):
 def squiggle_xy(a, b, c, d, i=np.arange(0.0, 2*np.pi, 0.05)):
     return np.sin(i*a)*np.cos(i*b), np.sin(i*c)*np.cos(i*d)
 
-def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthFlg=True, pltFig=False, saveFlg=False, pdfsav=' ', ytypeStr=' ', unitsStr=' ', ymin=False, ymax=False, yData2=False, yData3=False, yData4=False, period=1, qboFlg=False):
+def AnalTSAnom(npanels, xDates, yData, pltID, Lat, ID, fits=True, AvgType='Daily', smthFlg=True, pltFig=False, saveFlg=False, pdfsav=' ', ytypeStr=' ', unitsStr=' ', ymin=False, ymax=False, yData2=False, yData3=False, yData4=False, period=1, qboFlg=False):
     
     #--------------------
     #Slope and Amplitude of time series
@@ -2466,11 +2601,9 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', s
         fig  = plt.figure(figsize=(18,13))
         fig2 = plt.figure(figsize=(18,13))  
         
-        outer_grid = gridspec.GridSpec(npanels, 3, wspace=0.2, hspace=0.075)
+        outer_grid = gridspec.GridSpec(npanels, 3, wspace=0.05, hspace=0.075)
 
     for i, idhdf in enumerate(pltID):
-
-        print idhdf
 
         #----------------------------
         if AvgType == 'Daily':
@@ -2575,15 +2708,21 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', s
             ax  = plt.Subplot(fig, outer_grid[i])
             fig.add_subplot(ax)
             ax.plot(Dates, Anomaly,'k.',markersize=0)
-            ax.scatter(Dates, Anomaly, s=20, facecolor='lightgray', edgecolor='k',alpha=0.85)
+            ax.scatter(Dates, Anomaly, s=40, facecolor='lightgray', edgecolor='k',alpha=0.85)
             #print len(Dates)
             #print len(f_fourier(dateYeardateYearFracFrac))
             if qboFlg: ax.plot(dates2,f_fourier(dateYearFrac2)-300.,label='Fitted Anual Trend',linewidth=2.0)
 
+            ax.axhline(y=0, linestyle='--', linewidth=1.5, color='gray', alpha=0.5)
+
 
             ax2 = plt.Subplot(fig2, outer_grid[i])
             ax2.plot(Dates, Anomaly2,'k.',markersize=0)
-            ax2.scatter(Dates, Anomaly2, s=20, facecolor='lightgray', edgecolor='k',alpha=0.85)
+            ax2.scatter(Dates, Anomaly2, s=40, facecolor='lightgray', edgecolor='k',alpha=0.85)
+
+            ax2.axhline(y=0, linestyle='--', linewidth=1.5, color='gray', alpha=0.5)
+
+
 
             #--------------------
             #
@@ -2694,21 +2833,22 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', s
             #---------------------------------------------------
             # POLY FIT FOR STATIONS WITH LONG TIME SERIES (TO KNOW INFLECTION POINTS)
             #---------------------------------------------------
-            if (idhdf != 'Eureka') & (idhdf != 'St Petersburg') & (idhdf != 'Boulder') & (idhdf != 'Maido') &  (idhdf != 'StD-Maido') & (idhdf != 'Bremen') & (idhdf != 'Paris') & (idhdf != 'Altzomoni'):
+            if (idhdf != 'Eureka') & (idhdf != 'St Petersburg') & (idhdf != 'Boulder') & (idhdf != 'Maido') &  (idhdf != 'St Denis') & (idhdf != 'Bremen') & (idhdf != 'Paris') & (idhdf != 'Altzomoni'):
 
                 res          = mf.fit_driftfourier_poly(dateYearFrac, Anomaly2, weights, 2, half_period=period)
                 f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
 
         #---------------------------------------------------
         #---------------------------------------------------
-        roc  = df_drift(dateYearFrac2)/np.mean(AvgData)*100.0
-        roc  = np.asarray(roc)
+        if fits: 
+            roc  = df_drift(dateYearFrac2)/np.mean(AvgData)*100.0
+            roc  = np.asarray(roc)
 
-        zero_crossings = np.where(np.diff(np.sign(roc)))[0]
+        # zero_crossings = np.where(np.diff(np.sign(roc)))[0]
     
-        print idhdf
-        print 'Number of crossings = {}'.format(len(dates2[zero_crossings]))
-        print 'Dates of crossings  = {}'.format(dates2[zero_crossings])
+        # print idhdf
+        # print 'Number of crossings = {}'.format(len(dates2[zero_crossings]))
+        # print 'Dates of crossings  = {}'.format(dates2[zero_crossings])
 
         # if len(zero_crossings) <= 3:
 
@@ -2741,28 +2881,28 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', s
             Lat[i] = float(Lat[i])
 
             if Lat[i] >= 50.:     
-                ax.set_axis_bgcolor('lightcyan')
-                ax2.set_axis_bgcolor('lightcyan')
+                ax.set_facecolor('lightcyan')
+                ax2.set_facecolor('lightcyan')
                 
             elif (Lat[i] >= 20.) & (Lat[i] < 50.):
-                ax.set_axis_bgcolor('lightgreen')
-                ax2.set_axis_bgcolor('lightgreen')
+                ax.set_facecolor('lightgreen')
+                ax2.set_facecolor('lightgreen')
                
             elif (Lat[i] >= -20.)  & (Lat[i] < 20.):
-                ax.set_axis_bgcolor('mistyrose')
-                ax2.set_axis_bgcolor('mistyrose')
+                ax.set_facecolor('mistyrose')
+                ax2.set_facecolor('mistyrose')
                 
             elif (Lat[i] >= -50.)  & (Lat[i] < -20.):
-                ax.set_axis_bgcolor('cornsilk')
-                ax2.set_axis_bgcolor('cornsilk')
+                ax.set_facecolor('cornsilk')
+                ax2.set_facecolor('cornsilk')
                 
             elif (Lat[i] < -50.):
-                ax.set_axis_bgcolor('lightgrey')
-                ax2.set_axis_bgcolor('lightgrey')
+                ax.set_facecolor('lightgrey')
+                ax2.set_facecolor('lightgrey')
             
             else:
-                ax.set_axis_bgcolor('lightgrey')
-                ax2.set_axis_bgcolor('lightgrey')
+                ax.set_facecolor('lightgrey')
+                ax2.set_facecolor('lightgrey')
  
         if fits:
 
@@ -2802,7 +2942,7 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', s
 
 
 
-            elif (idhdf == 'Eureka') or (idhdf == 'Kiruna') or (idhdf == 'St Petersburg') or (idhdf == 'Bremen') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Tsukuba')  or (idhdf == 'Izana') or (idhdf == 'Paramaribo'):
+            elif (idhdf == 'Eureka') or (idhdf == 'Kiruna') or (idhdf == 'St Petersburg') or (idhdf == 'Bremen') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'St Denis') or (idhdf == 'Tsukuba')  or (idhdf == 'Izana') or (idhdf == 'Paramaribo'):
 
                 yoi  = [[2009, 2016]]
 
@@ -2989,143 +3129,235 @@ def AnalTSAnom(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', s
 
                 #ax.plot(dailyVals['dates'][indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend', linewidth=2.0)
 
+
         if pltFig:
-            yearsLc      = YearLocator()
-            months       = MonthLocator()
-            DateFmt      = DateFormatter('%Y')
-
             ax.set_xlim(xmin, xmax)
-            ax.grid(True, color='gray', alpha=0.5)
-            ax.tick_params(which='both',labelsize=10)
-            ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
 
-            ax.xaxis.set_major_locator(yearsLc)
-            ax.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+            ax.grid(True, color='gray', alpha=0.25)
+            ax.tick_params(which='both',labelsize=10)
+            #ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
+            ax.annotate(ID[i].upper() + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.015, 0.85), xycoords='axes fraction', fontsize=16, ha='left')
+            #if i == 0: ax.set_title('{} Total Columns'.format(gasName.upper()),multialignment='center')
+            #start, end = ax1[i].get_xlim()
+            #ax1[i].xticks.set_ticks(np.arange(min(totClmn[idhdf]), max(totClmn[idhdf])))
+            #ax1[i].set_ylim(bottom=0)
+
+            yearsLc1      = YearLocator(2)
+            yearsLc2      = YearLocator(1)
+            months        = MonthLocator()
+            DateFmt       = DateFormatter('%Y')
+
+            #plt.xticks(rotation=45)
+            ax.xaxis.set_major_locator(yearsLc1)
+            ax.xaxis.set_minor_locator(yearsLc2)
+            #ax.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+            #ax1.xaxis.set_minor_formatter(DateFormatter('%m'))
             ax.xaxis.set_major_formatter(DateFmt)
+            #ax.set_xlabel('Year')
+            #ax1.xaxis.set_tick_params(which='major', pad=15)  
             ax.xaxis.set_tick_params(which='minor',labelbottom='off')
+            ax.tick_params(which='both')
 
             if (ymin and ymax):
                 ax.set_ylim(ymin, ymax)
-
-            if qboFlg:
-                axx.set_xlim(xmin, xmax) 
-                axx.tick_params(which='both',labelsize=10)
-                axx.tick_params(axis = 'both', which = 'minor', labelsize = 0)
-                axx.set_ylim(-400, 300) 
+          
+            #ax.set_xticks([])
+            #ax.set_yticks([])
+            #fig.add_subplot(ax)
 
 
-
-
-
-
-            #axx.set_xlim(xmin, xmax)
-
-            #fig.add_subplot(axx, ax)
-            #fig.add_subplot(axx)
-
-            #---------------------------------------------------
-            #
-            #---------------------------------------------------
             ax2.set_xlim(xmin, xmax)
             #ax2.set_ylim(-7, 7)
             #ax2.axhline(y=0, linestyle='--', color='k')
-            ax2.grid(True, color='gray', alpha=0.5)
+            ax2.grid(True, color='gray', alpha=0.25)
             ax2.tick_params(which='both',labelsize=10)
-            ax2.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
+            ax2.annotate(ID[i].upper() + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.015, 0.85), xycoords='axes fraction', fontsize=16, ha='left')
 
-            ax2.xaxis.set_major_locator(yearsLc)
-            ax2.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+            ax2.xaxis.set_major_locator(yearsLc1)
+            ax2.xaxis.set_minor_locator(yearsLc2)
+            #ax.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+            #ax1.xaxis.set_minor_formatter(DateFormatter('%m'))
             ax2.xaxis.set_major_formatter(DateFmt)
+            #ax.set_xlabel('Year')
+            #ax1.xaxis.set_tick_params(which='major', pad=15)  
             ax2.xaxis.set_tick_params(which='minor',labelbottom='off')
+            ax2.tick_params(which='both')
+
+        
 
             if (ymin and ymax):
                 ax2.set_ylim(ymin, ymax)
     
             fig2.add_subplot(ax2)
 
+
             #---------------------------------------------------
 
     if pltFig:
     
+        # all_axes = fig.get_axes()
+        # #show only the outside spines
+        # for ax in all_axes:
+        #     for sp in ax.spines.values():
+        #         sp.set_visible(False)
+        #         plt.setp(ax.get_xticklabels(), visible=False)
+        #     if ax.is_first_row():
+        #         ax.spines['top'].set_visible(True)
+        #     if ax.is_last_row():
+        #         ax.spines['bottom'].set_visible(True)
+        #         plt.setp(ax.get_xticklabels(), visible=True)
+        #     if ax.is_first_col():
+        #         ax.spines['left'].set_visible(True)
+        #     if ax.is_last_col():
+        #         ax.spines['right'].set_visible(True)
+
+        # if (npanels % 2 == 1): #even
+        #     all_axes[-2].spines['bottom'].set_visible(True)
+        #     plt.setp(all_axes[-2].get_xticklabels(), visible=True)
+        #     all_axes[-2].set_zorder(1)
+
+        # all_axes[-1].set_xlabel('Year')
+        # all_axes[-2].set_xlabel('Year')
+        # all_axes[-3].set_xlabel('Year')
+        
+        # fig.autofmt_xdate()
+        # fig.text(0.03, 0.5, ytypeStr +' ['+unitsStr+']', fontsize=16, va='center', rotation='vertical')
+        # fig.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
+        # fig.suptitle(ytypeStr, fontsize=16  )
+        
+        #-----
         all_axes = fig.get_axes()
         #show only the outside spines
         for ax in all_axes:
+
             for sp in ax.spines.values():
                 sp.set_visible(False)
                 plt.setp(ax.get_xticklabels(), visible=False)
-            if ax.is_first_row():
+                plt.setp(ax.get_yticklabels(), visible=False)
                 ax.spines['top'].set_visible(True)
-            if ax.is_last_row():
-                ax.spines['bottom'].set_visible(True)
-                plt.setp(ax.get_xticklabels(), visible=True)
-            if ax.is_first_col():
                 ax.spines['left'].set_visible(True)
-            if ax.is_last_col():
                 ax.spines['right'].set_visible(True)
+                ax.spines['bottom'].set_visible(True)
+                #ax.set_tick_params(which='major',labelsize=16)
+            
+                if ax.is_first_col():
+                    ax.spines['left'].set_visible(True)
+                    plt.setp(ax.get_yticklabels(), visible=True)
+                    ax.tick_params(labelsize = 14)
 
-        if (npanels % 2 == 1): #even
-            all_axes[-2].spines['bottom'].set_visible(True)
-            plt.setp(all_axes[-2].get_xticklabels(), visible=True)
-            all_axes[-2].set_zorder(1)
+        
+        for i in range(-1, -5, -1):
 
-        all_axes[-1].set_xlabel('Year')
-        all_axes[-2].set_xlabel('Year')
-        all_axes[-3].set_xlabel('Year')
-        
-        fig.autofmt_xdate()
-        fig.text(0.03, 0.5, ytypeStr +' ['+unitsStr+']', fontsize=16, va='center', rotation='vertical')
-        fig.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
-        fig.suptitle(ytypeStr, fontsize=16  )
-        
+            all_axes[i].spines['bottom'].set_visible(True)
+            plt.setp(all_axes[i].get_xticklabels(), visible=True, rotation=45)
+            all_axes[i].set_zorder(1)
+
+            all_axes[i].set_xlabel('Year', fontsize=14)
+            all_axes[i].tick_params(labelsize = 14)
+
+        #fig.text(0.02, 0.5, ytypeStr +' ['+unitsStr+']', fontsize=16, va='center', rotation='vertical')
+        fig.text(0.0075, 0.5, ytypeStr +' ['+unitsStr+']', fontsize=16, va='center', rotation='vertical')
+        #plt.suptitle(ytypeStr, fontsize=16  )
+
+        fig.subplots_adjust(left=0.05, bottom=0.075, right=0.975, top=0.975)
+
         if saveFlg: pdfsav.savefig(fig,dpi=200)
         else: 
             plt.show(block=False)
+
+        ytypeStr = ytypeStr.replace(' ', '')
+
+        if fits: fig.savefig('/data1/projects/ocs/figures/fig/'+ytypeStr+'_wFit.pdf', bbox_inches='tight')
+        else: fig.savefig('/data1/projects/ocs/figures/fig/'+ytypeStr+'.pdf', bbox_inches='tight')
 
     #---------------------------------------------------
     #
     #---------------------------------------------------
     if pltFig:
     
+        # all_axes = fig2.get_axes()
+        # #show only the outside spines
+        # for ax in all_axes:
+        #     for sp in ax.spines.values():
+        #         sp.set_visible(False)
+        #         plt.setp(ax.get_xticklabels(), visible=False)
+        #     if ax.is_first_row():
+        #         ax.spines['top'].set_visible(True)
+        #     if ax.is_last_row():
+        #         ax.spines['bottom'].set_visible(True)
+        #         plt.setp(ax.get_xticklabels(), visible=True)
+        #     if ax.is_first_col():
+        #         ax.spines['left'].set_visible(True)
+        #     if ax.is_last_col():
+        #         ax.spines['right'].set_visible(True)
+
+        # if (npanels % 2 == 1): #even
+        #     all_axes[-2].spines['bottom'].set_visible(True)
+        #     plt.setp(all_axes[-2].get_xticklabels(), visible=True)
+        #     all_axes[-2].set_zorder(1)
+
+        # all_axes[-1].set_xlabel('Year')
+        # all_axes[-2].set_xlabel('Year')
+        # all_axes[-3].set_xlabel('Year')
+        
+        # fig2.autofmt_xdate()
+        # fig2.text(0.03, 0.5, 'Rate of change [%/y]', fontsize=16, va='center', rotation='vertical')
+        # fig2.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
+        # fig2.suptitle('Rate of change of VMR Anomalies', fontsize=16  )
+
+        #-----
         all_axes = fig2.get_axes()
         #show only the outside spines
         for ax in all_axes:
+
             for sp in ax.spines.values():
                 sp.set_visible(False)
                 plt.setp(ax.get_xticklabels(), visible=False)
-            if ax.is_first_row():
+                plt.setp(ax.get_yticklabels(), visible=False)
                 ax.spines['top'].set_visible(True)
-            if ax.is_last_row():
-                ax.spines['bottom'].set_visible(True)
-                plt.setp(ax.get_xticklabels(), visible=True)
-            if ax.is_first_col():
                 ax.spines['left'].set_visible(True)
-            if ax.is_last_col():
                 ax.spines['right'].set_visible(True)
+                ax.spines['bottom'].set_visible(True)
+                #ax.set_tick_params(which='major',labelsize=16)
+            
+                if ax.is_first_col():
+                    ax.spines['left'].set_visible(True)
+                    plt.setp(ax.get_yticklabels(), visible=True)
+                    ax.tick_params(labelsize = 14)
 
-        if (npanels % 2 == 1): #even
-            all_axes[-2].spines['bottom'].set_visible(True)
-            plt.setp(all_axes[-2].get_xticklabels(), visible=True)
-            all_axes[-2].set_zorder(1)
+        for i in range(-1, -5, -1):
 
-        all_axes[-1].set_xlabel('Year')
-        all_axes[-2].set_xlabel('Year')
-        all_axes[-3].set_xlabel('Year')
-        
-        fig2.autofmt_xdate()
-        fig2.text(0.03, 0.5, 'Rate of change [%/y]', fontsize=16, va='center', rotation='vertical')
-        fig2.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
-        fig2.suptitle('Rate of change of VMR Anomalies', fontsize=16  )
+            all_axes[i].spines['bottom'].set_visible(True)
+            plt.setp(all_axes[i].get_xticklabels(), visible=True, rotation=45)
+            all_axes[i].set_zorder(1)
+
+            all_axes[i].set_xlabel('Year', fontsize=14)
+            all_axes[i].tick_params(labelsize = 14)
+
+        #fig2.autofmt_xdate()
+
+        #fig2.text(0.02, 0.5, ytypeStr +' ['+unitsStr+']', fontsize=16, va='center', rotation='vertical')
+        fig2.text(0.0075, 0.5, 'Rate of change [%/y]', fontsize=16, va='center', rotation='vertical')
+        #plt.suptitle(ytypeStr, fontsize=16  )
+
+        fig2.subplots_adjust(left=0.05, bottom=0.075, right=0.975, top=0.975)
+
         
         if saveFlg: pdfsav.savefig(fig2,dpi=200)
         else: 
             plt.show(block=False)
+
+        ytypeStr = ytypeStr.replace(' ', '')
+
+        if fits: fig2.savefig('/data1/projects/ocs/figures/fig/'+ytypeStr+'ROC_wFit.pdf', bbox_inches='tight')
+        else: fig2.savefig('/data1/projects/ocs/figures/fig/'+ytypeStr+'ROC.pdf', bbox_inches='tight')
 
 
     return (slope, slope_e, slope_p1, slope_p1_e, slope_p2, slope_p2_e, slope_p3, slope_p3_e, amp,
             avgD, stdD, avgD_p1, stdD_p1 , avgD_p2, stdD_p2 , avgD_p3, stdD_p3)
 
 
-def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthFlg=True, pltFig=False, saveFlg=False, pdfsav=' ', ytypeStr=' ', unitsStr=' ', ymin=False, ymax=False, yData2=False, yData3=False, yData4=False, period=1):
+def AnalTS(npanels, xDates, yData, pltID, Lat, ID, fits=True, AvgType='Daily', smthFlg=True, pltFig=False, saveFlg=False, pdfsav=' ', ytypeStr=' ', unitsStr=' ', ymin=False, ymax=False, yData2=False, yData3=False, yData4=False, period=1):
     
     #--------------------
     #Slope and Amplitude of time series
@@ -3162,26 +3394,16 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthF
     if pltFig:    
         fig = plt.figure(figsize=(18,13))  
 
-        outer_grid = gridspec.GridSpec(npanels, 3, wspace=0.1, hspace=0.075)
+        outer_grid = gridspec.GridSpec(npanels, 3, wspace=0.05, hspace=0.075)
+    #--------------
+    # with open('/data1/projects/ocs/figures/fig/'+ytypeStr+'.txt','w') as fopen:
+    #     fopen.write('#Site\tLatitude\tMean TPH\tstd TPH\tMax TPH\tMin TPH\tAmplitude\n')
+
+    
+    #     strformat = '{:<15}\t'+'\t'.join('{:>5.1f}' for i in range(6)) + '\n'
+        
 
     for i, idhdf in enumerate(pltID):
-
-        #----------------------------
-        #CONCATENATE st denis and maido
-        #----------------------------
-        # if idhdf == 'St Denis':
-        #     yData[idhdf]    = np.asarray(yData[idhdf])
-        #     yData['Maido']  = np.asarray(yData['Maido'])
-
-        #     xDates[idhdf]    = np.asarray(xDates[idhdf])
-        #     xDates['Maido']  = np.asarray(xDates['Maido'])
-
-        #     #if (len(yData[idhdf]) != len(xDates[idhdf])): 
-        #     yData[idhdf]  = np.concatenate( (yData[idhdf], yData['Maido']))
-
-
-        #     if (len(xDates[idhdf]) != len(yData[idhdf])): 
-        #         xDates[idhdf] = np.concatenate( (xDates[idhdf], xDates['Maido']))
         
         #----------------------------
         if AvgType == 'Daily':
@@ -3251,6 +3473,9 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthF
             stdD.append(np.std(AvgData))
 
 
+            #fopen.write(strformat.format(idhdf, float(Lat[i]), np.mean(AvgData), np.std(AvgData), np.max(AvgData), np.min(AvgData), float(Amp)))
+
+
             # if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Bremen') or (idhdf == 'Paris') or (idhdf == 'Altzomoni'):
 
             #     res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
@@ -3303,7 +3528,7 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthF
         if pltFig:    
             ax = plt.Subplot(fig, outer_grid[i])
             ax.plot(Dates, AvgData,'k.',markersize=0)
-            ax.scatter(Dates,AvgData, s=20, facecolor='lightgray', edgecolor='k',alpha=0.85)
+            ax.scatter(Dates,AvgData, s=40, facecolor='lightgray', edgecolor='k',alpha=0.85)
 
             if yData2:
                 ax.plot(xDates[idhdf], yData2[idhdf], color='green')
@@ -3321,22 +3546,22 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthF
             Lat[i] = float(Lat[i])
 
             if Lat[i] >= 50.:     
-                ax.set_axis_bgcolor('lightcyan')
+                ax.set_facecolor('lightcyan')
                 
             elif (Lat[i] >= 20.) & (Lat[i] < 50.):
-                ax.set_axis_bgcolor('lightgreen')
+                ax.set_facecolor('lightgreen')
                
             elif (Lat[i] >= -20.)  & (Lat[i] < 20.):
-                ax.set_axis_bgcolor('mistyrose')
+                ax.set_facecolor('mistyrose')
                 
             elif (Lat[i] >= -50.)  & (Lat[i] < -20.):
-                ax.set_axis_bgcolor('cornsilk')
+                ax.set_facecolor('cornsilk')
                 
             elif (Lat[i] < -50.):
-                ax.set_axis_bgcolor('lightgrey')
+                ax.set_facecolor('lightgrey')
             
             else:
-                ax.set_axis_bgcolor('lightgrey')
+                ax.set_facecolor('lightgrey')
  
         if fits:
 
@@ -3345,7 +3570,7 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthF
                 ax.plot(dates2,f_driftfourier(dateYearFrac2),label='Fitted Anual Trend + intra-annual variability',linewidth=2.0)
             #---------------------------------------------------
 
-            if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Bremen') or  (idhdf == 'Paris') or (idhdf == 'Altzomoni') or (idhdf == 'Tsukuba') or (idhdf == 'Kiruna') or (idhdf == 'Izana') or (idhdf == 'Paramaribo'):
+            if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'St Denis') or (idhdf == 'Bremen') or  (idhdf == 'Paris') or (idhdf == 'Altzomoni') or (idhdf == 'Tsukuba') or (idhdf == 'Kiruna') or (idhdf == 'Izana') or (idhdf == 'Paramaribo'):
 
                 yoi  = [[2010, 2016]]
 
@@ -3532,88 +3757,660 @@ def AnalTS(npanels, xDates, yData, pltID, Lat, fits=True, AvgType='Daily', smthF
                 #ax.plot(dailyVals['dates'][indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend', linewidth=2.0)
 
         if pltFig:
-            ax.set_xlim(xmin, xmax)
+                ax.set_xlim(xmin, xmax)
 
-            ax.grid(True, color='gray', alpha=0.5)
-            ax.tick_params(which='both',labelsize=10)
-            ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
-            #if i == 0: ax.set_title('{} Total Columns'.format(gasName.upper()),multialignment='center')
-            #start, end = ax1[i].get_xlim()
-            #ax1[i].xticks.set_ticks(np.arange(min(totClmn[idhdf]), max(totClmn[idhdf])))
-            #ax1[i].set_ylim(bottom=0)
+                ax.grid(True, color='gray', alpha=0.25)
+                ax.tick_params(which='both',labelsize=10)
+                #ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
+                ax.annotate(ID[i].upper() + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.015, 0.85), xycoords='axes fraction', fontsize=16, ha='left')
+                #if i == 0: ax.set_title('{} Total Columns'.format(gasName.upper()),multialignment='center')
+                #start, end = ax1[i].get_xlim()
+                #ax1[i].xticks.set_ticks(np.arange(min(totClmn[idhdf]), max(totClmn[idhdf])))
+                #ax1[i].set_ylim(bottom=0)
 
-            yearsLc      = YearLocator()
-            months       = MonthLocator()
-            DateFmt      = DateFormatter('%Y')
+                yearsLc1      = YearLocator(2)
+                yearsLc2      = YearLocator(1)
+                months        = MonthLocator()
+                DateFmt       = DateFormatter('%Y')
 
-            #plt.xticks(rotation=45)
-            ax.xaxis.set_major_locator(yearsLc)
-            #ax.xaxis.set_minor_locator(months)
-            ax.tick_params(axis = 'both', which = 'minor', labelsize = 0)
-            #ax1.xaxis.set_minor_formatter(DateFormatter('%m'))
-            ax.xaxis.set_major_formatter(DateFmt)
-            #ax.set_xlabel('Year')
-            #ax1.xaxis.set_tick_params(which='major', pad=15)  
-            ax.xaxis.set_tick_params(which='minor',labelbottom='off')
 
-            if (ymin and ymax):
-                ax.set_ylim(ymin, ymax)
-          
-            #ax.set_xticks([])
-            #ax.set_yticks([])
-            fig.add_subplot(ax)
+                #plt.xticks(rotation=45)
+                ax.xaxis.set_major_locator(yearsLc1)
+                ax.xaxis.set_minor_locator(yearsLc2)
+                #ax.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+                #ax1.xaxis.set_minor_formatter(DateFormatter('%m'))
+                ax.xaxis.set_major_formatter(DateFmt)
+                #ax.set_xlabel('Year')
+                #ax1.xaxis.set_tick_params(which='major', pad=15)  
+                ax.xaxis.set_tick_params(which='minor',labelbottom='off')
+                ax.tick_params(which='both')
+
+                if (ymin and ymax):
+                    ax.set_ylim(ymin, ymax)
+              
+                #ax.set_xticks([])
+                #ax.set_yticks([])
+                fig.add_subplot(ax)
 
     if pltFig:
     
+        # all_axes = fig.get_axes()
+        # #show only the outside spines
+        # for ax in all_axes:
+        #     for sp in ax.spines.values():
+        #         sp.set_visible(False)
+        #         plt.setp(ax.get_xticklabels(), visible=False)
+        #     if ax.is_first_row():
+        #         ax.spines['top'].set_visible(True)
+        #     if ax.is_last_row():
+        #         ax.spines['bottom'].set_visible(True)
+        #         plt.setp(ax.get_xticklabels(), visible=True)
+        #     if ax.is_first_col():
+        #         ax.spines['left'].set_visible(True)
+        #     if ax.is_last_col():
+        #         ax.spines['right'].set_visible(True)
+
+        # if (npanels % 2 == 1): #even
+        #     all_axes[-2].spines['bottom'].set_visible(True)
+        #     plt.setp(all_axes[-2].get_xticklabels(), visible=True)
+        #     all_axes[-2].set_zorder(1)
+
+        
+        # all_axes[-1].set_xlabel('Year')
+        # all_axes[-2].set_xlabel('Year')
+        # all_axes[-3].set_xlabel('Year')
+
+        
+        # fig.autofmt_xdate()
+
+        # fig.text(0.03, 0.5, ytypeStr +' ['+unitsStr+']', fontsize=16, va='center', rotation='vertical')
+        # plt.suptitle(ytypeStr, fontsize=16  )
+
+        # fig.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
+
+        #-----
         all_axes = fig.get_axes()
         #show only the outside spines
         for ax in all_axes:
+
             for sp in ax.spines.values():
                 sp.set_visible(False)
                 plt.setp(ax.get_xticklabels(), visible=False)
-            if ax.is_first_row():
+                plt.setp(ax.get_yticklabels(), visible=False)
                 ax.spines['top'].set_visible(True)
-            if ax.is_last_row():
-                ax.spines['bottom'].set_visible(True)
-                plt.setp(ax.get_xticklabels(), visible=True)
-            if ax.is_first_col():
                 ax.spines['left'].set_visible(True)
-            if ax.is_last_col():
                 ax.spines['right'].set_visible(True)
+                ax.spines['bottom'].set_visible(True)
+                #ax.set_tick_params(which='major',labelsize=16)
+                # if ax.is_last_row():
+                #     ax.spines['bottom'].set_visible(True)
+                #     plt.setp(ax.get_xticklabels(), visible=True)
 
-        if (npanels % 2 == 1): #even
-            all_axes[-2].spines['bottom'].set_visible(True)
-            plt.setp(all_axes[-2].get_xticklabels(), visible=True)
-            all_axes[-2].set_zorder(1)
+                if ax.is_first_col():
+                    ax.spines['left'].set_visible(True)
+                    plt.setp(ax.get_yticklabels(), visible=True)
+                    ax.tick_params(labelsize = 14)
 
-        
-        all_axes[-1].set_xlabel('Year')
-        all_axes[-2].set_xlabel('Year')
-        all_axes[-3].set_xlabel('Year')
 
-        
-        fig.autofmt_xdate()
+        for i in range(-1, -5, -1):
 
-        fig.text(0.03, 0.5, ytypeStr +' ['+unitsStr+']', fontsize=16, va='center', rotation='vertical')
-        plt.suptitle(ytypeStr, fontsize=16  )
+            all_axes[i].spines['bottom'].set_visible(True)
+            plt.setp(all_axes[i].get_xticklabels(), visible=True, rotation=45)
+            all_axes[i].set_zorder(1)
 
-        fig.subplots_adjust(left=0.08, bottom=0.05, right=0.975, top=0.95)
+            all_axes[i].set_xlabel('Year', fontsize=14)
+            all_axes[i].tick_params(labelsize = 14)
+
+        #fig.autofmt_xdate()
+
+        fig.text(0.0075, 0.5, ytypeStr +' ['+unitsStr+']', fontsize=16, va='center', rotation='vertical')
+        #plt.suptitle(ytypeStr, fontsize=16  )
+
+        fig.subplots_adjust(left=0.05, bottom=0.075, right=0.975, top=0.975)
+
         
         if saveFlg: pdfsav.savefig(fig,dpi=200)
         else: 
             plt.show(block=False)
 
+        ytypeStr = ytypeStr.replace(' ', '')
+
+        if fits: fig.savefig('/data1/projects/ocs/figures/fig/'+ytypeStr+'_wFit.pdf', bbox_inches='tight')
+        else: fig.savefig('/data1/projects/ocs/figures/fig/'+ytypeStr+'.pdf', bbox_inches='tight')
+
 
     return (slope, slope_e, slope_p1, slope_p1_e, slope_p2, slope_p2_e, slope_p3, slope_p3_e, amp,
             avgD, stdD, avgD_p1, stdD_p1 , avgD_p2, stdD_p2 , avgD_p3, stdD_p3)
 
+def AnalTS2(npanels, xDates, yData, pltID, Lat, ID, fits=True, AvgType='Daily', smthFlg=True, pltFig=False, saveFlg=False, pdfsav=' ', ytypeStr=' ', unitsStr=' ', ymin=False, ymax=False, yData2=False, yData3=False, yData4=False, period=1):
+        
+        #--------------------
+        #Slope and Amplitude of time series
+        #--------------------
+        slope       = []   #slope
+        slope_e     = []   #slope error
+
+        slope_p1    = []   #slope 1995 - 2002
+        slope_p1_e  = []   #slope error 
+
+        slope_p2    = []   #slope 2002 - 2008
+        slope_p2_e  = []   #slope error
+
+        slope_p3    = []   #slope  2008 - 2016
+        slope_p3_e  = []   #slope error
+
+        amp         = []   #Amplitude 
+
+        avgD        = []
+        stdD        = []
+
+        avgD_p1     = []
+        stdD_p1     = []
+
+        avgD_p2     = []
+        stdD_p2     = []
+
+        avgD_p3     = []
+        stdD_p3     = []
+
+        xmin      = dt.date(1993, 1, 1)
+        xmax      = dt.date(2016, 12, 31)
+
+        if pltFig:    
+            #fig = plt.figure(figsize=(18,13))  
+            fig = plt.figure(figsize=(18,13))
+
+            outer_grid = gridspec.GridSpec(npanels, 4, wspace=0.075, hspace=0.075)
+            #outer_grid = gridspec.GridSpec(npanels2, 4, wspace=0.11, hspace=0.085) 
+
+        for i, idhdf in enumerate(pltID):
+            
+            #----------------------------
+            if AvgType == 'Daily':
+                Avg          = mf.dailyAvg(yData[idhdf],xDates[idhdf], dateAxis=1, meanAxis=0)
+                Dates        = Avg['dates']
+                dateYearFrac = mf.toYearFraction(Avg['dates'])
+                AvgData      = Avg['dailyAvg']
+
+                
+            elif AvgType == 'Monthly':
+                Avg          = mf.mnthlyAvg(yData[idhdf],xDates[idhdf], dateAxis=1, meanAxis=0)
+                Dates        = Avg['dates']
+                dateYearFrac = mf.toYearFraction(Avg['dates'])
+                AvgData      =  Avg['mnthlyAvg']
+
+            elif AvgType == 'none':
+                Dates        = xDates[idhdf]
+                dateYearFrac = mf.toYearFraction(Dates)
+                AvgData      = yData[idhdf]
+
+            else:
+                print 'Error: Define average type: Daily, Monthly, or none'
+                exit()
+
+            #--------------------
+            #Apply savitzky golay filter (Comment out if not wated)
+            #--------------------
+            if smthFlg: AvgData = mf.savitzky_golay(AvgData, 7, 3)
+
+            if fits:
+
+                weights      = np.ones_like(dateYearFrac)
+
+                #---------------------------------------------------
+                # To make a continuous fit
+                #---------------------------------------------------
+                numdays = (Dates.max() + dt.timedelta(days=1) - Dates.min()).days
+                dates2  = [Dates.min() + dt.timedelta(days=x) for x in range(0, numdays)]
+                dates2  = np.asarray(dates2)
+                dateYearFrac2 = mf.toYearFraction(dates2)
+                #---------------------------------------------------
+
+                yyyy = [sngdate.year for sngdate in Dates]
+                yyyy = np.asarray(yyyy)
+                
+                #---------------------------------------------------
+                # Calculate the linear regression of all years and estimate Fourier seris
+                #---------------------------------------------------
+                
+                res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=period)
+                f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
+
+                res_b        = mf.cf_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=period)
+                perc, intercept_b, slope_b, pfourier_b = res_b
+
+                #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
+                #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData)*100.0, np.std(slope_b)/np.mean(AvgData)*100.0, yyyy[0], yyyy[-1])
+
+                slope.append(res[1]/np.mean(AvgData)*100.0)
+                slope_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+
+                Amp   = np.sum(res[2]**2)
+                Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
+                amp.append(Amp)
+
+                avgD.append(np.mean(AvgData))
+                stdD.append(np.std(AvgData))
+
+
+                # if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'StD-Maido') or (idhdf == 'Bremen') or (idhdf == 'Paris') or (idhdf == 'Altzomoni'):
+
+                #     res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+                #     f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
+
+                #     res_b        = mf.cf_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+                #     perc, intercept_b, slope_b, pfourier_b = res_b
+
+                #     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
+                #     #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData)*100.0, np.std(slope_b)/np.mean(AvgData)*100.0, yyyy[0], yyyy[-1])
+
+                #     slope.append(res[1]/np.mean(AvgData)*100.0)
+                #     slope_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+
+                #     Amp   = np.sum(res[2]**2)
+                #     Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
+                #     amp.append(Amp)
+
+                #     avgD.append(np.mean(AvgData))
+                #     stdD.append(np.std(AvgData))
+
+                # else:
+
+                #     res          = mf.fit_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+                #     f_drift, f_fourier, f_driftfourier,  res_std, A= res[3:8]
+
+                #     res_b        = mf.cf_driftfourier(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+                #     perc, intercept_b, slope_b, pfourier_b = res_b
+
+                #     #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[0], yyyy[-1])
+                #     #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData)*100.0, np.std(slope_b)/np.mean(AvgData)*100.0, yyyy[0], yyyy[-1])
+
+                #     slope.append(res[1]/np.mean(AvgData)*100.0)
+                #     slope_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+
+                #     Amp   = np.sum(res[2]**2)
+                #     Amp   = np.sqrt(Amp)*2.0##/np.mean(f_driftfourier(dateYearFrac)) * 100.0
+                #     amp.append(Amp)
+
+                #     avgD.append(np.mean(AvgData))
+                #     stdD.append(np.std(AvgData))
+
+                    #res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=1.0)
+                    #f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
+
+
+            #---------------------------------------------------
+            #start plot
+            #---------------------------------------------------
+            if pltFig:    
+                ax = plt.Subplot(fig, outer_grid[i])
+                ax.plot(Dates, AvgData,'k.',markersize=0)
+                ax.scatter(Dates,AvgData, s=40, facecolor='lightgray', edgecolor='k',alpha=0.85)
+
+                if yData2:
+                    ax.plot(xDates[idhdf], yData2[idhdf], color='green')
+
+                if yData3:
+                    ax.plot(xDates[idhdf], yData3[idhdf], color='green')
+
+                if yData4:
+                    dtpStd      = np.nanstd(yData4[idhdf])
+                    dtpMean     = np.nanmean(yData4[idhdf])
+
+                    ax.axhline(y=dtpMean + (2.0*dtpStd), color='red', alpha=0.5)
+                    ax.axhline(y=dtpMean - (2.0*dtpStd), color='red', alpha=0.5)  
+
+                Lat[i] = float(Lat[i])
+
+                if Lat[i] >= 50.:     
+                    ax.set_facecolor('lightcyan')
+                    
+                elif (Lat[i] >= 20.) & (Lat[i] < 50.):
+                    ax.set_facecolor('lightgreen')
+                   
+                elif (Lat[i] >= -20.)  & (Lat[i] < 20.):
+                    ax.set_facecolor('mistyrose')
+                    
+                elif (Lat[i] >= -50.)  & (Lat[i] < -20.):
+                    ax.set_facecolor('cornsilk')
+                    
+                elif (Lat[i] < -50.):
+                    ax.set_facecolor('lightgrey')
+                
+                else:
+                    ax.set_facecolor('lightgrey')
+     
+            if fits:
+
+                if pltFig:
+                    #ax.plot(dates2,f_fourier(dateYearFrac2),label='Intra-annual variability', linewidth=1.0)
+                    ax.plot(dates2,f_driftfourier(dateYearFrac2),label='Fitted Anual Trend + intra-annual variability',linewidth=2.0)
+                #---------------------------------------------------
+
+                if (idhdf == 'Eureka') or (idhdf == 'St Petersburg') or (idhdf == 'Boulder') or (idhdf == 'Maido') or (idhdf == 'St Denis') or (idhdf == 'Bremen') or  (idhdf == 'Paris') or (idhdf == 'Altzomoni') or (idhdf == 'Tsukuba') or (idhdf == 'Kiruna') or (idhdf == 'Izana') or (idhdf == 'Paramaribo'):
+
+                    yoi  = [[2010, 2016]]
+
+                    for y in yoi:
+                        
+                        indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
+
+                        res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                        f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
+                        df_drift     = res[1]
+                        roc          = df_drift
+
+                        res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                        perc, intercept_b, slope_b, pfourier_b = res_b
+
+                        #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
+                        #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                        slope_p1.append(float('nan'))
+                        slope_p1_e.append(float('nan'))
+
+                        slope_p2.append(float('nan'))
+                        slope_p2_e.append(float('nan'))
+
+                        slope_p3.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                        slope_p3_e.append(np.std(slope_b)/np.mean(AvgData)*100.0)
+
+
+                        avgD_p1.append(float('nan'))
+                        stdD_p1.append(float('nan'))
+
+                        avgD_p2.append(float('nan'))
+                        stdD_p2.append(float('nan'))
+
+                        avgD_p3.append(np.mean(AvgData[indx1]))
+                        stdD_p3.append(np.std(AvgData[indx1]))
+
+
+
+                elif (idhdf == 'Thule') or (idhdf == 'Lauder') or (idhdf == 'Toronto')  or (idhdf == 'Ny Alesund'):
+
+                    yoi  = [[2002, 2008], [2010, 2016]]
+
+                    slope_p1.append(float('nan'))
+                    slope_p1_e.append(float('nan'))
+
+                    avgD_p1.append(float('nan'))
+                    stdD_p1.append(float('nan'))
+
+                    for ii, y in enumerate(yoi):
+                        
+                        indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
+
+                        res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=period)
+                        f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
+                        roc    = df_drift(dateYearFrac[indx1[0]:indx1[-1]])
+                        roc    =  np.mean(roc)
+
+                        #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Poly)".format(pltID[i], np.mean(roc), np.std(roc), yyyy[indx1[0]], yyyy[indx1[-1]])
+                        #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Poly)".format(pltID[i], np.mean(roc)/np.mean(AvgData[indx1])*100.0, np.std(roc)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+
+                        res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                        f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
+                        df_drift     = res[1]
+                        roc          = df_drift
+
+                        res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                        perc, intercept_b, slope_b, pfourier_b = res_b
+
+                        #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
+                        #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                        if ii == 0:
+                            slope_p2.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                            slope_p2_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                            avgD_p2.append(np.mean(AvgData[indx1]))
+                            stdD_p2.append(np.std(AvgData[indx1]))
+
+                        if ii == 1:
+                            slope_p3.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                            slope_p3_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                            avgD_p3.append(np.mean(AvgData[indx1]))
+                            stdD_p3.append(np.std(AvgData[indx1]))
+
+                elif (idhdf == 'Rikubetsu'):
+
+                    yoi  = [[1996, 2002], [2002, 2008]]
+
+                    slope_p3.append(float('nan'))
+                    slope_p3_e.append(float('nan'))
+
+                    avgD_p3.append(float('nan'))
+                    stdD_p3.append(float('nan'))
+                
+                    for ii, y in enumerate(yoi):
+
+                        indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
+
+                        res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=period)
+                        f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
+                        roc    = df_drift(dateYearFrac[indx1[0]:indx1[-1]])
+                       
+                        #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Poly)".format(pltID[i], np.mean(roc), np.std(roc), yyyy[indx1[0]], yyyy[indx1[-1]])
+                        #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Poly)".format(pltID[i], np.mean(roc)/np.mean(AvgData[indx1])*100.0, np.std(roc)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                        res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                        f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
+                        df_drift     = res[1]
+                        roc          = df_drift
+
+                        res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                        perc, intercept_b, slope_b, pfourier_b = res_b
+
+                        #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
+                        #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                        if ii == 0:
+                            slope_p1.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                            slope_p1_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                            avgD_p1.append(np.mean(AvgData[indx1]))
+                            stdD_p1.append(np.std(AvgData[indx1]))
+
+                        if ii == 1:
+                            slope_p2.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                            slope_p2_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                            avgD_p2.append(np.mean(AvgData[indx1]))
+                            stdD_p2.append(np.std(AvgData[indx1]))
+
+                  
+                        #ax.plot(dailyVals['dates'][indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend', linewidth=2.0)
+
+                elif (idhdf == 'Jungfraujoch')  or (idhdf == 'Mauna Loa') or (idhdf == 'Wollongong') or (idhdf == 'AHTS') or (idhdf == 'Zugspitze'):
+
+                    yoi  = [[1995, 2002], [2002, 2008], [2010, 2016]]
+                
+                    for ii, y in enumerate(yoi):
+
+                        indx1  = np.where( (yyyy >= y[0]) &  (yyyy <= y[1]))[0]
+
+                        res          = mf.fit_driftfourier_poly(dateYearFrac, AvgData, weights, 2, half_period=period)
+                        f_drift, f_fourier, f_driftfourier,  res_std, A,  df_drift = res[3:9]
+                        roc    = df_drift(dateYearFrac[indx1[0]:indx1[-1]])
+                       
+                        #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Poly)".format(pltID[i], np.mean(roc), np.std(roc), yyyy[indx1[0]], yyyy[indx1[-1]])
+                        #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Poly)".format(pltID[i], np.mean(roc)/np.mean(AvgData[indx1])*100.0, np.std(roc)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                        res    = mf.fit_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                        f_drift, f_fourier, f_driftfourier,  res_std, A = res[3:8]
+                        df_drift     = res[1]
+                        roc          = df_drift
+
+                        res_b        = mf.cf_driftfourier(dateYearFrac[indx1], AvgData[indx1], weights[indx1], 2, half_period=period)
+                        perc, intercept_b, slope_b, pfourier_b = res_b
+
+                        #print "Rate of Change ({}) = {:.3f} +/- {:.3f} molec/cm2 for years: {} - {} (Linear)".format(pltID[i], res[1], np.std(slope_b), yyyy[indx1[0]], yyyy[indx1[-1]])
+                        #print "Rate of Change ({}) = {:.2f} +/- {:.3f}% for years: {} - {} (Linear)".format(pltID[i], res[1]/np.mean(AvgData[indx1])*100.0, np.std(slope_b)/np.mean(AvgData[indx1])*100.0, yyyy[indx1[0]], yyyy[indx1[-1]])
+
+                        if ii == 0:
+                            slope_p1.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                            slope_p1_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                            avgD_p1.append(np.mean(AvgData[indx1]))
+                            stdD_p1.append(np.std(AvgData[indx1]))
+
+                        if ii == 1:
+                            slope_p2.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                            slope_p2_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                            avgD_p2.append(np.mean(AvgData[indx1]))
+                            stdD_p2.append(np.std(AvgData[indx1]))
+
+                        if ii == 2:
+                            slope_p3.append(res[1]/np.mean(AvgData[indx1])*100.0)
+                            slope_p3_e.append(np.std(slope_b)/np.mean(AvgData[indx1])*100.0)
+
+                            avgD_p3.append(np.mean(AvgData[indx1]))
+                            stdD_p3.append(np.std(AvgData[indx1]))
+
+                    #ax.plot(dailyVals['dates'][indx1],f_drift(dateYearFrac[indx1]),label='Fitted Anual Trend', linewidth=2.0)
+
+            if pltFig:
+                ax.set_xlim(xmin, xmax)
+
+                ax.grid(True, color='gray', alpha=0.25)
+                ax.tick_params(which='both',labelsize=10)
+                #ax.annotate(pltID[i] + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.025, 0.8), xycoords='axes fraction', fontsize=16, ha='left')
+                ax.annotate(ID[i].upper() + ' ({0:.2f}$^\circ$)'.format(float(Lat[i])), xy=(0.015, 0.85), xycoords='axes fraction', fontsize=16, ha='left')
+                #if i == 0: ax.set_title('{} Total Columns'.format(gasName.upper()),multialignment='center')
+                #start, end = ax1[i].get_xlim()
+                #ax1[i].xticks.set_ticks(np.arange(min(totClmn[idhdf]), max(totClmn[idhdf])))
+                #ax1[i].set_ylim(bottom=0)
+
+                yearsLc1      = YearLocator(2)
+                yearsLc2      = YearLocator(1)
+                months        = MonthLocator()
+                DateFmt       = DateFormatter('%Y')
+
+
+                #plt.xticks(rotation=45)
+                ax.xaxis.set_major_locator(yearsLc1)
+                ax.xaxis.set_minor_locator(yearsLc2)
+                #ax.tick_params(axis = 'both', which = 'minor', labelsize = 0)
+                #ax1.xaxis.set_minor_formatter(DateFormatter('%m'))
+                ax.xaxis.set_major_formatter(DateFmt)
+                #ax.set_xlabel('Year')
+                #ax1.xaxis.set_tick_params(which='major', pad=15)  
+                ax.xaxis.set_tick_params(which='minor',labelbottom='off')
+                ax.tick_params(which='both')
+
+                if (ymin and ymax):
+                    ax.set_ylim(ymin, ymax)
+              
+                #ax.set_xticks([])
+                #ax.set_yticks([])
+                fig.add_subplot(ax)
+
+        if pltFig:
+        
+            #-----
+            all_axes = fig.get_axes()
+            #show only the outside spines
+            for i, ax in enumerate(all_axes):
+
+                for sp in ax.spines.values():
+                    sp.set_visible(False)
+                    plt.setp(ax.get_xticklabels(), visible=False)
+                    plt.setp(ax.get_yticklabels(), visible=False)
+                    ax.spines['top'].set_visible(True)
+                    ax.spines['left'].set_visible(True)
+                    ax.spines['right'].set_visible(True)
+                    ax.spines['bottom'].set_visible(True)
+                
+                    if ax.is_first_col():
+                        ax.spines['left'].set_visible(True)
+                        plt.setp(ax.get_yticklabels(), visible=True)
+                        ax.tick_params(labelsize = 14)
+
+            #fig.autofmt_xdate()
+
+            for i in range(-1, -5, -1):
+
+                all_axes[i].spines['bottom'].set_visible(True)
+                plt.setp(all_axes[i].get_xticklabels(), visible=True, rotation=45)
+                all_axes[i].set_zorder(1)
+
+                all_axes[i].set_xlabel('Year', fontsize=14)
+                all_axes[i].tick_params(labelsize = 14)
+
+            #fig.autofmt_xdate()
+
+            fig.text(0.0075, 0.5, ytypeStr +' ['+unitsStr+']', fontsize=16, va='center', rotation='vertical')
+            #plt.suptitle(ytypeStr, fontsize=16  )
+
+            fig.subplots_adjust(left=0.05, bottom=0.075, right=0.99, top=0.99)
+
+            
+            if saveFlg: pdfsav.savefig(fig,dpi=200)
+            else: 
+                plt.show(block=False)
+
+            ytypeStr = ytypeStr.replace(' ', '')
+
+
+            if fits: fig.savefig('/data1/projects/ocs/figures/fig/'+ytypeStr+'_wFit.pdf', bbox_inches='tight')
+            else: fig.savefig('/data1/projects/ocs/figures/fig/'+ytypeStr+'.pdf', bbox_inches='tight')
+
+
+        return (slope, slope_e, slope_p1, slope_p1_e, slope_p2, slope_p2_e, slope_p3, slope_p3_e, amp,
+                avgD, stdD, avgD_p1, stdD_p1 , avgD_p2, stdD_p2 , avgD_p3, stdD_p3)
+
 
 def hbarplt3(b1, b2, b3, pltID, b1_label='', b2_label='', b3_label='', subtitle='', saveFlg=False, pdfsav=' '):
+
+    pltID        = np.asarray(pltID)
+
+    pltID        = [p.upper() for p in pltID]
+
+
+    #-------------------------------------------------
+    # Calculate partial columns and weighted VMR
+    #-------------------------------------------------
+
+    with open('/data1/projects/ocs/figures/fig/'+'ROC_lowTrop.dat','w') as fopen:
+
+        fopen.write('# Site, roc1, roc1_e, roc2, roc2_e, roc3, roc3_e, roc4, roc4_e\n')
+
+        strFormat = '{0:<10s} & {1:>.2f} $\pm$ {2:>.2f} & {3:.2f} $\pm$ {4:.2f} & {5:.2f} $\pm$ {6:.2f} & {7:.2f} $\pm$ {8:.2f}\n'
+
+        for pi, p in enumerate(pltID):
+
+            fopen.write(strFormat.format(p.upper(), b1[0][pi], b1[1][pi], b1[2][pi], b1[3][pi], b1[4][pi], b1[5][pi], b1[6][pi], b1[7][pi]     ) )
+
+    with open('/data1/projects/ocs/figures/fig/'+'ROC_freeTrop.dat','w') as fopen:
+
+        fopen.write('# Site, roc1, roc1_e, roc2, roc2_e, roc3, roc3_e, roc4, roc4_e\n')
+
+        strFormat = '{0:<10s} & {1:>.2f} $\pm$ {2:>.2f} & {3:.2f} $\pm$ {4:.2f} & {5:.2f} $\pm$ {6:.2f} & {7:.2f} $\pm$ {8:.2f}\n'
+
+        for pi, p in enumerate(pltID):
+
+            fopen.write(strFormat.format(p.upper(), b2[0][pi], b2[1][pi], b2[2][pi], b2[3][pi], b2[4][pi], b2[5][pi], b2[6][pi], b2[7][pi]     ) )
+
+    with open('/data1/projects/ocs/figures/fig/'+'ROC_Strat.dat','w') as fopen:
+
+        fopen.write('# Site, roc1, roc1_e, roc2, roc2_e, roc3, roc3_e, roc4, roc4_e\n')
+
+        strFormat = '{0:<10s} & {1:>.2f} $\pm$ {2:>.2f} & {3:.2f} $\pm$ {4:.2f} & {5:.2f} $\pm$ {6:.2f} & {7:.2f} $\pm$ {8:.2f}\n'
+
+        for pi, p in enumerate(pltID):
+
+            fopen.write(strFormat.format(p.upper(), b3[0][pi], b3[1][pi], b3[2][pi], b3[3][pi], b3[4][pi], b3[5][pi], b3[6][pi], b3[7][pi]     ) )
+
+
     
     #---------------------------------------------------
     # Bar plot: Three different periods ==> Retrieval
     #---------------------------------------------------
-    pltID        = np.asarray(pltID)
+    
 
     ind = np.arange(len(b1[0]))
     
@@ -3625,10 +4422,10 @@ def hbarplt3(b1, b2, b3, pltID, b1_label='', b2_label='', b3_label='', subtitle=
     ax.barh(ind+0.27, b3[0], 0.27, xerr=b3[1], align='center', color = 'g', ecolor = 'k', label = b3_label)  #yerr=slope_TC*0
     ax.xaxis.grid(True)
     ax.yaxis.grid(True)
-    ax.set_xlabel('Rate of change (%/y)')
+    ax.set_xlabel('Rate of change [%/y]')
     ax.set_yticks(ind)
     ax.set_yticklabels(np.transpose(pltID), rotation=0)
-    ax.set_title(subtitle+'\n(1996 - 2016)', multialignment='center')
+    ax.set_title('1996 - 2016', multialignment='center')
     #ax.set_xlabel('Site')
     ax.set_xlim(-2.0, 2.0)
     ax.axvline(0, color='black', lw=1)
@@ -3640,8 +4437,8 @@ def hbarplt3(b1, b2, b3, pltID, b1_label='', b2_label='', b3_label='', subtitle=
     ax2.barh(ind+0.27, b3[2], 0.27, xerr=b3[3], align='center', color = 'g', ecolor = 'k', label = b3_label)  
     ax2.xaxis.grid(True)
     ax2.yaxis.grid(True)
-    ax2.set_xlabel('Rate of change (%/y))')
-    ax2.set_title(subtitle+'\n(1996 - 2002)', multialignment='center')
+    ax2.set_xlabel('Rate of change [%/y]')
+    ax2.set_title('1996 - 2002', multialignment='center')
     ax2.set_yticks(ind)
     ax2.set_yticklabels(np.transpose(pltID), rotation=0)
     #ax.set_xlabel('Site')
@@ -3658,8 +4455,8 @@ def hbarplt3(b1, b2, b3, pltID, b1_label='', b2_label='', b3_label='', subtitle=
     ax3.barh(ind+0.27, b3[4], 0.27, xerr=b3[5], align='center', color = 'g', ecolor = 'k')  
     ax3.xaxis.grid(True)
     ax3.yaxis.grid(True)
-    ax3.set_xlabel('Rate of change (%/y))')
-    ax3.set_title(subtitle+'\n(2002 - 2008)', multialignment='center')
+    ax3.set_xlabel('Rate of change [%/y]')
+    ax3.set_title('2002 - 2008', multialignment='center')
     ax3.set_yticks(ind)
     #ax3.set_yticklabels(np.transpose(pltID), rotation=0)
     #ax.set_xlabel('Site')
@@ -3673,8 +4470,8 @@ def hbarplt3(b1, b2, b3, pltID, b1_label='', b2_label='', b3_label='', subtitle=
     ax4.barh(ind+0.27, b3[6], 0.27, xerr=b3[7], align='center', color = 'g', ecolor = 'k')  
     ax4.xaxis.grid(True)
     ax4.yaxis.grid(True)
-    ax4.set_xlabel('Rate of change (%/y))')
-    ax4.set_title(subtitle+'\n(2009 - 2016)', multialignment='center')
+    ax4.set_xlabel('Rate of change [%/y]')
+    ax4.set_title('2009 - 2016', multialignment='center')
     ax4.set_yticks(ind)
     #ax4.set_yticklabels(np.transpose(pltID), rotation=0)
     #ax.set_xlabel('Site')
@@ -3685,10 +4482,14 @@ def hbarplt3(b1, b2, b3, pltID, b1_label='', b2_label='', b3_label='', subtitle=
 
     plt.gca().invert_yaxis()
     #fig.tight_layout()
-    fig.subplots_adjust(left=0.1, right=0.95)
+    fig.subplots_adjust(left=0.1, right=0.97)
 
     if saveFlg: pdfsav.savefig(fig,dpi=200)
     else:       plt.show(block=False)
+
+    subtitle = subtitle.replace(' ', '')
+
+    fig.savefig('/data1/projects/ocs/figures/fig/'+subtitle+'.pdf', bbox_inches='tight')
 
 
  

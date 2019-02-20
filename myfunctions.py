@@ -1312,6 +1312,7 @@ def read_ICARTT(path):
                 VOLUME_INFO = l.strip()
             elif li == DATE_LINE:
                 l = l.replace(',', '').split()
+
                 SDATE = "".join(l[:3])
                 WDATE = "".join(l[3:])
                 SDATE = SDATE
@@ -1362,7 +1363,7 @@ def read_ICARTT(path):
 
 
     infile = file(path, 'r')
-    cols, indextoname = getColumns(infile, headerrow=n_header_lines-1, delim=',', header=True)
+    cols, indextoname = getColumns(path, headerrow=n_header_lines-1, delim=',', header=True)
     infile.close()
 
     start_utc = np.asarray(cols[indextoname[0]], dtype=np.float32)

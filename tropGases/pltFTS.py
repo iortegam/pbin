@@ -46,6 +46,7 @@ import myfunctions as mf
 import dataOutClass as dc
 from collections                     import OrderedDict
 import PltClass as mp
+from scipy import linspace, polyval, polyfit, sqrt, stats, randn
 
 import ClassFTS as cfts
 
@@ -119,7 +120,7 @@ def main():
     fday               = 31
 
 
-    if camFlg: pltFile  =  pltDir + 'pltFTSCAM.pdf'
+    if camFlg: pltFile  =  pltDir + 'pltFTSCAM-FINN.pdf'
     else: pltFile  =  pltDir + 'pltFTS.pdf'
     
 
@@ -265,6 +266,9 @@ def main():
         vmr_std_CAM          = {}
         dates_CAM            = {}
 
+        vmr_CAM_int          = {}
+        vmr_std_CAM_int      = {}
+
         driftFourier_CAM     = {}
         drift_CAM            = {}
 
@@ -282,7 +286,6 @@ def main():
         idates        = np.asarray(fts[g+'_dt'])
 
         indsDates       = np.where((idates >= xmin) & (idates < xmax))[0]
-
 
         dates[g]        = np.asarray(fts[g+'_dt'])[indsDates]
         #vmr[g]          = np.asarray(fts[g+'_TC'], dtype=np.float32)[indsDates]
@@ -305,7 +308,7 @@ def main():
         res_b               = mf.cf_driftfourier(dateYearFrac, vmr[g], weights, 2, half_period=1)
         perc, intercept_b, slope_b, pfourier_b = res_b
 
-        print "Rate of Change ({}) = {:.2f} +/- {:.3f}%) - ALL".format(g, np.mean(slope_b)/np.mean(vmr[g])*100.0, np.std(slope_b)/np.mean(vmr[g])*100.0)
+        print "\nRate of Change ({}) = {:.2f} +/- {:.3f}%) - ALL".format(g, np.mean(slope_b)/np.mean(vmr[g])*100.0, np.std(slope_b)/np.mean(vmr[g])*100.0)
 
         slope.append(np.mean(slope_b)/np.mean(vmr[g])*100.0)
         slope_e.append(np.std(slope_b)/np.mean(vmr[g])*100.0)
@@ -344,7 +347,7 @@ def main():
         res_b               = mf.cf_driftfourier(dateYearFrac, vmr_mnth[g], weights, 2, half_period=1)
         perc, intercept_b, slope_b, pfourier_b = res_b
         
-        print "Rate of Change ({}) = {:.2f} +/- {:.3f}%) - MONTHLY\n".format(g, np.mean(slope_b)/np.mean(vmr_mnth[g])*100.0, np.std(slope_b)/np.mean(vmr_mnth[g])*100.0)
+        print "Rate of Change ({}) = {:.2f} +/- {:.3f}%) - MONTHLY".format(g, np.mean(slope_b)/np.mean(vmr_mnth[g])*100.0, np.std(slope_b)/np.mean(vmr_mnth[g])*100.0)
 
         slope_mnth.append(np.mean(slope_b)/np.mean(vmr_mnth[g])*100.0)
         slope_mnth_e.append(np.std(slope_b)/np.mean(vmr_mnth[g])*100.0)
@@ -407,10 +410,14 @@ def main():
             doy_ftir             = mf.toYearFraction(dates_mnth[g]) 
             doy_cam              = mf.toYearFraction(dates_CAM[g])   
 
-            vmr_cam_inter       = interpolate.interp1d(doy_cam, vmr_CAM[g], axis=0, fill_value='extrapolate', bounds_error=False)(doy_ftir)
-            diff                = (vmr_mnth[g] - vmr_cam_inter)/vmr_mnth[g]  * 100.
-            rd.append(np.mean(diff))
-            rd_std.append(np.std(diff))
+            vmr_CAM_int[g]       = interpolate.interp1d(doy_cam, vmr_CAM[g], axis=0, bounds_error=False)(doy_ftir)
+            vmr_std_CAM_int[g]   = interpolate.interp1d(doy_cam, vmr_std_CAM[g], axis=0, bounds_error=False)(doy_ftir)
+
+            diff                = (vmr_mnth[g] - vmr_CAM_int[g])/vmr_mnth[g]  * 100.
+            rd.append(np.nanmean(diff))
+            rd_std.append(np.nanstd(diff))
+
+            print "Relative difference in percent of ({}) = {:.2f} +/- {:.3f}%) - ALL".format(g, np.nanmean(diff), np.nanstd(diff))
 
           
     #---------------------------------
@@ -528,7 +535,7 @@ def main():
             first_legend  = fig.legend(handles=[p1, p3], prop={'size':12},loc='center left',bbox_to_anchor=(0.03,0.12), bbox_transform=ax.transAxes)
             #plt.gca().add_artist(first_legend)
 
-            second_legend = fig.legend(handles=[p6], prop={'size':12},loc='center left',bbox_to_anchor=(0.45,0.1), bbox_transform=ax.transAxes)
+            if camFlg: second_legend = fig.legend(handles=[p6], prop={'size':12},loc='center left',bbox_to_anchor=(0.45,0.1), bbox_transform=ax.transAxes)
 
             #fig.legend(loc='upper right', bbox_to_anchor=(1,1), bbox_transform=ax.transAxes, title='fig.legend\nax.transAxes')
 
@@ -580,6 +587,113 @@ def main():
         plt.savefig(pltDir+'Time_Series_mnth.pdf', bbox_inches='tight')
     else:
         plt.show(block=False)
+    
+
+
+    #---------------------------------------------------
+    # PLOT: --  CORRELATION--
+    #---------------------------------------------------
+
+    if camFlg:
+        fig = plt.figure(figsize=(12,12))
+
+        outer_grid = gridspec.GridSpec(npanels, 2, wspace=0.2, hspace=0.2)
+
+        for i, g in enumerate(gasName):
+
+            xx   = np.asarray(vmr_mnth[g][~np.isnan(vmr_CAM_int[g])], dtype=np.float32)
+            yy   = np.asarray(vmr_CAM_int[g][~np.isnan(vmr_CAM_int[g])], dtype=np.float32)
+
+            xx_e = np.asarray(vmr_std_mnth[g][~np.isnan(vmr_CAM_int[g])], dtype=np.float32)
+            yy_e = np.asarray(vmr_std_CAM_int[g][~np.isnan(vmr_CAM_int[g])], dtype=np.float32)
+
+
+            odr, odrErr  = mf.orthoregress(xx, yy, xerr=xx*0.1, yerr=yy_e, InError=True)
+            slope_i      = float(odr[0])
+            intercept_i = float(odr[1])
+
+            slope_i_e     = float(odrErr[0])
+            intercept_i_e = float(odrErr[1])
+
+            slopelr, interceptlr, r_valueln, p_valuelr, std_errlr = stats.linregress(xx, yy)
+            rvalue_i = float(r_valueln)
+
+            bias = mf.bias(xx, yy)
+
+            print '\n', g
+            print 'Slope: {0:.3f} +/- {1:.3f}'.format(float(odr[0]), float(odrErr[0]))
+            print 'Intercept = {0:.3f} +/- {1:.3f}'.format(float(odr[1]), float(odrErr[1]))
+            print 'R value = {0:.2f}'.format(float(r_valueln))
+            print 'Bias [%] = {0:.3f}'.format(float(bias)/np.mean(xx) * 100.)
+
+
+
+            gasname = mf.getgasname(g)
+
+            ax = plt.Subplot(fig, outer_grid[i])
+
+            ax.errorbar(vmr_mnth[g], vmr_CAM_int[g], xerr=vmr_std_mnth[g], yerr=vmr_std_CAM_int[g],fmt='o', markersize=6, color='red', ecolor='red', elinewidth=1.5, zorder=1)
+               
+            ax.grid(True, alpha=0.35)
+            
+            #if i ==0: ax.legend(loc='center left',bbox_to_anchor=(0.8,0.75),prop={'size':10})
+            ax.tick_params(labelsize=16)
+            #ax.set_xlim((0.8, 12.2))
+
+            ax.text(0.03, 0.9, gasname, va='center',transform=ax.transAxes,fontsize=24)
+
+            ax.text(0.25,0.9,"Slope: {0:.3f}".format(slope_i),transform=ax.transAxes,  fontsize=11, color='k')
+            ax.text(0.25,0.82,"Intercept: {:.3f}".format(intercept_i),transform=ax.transAxes,  fontsize=11, color='k')
+            ax.text(0.25,0.74,"r-value: {0:.2f}".format(rvalue_i),transform=ax.transAxes,  fontsize=11, color='k')
+            ax.text(0.25,0.68,"Bias [%]: {0:.3f}".format(float(bias)/np.mean(xx) * 100.),transform=ax.transAxes,  fontsize=11, color='k')
+
+
+            if g.lower() != 'ch4':
+                ax.set_xlim(xmin=0, xmax=np.max(vmr_mnth[g]) + np.max(vmr_mnth[g]) *0.3)
+                ax.set_ylim(ymin=0, ymax=np.max(vmr_mnth[g]) + np.max(vmr_mnth[g]) *0.3)
+            else:
+                ax.set_xlim(xmin=np.min(vmr_mnth[g]) - np.min(vmr_mnth[g]) *0.05, xmax=np.max(vmr_mnth[g]) + np.max(vmr_mnth[g]) *0.05)
+                ax.set_ylim(ymin=np.min(vmr_mnth[g]) - np.min(vmr_mnth[g]) *0.05, ymax=np.max(vmr_mnth[g]) + np.max(vmr_mnth[g]) *0.05)
+            
+            ymin, ymax = ax.get_ylim()
+     
+            one2one = np.arange(ymin, ymax, 0.1)
+
+            ax.plot(one2one, one2one, color='black', linestyle='--', linewidth=2.0)
+
+            fig.add_subplot(ax)
+
+        all_axes  = fig.get_axes()
+
+        #show only the outside spines
+        for ax in all_axes:
+            for sp in ax.spines.values():
+                sp.set_visible(False)
+                plt.setp(ax.get_xticklabels(), visible=True)
+                ax.spines['top'].set_visible(True)
+                ax.spines['left'].set_visible(True)
+                ax.spines['right'].set_visible(True)
+                ax.spines['bottom'].set_visible(True)
+                if ax.is_last_row():
+                    ax.spines['bottom'].set_visible(True)
+                    plt.setp(ax.get_xticklabels(), visible=True)
+
+
+        all_axes[-1].set_xlabel('wVMR - FTIR [ppb]', fontsize=16)
+        all_axes[-2].set_xlabel('wVMR - FTIR [ppb]', fontsize=16)
+
+        fig.text(0.02, 0.5, 'wVMR - CAM-Chem [ppb]', fontsize=18, va='center', rotation='vertical')
+
+        fig.subplots_adjust(bottom=0.065,top = 0.98, left=0.085, right=0.98)
+
+        if saveFlg: 
+            pdfsav.savefig(fig,dpi=200)
+            plt.savefig(pltDir+'Correlation_FTSvsCAM.pdf', bbox_inches='tight')
+        else:
+            plt.show(block=False)
+
+        #user_input = raw_input('Press any key to exit >>> ')
+        #sys.exit()           # Exit program
 
 
 
@@ -1051,16 +1165,16 @@ def main():
 
         fig, (ax, ax2) = plt.subplots(2, figsize=(9, 8), sharex=True)
 
-        #ax.bar(ind, slope_mnth, width = 0.4, color = 'r', yerr=slope_mnth_e, ecolor = 'k',label = 'FTIR')
-        ax.bar(ind, slope, width = 0.4, color = 'r', yerr=slope_e, ecolor = 'k', label = 'FTIR')
-        ax.bar(ind+0.4, slope_CAM, width = 0.4, color = 'orange', yerr=slope_e_CAM, ecolor = 'k', label = 'CAM-Chem')
+        ax.bar(ind+(0.27/2.), slope, width = 0.27, color = 'blue', yerr=slope_e, ecolor = 'k', label = 'FTIR - all', align='center')
+        ax.bar(ind+(0.27 + 0.27/2.), slope_mnth, width = 0.27, color = 'r', yerr=slope_mnth_e, ecolor = 'k',label = 'FTIR - Monthly', align='center')
+        ax.bar(ind+(0.27*2+0.27/2.), slope_CAM, width = 0.27, color = 'orange', yerr=slope_e_CAM, ecolor = 'k', label = 'CAM-Chem - Monthly', align='center')
         #ax.bar(ind+0.4,slope_mnth, width = 0.4, align='center', color = 'b', yerr=slope_mnth_e, ecolor = 'k', label = 'Monthly')
-        ax.set_ylabel('Annual rate of change [%]', fontsize=20)
+        ax.set_ylabel('Rate of change [%$\cdot$yr$^{-1}$]', fontsize=20)
         #ax.set_xlabel('Gas', fontsize=18)
-        ax.set_xticks(ind+0.4)
+        #ax.set_xticks(ind+0..27*3/2.)
         #ax.set_xticklabels(GasStrall,  rotation=45)
         ax.tick_params(labelsize=20)
-        ax.legend(prop={'size':16}, loc=2)
+        ax.legend(prop={'size':14}, loc=2)
         ax.axhline(0, color='black', lw=1)
         ax.yaxis.grid(True)
         ax.xaxis.set_tick_params(which='major',labelsize=20)
@@ -1068,11 +1182,11 @@ def main():
         ax.set_xlim(-0.2, N)
 
 
-        ax2.bar(ind, rd, width = 0.8, color = 'r', yerr=rd_std, ecolor = 'k')
+        ax2.bar(ind, rd, width = 0.27*3, color = 'r', yerr=rd_std, ecolor = 'k')
         
         ax2.set_ylabel('Relative Difference [%]', fontsize=20)
         #ax.set_xlabel('Gas', fontsize=18)
-        ax2.set_xticks(ind+0.4)
+        ax2.set_xticks(ind+0.27*3/2.)
         ax2.set_xticklabels(GasStrall,  rotation=45)
         ax2.tick_params(labelsize=20)
         ax2.axhline(0, color='black', lw=1)
@@ -1080,9 +1194,6 @@ def main():
         ax2.xaxis.set_tick_params(which='major',labelsize=20)
         ax2.yaxis.set_tick_params(which='major',labelsize=20)
         ax2.set_xlim(-0.2, N)
-
-
-
 
 
         fig.subplots_adjust(left=0.135, bottom=0.15, right=0.95, top=0.95)

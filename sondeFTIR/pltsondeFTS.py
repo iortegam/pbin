@@ -226,6 +226,8 @@ def main(argv):
         Airmassmean            = {}
         NobsFTS                = {}
 
+        Prf_r_a                = {}
+
         latmean                = {}
         lonmean                = {}
 
@@ -246,6 +248,11 @@ def main(argv):
 
         Prfsonde_interp        = {}
         Prfsonde_sd_interp     = {}
+
+        Prfsonde_interp_smth   = {}
+        Prfsonde_sd_interp_smth = {}
+        
+
         PrfsondeMol_interp     = {}
         PrfsondeMol_sd_interp  = {}
         sondeairmass_a_interp  = {}
@@ -254,10 +261,22 @@ def main(argv):
         sondealt2              = {}
         sondedt2               = {}
 
+        Prfsond_r_a            = {}
+
         PrfDiff                = {}
         PrfDiffApr             = {}
         PrfDiffRel             = {}
         PrfDiffAprRel          = {}
+
+        PrfDiff_smth           = {}
+        PrfDiffApr_smth        = {}
+        PrfDiffRel_smth        = {}
+        PrfDiffAprRel_smth     = {}
+
+        PrfDiff_r_a            = {}
+        PrfDiffRel_r_a         = {}
+        
+
         PrfDist                = {}
 
         FTSvmrP                = {}
@@ -379,14 +398,11 @@ def main(argv):
                         FTSdates.setdefault(dfStr+v, []).append(uniqueDay)
 
                         #--------------------------------------------------------
-                        # Get location of FTS based on altitude profile weighted from sone, azimuth (bearing) and SZA
+                        # Get location of FTS based on altitude profile weighted from sonde, azimuth (bearing) and SZA
                         #--------------------------------------------------------
 
-
-                        
                         latmean.setdefault(dfStr+v, []).append(np.mean(latFTS2[inds]))
                         lonmean.setdefault(dfStr+v, []).append(np.mean(lonFTS2[inds]))
-
 
                         sondeH2OPrf_i      = sondeH2OPrf_a[d]
                         sondeH2OPrfsd_i    = sondeH2OPrfsd_a[d]
@@ -420,22 +436,35 @@ def main(argv):
                         Prfsondelon_interp.setdefault(dfStr+v, []).append(sondePrflon_interp_i)
                         Prfsondelat_interp.setdefault(dfStr+v, []).append(sondePrflat_interp_i)
 
-                    if pltInputs['smthFlg']:
+                    #if pltInputs['smthFlg']:
                         #---------------------------------
                         # Smoothing using FTIR AK and apriori
                         #---------------------------------
-                        Prfsonde_interp.setdefault(dfStr+v, []).append(np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3 + np.dot(np.mean(fts.avkVMR[v][inds],axis=0), (Prfsonde_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3)))
-                        Prfsonde_sd_interp.setdefault(dfStr+v, []).append(np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3 + np.dot(np.mean(fts.avkVMR[v][inds],axis=0), (Prfsonde_sd_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3)))
+                    #if d == 7:
+                    ##Prfsonde_interp_smth.setdefault(dfStr+v, []).append(np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3 + np.dot(np.mean(fts.avkVMR[v],axis=0), (Prfsonde_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3)))
+                    ##Prfsonde_sd_interp_smth.setdefault(dfStr+v, []).append(np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3 + np.dot(np.mean(fts.avkVMR[v],axis=0), (Prfsonde_sd_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3)))
+                    #else:
+                    
+                    #Prfsonde_interp_smth.setdefault(dfStr+v, []).append(np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3 + np.dot(np.mean(fts.avkVMR[v][inds],axis=0), (Prfsonde_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3)))
+                    #Prfsonde_sd_interp_smth.setdefault(dfStr+v, []).append(np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3 + np.dot(np.mean(fts.avkVMR[v][inds],axis=0), (Prfsonde_sd_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3)))
 
-                        
-                    else:
-                        Prfsonde_interp.setdefault(dfStr+v, []).append(Prfsonde_interp_i)
-                        Prfsonde_sd_interp.setdefault(dfStr+v, []).append(Prfsonde_sd_interp_i)
+                    Prfsonde_interp_smth.setdefault(dfStr+v, []).append(np.mean(fts.aPrfVMR[v][inds], axis=0) + np.dot(np.mean(fts.avkVMR[v][inds],axis=0), (Prfsonde_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0))))
+                    Prfsonde_sd_interp_smth.setdefault(dfStr+v, []).append(np.mean(fts.aPrfVMR[v][inds], axis=0) + np.dot(np.mean(fts.avkVMR[v][inds],axis=0), (Prfsonde_sd_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0))))
+
+                    #else:
+                    Prfsonde_interp.setdefault(dfStr+v, []).append(Prfsonde_interp_i)
+                    Prfsonde_sd_interp.setdefault(dfStr+v, []).append(Prfsonde_sd_interp_i)
+
+
+                    #Prfsond_r_a.setdefault(dfStr+v, []).append( np.dot(np.mean(fts.avkSCF[v][inds],axis=0), (Prfsonde_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0)/1e3)))
+                    Prfsond_r_a.setdefault(dfStr+v, []).append( np.dot(np.mean(fts.avkVMR[v][inds],axis=0), Prfsonde_interp_i -  np.mean(fts.aPrfVMR[v][inds], axis=0)))
+
             
                 prfmean_day[dfStr+v]           = np.asarray(prfmean_day[dfStr+v])
                 prferr_day[dfStr+v]            = np.asarray(prferr_day[dfStr+v])
                 prfSTD_day[dfStr+v]            = np.asarray(prfSTD_day[dfStr+v])
                 aPrf_day[dfStr+v]              = np.asarray(aPrf_day[dfStr+v])
+
                 Airmassmean[dfStr+v]           = np.asarray(Airmassmean[dfStr+v])
                 avkSCFday[dfStr+v]             = np.asarray(avkSCFday[dfStr+v])
                 FTSdates[dfStr+v]              = np.asarray(FTSdates[dfStr+v])
@@ -445,11 +474,18 @@ def main(argv):
 
                 Prfsonde_interp[dfStr+v]       = np.asarray(Prfsonde_interp[dfStr+v])
                 Prfsonde_sd_interp[dfStr+v]    = np.asarray(Prfsonde_sd_interp[dfStr+v])
+
+                Prfsonde_interp_smth[dfStr+v]   = np.asarray(Prfsonde_interp_smth[dfStr+v])
+                Prfsonde_sd_interp_smth[dfStr+v] = np.asarray(Prfsonde_sd_interp_smth[dfStr+v])
+
+
                 sondeairmass_a_interp[dfStr+v] = np.asarray(sondeairmass_a_interp[dfStr+v])
                 sondedates[dfStr+v]            = np.asarray(sondedates[dfStr+v])
                 sondealt2[dfStr+v]             = np.asarray(sondealt2[dfStr+v])
                 sondePrf[dfStr+v]              = np.asarray(sondePrf[dfStr+v])
                 sondePrfsd[dfStr+v]            = np.asarray(sondePrfsd[dfStr+v])
+
+                Prfsond_r_a[dfStr+v]            = np.asarray(Prfsond_r_a[dfStr+v])
                 
                 PrfDiff[dfStr+v]               = np.asarray(prfmean_day[dfStr+v] - Prfsonde_interp[dfStr+v])
                 PrfDiffApr[dfStr+v]            = np.asarray(aPrf_day[dfStr+v] - Prfsonde_interp[dfStr+v])
@@ -457,11 +493,28 @@ def main(argv):
                 PrfDiffRel[dfStr+v]            = np.true_divide(PrfDiff[dfStr+v], Prfsonde_interp[dfStr+v])*100.
                 PrfDiffAprRel[dfStr+v]         = np.true_divide(PrfDiffApr[dfStr+v], Prfsonde_interp[dfStr+v])*100.
 
+
+                PrfDiff_smth[dfStr+v]               = np.asarray(prfmean_day[dfStr+v] - Prfsonde_interp_smth[dfStr+v])
+                PrfDiffApr_smth[dfStr+v]            = np.asarray(aPrf_day[dfStr+v] - Prfsonde_interp_smth[dfStr+v])
+
+                PrfDiffRel_smth[dfStr+v]            = np.true_divide(PrfDiff_smth[dfStr+v], Prfsonde_interp_smth[dfStr+v])*100.
+                PrfDiffAprRel_smth[dfStr+v]         = np.true_divide(PrfDiffApr_smth[dfStr+v], Prfsonde_interp_smth[dfStr+v])*100.
+
+
+                PrfDiff_r_a[dfStr+v]               = np.asarray(prfmean_day[dfStr+v] - aPrf_day[dfStr+v])
+                PrfDiffRel_r_a[dfStr+v]            = np.true_divide(PrfDiff_r_a[dfStr+v],  aPrf_day[dfStr+v])*100.
+
                 if fleoutFlg:
                     Prfsondelon_interp[dfStr+v]    = np.asarray(Prfsondelon_interp[dfStr+v])
                     Prfsondelat_interp[dfStr+v]    = np.asarray(Prfsondelat_interp[dfStr+v])
                     PrfDist[dfStr+v]  = [ [mf.haversine(np.nanmean(lonmean[dfStr+v]), np.nanmean(latmean[dfStr+v]), lo2, la2 ) for (lo2, la2) in  zip(lo,la)] for (lo, la) in zip(Prfsondelon_interp[dfStr+v], Prfsondelat_interp[dfStr+v]) ]
-                    PrfDist[dfStr+v]    = np.asarray(PrfDist[dfStr+v])           
+                    PrfDist[dfStr+v]    = np.asarray(PrfDist[dfStr+v])       
+
+
+                Prf_r_a[dfStr+v]        = np.asarray(prfmean_day[dfStr+v] - aPrf_day[dfStr+v]) 
+
+                #Prfsond_r_a[dfStr+v]        = np.asarray(Prfsonde_interp[dfStr+v] - aPrf_day[dfStr+v])  
+               
         
        
         #---------------------------------
@@ -498,8 +551,8 @@ def main(argv):
                                         if ndoi ==0: ax0[0, ndoi].set_ylabel('Altitude [km]', fontsize=16)
 
 
-                                        ax0[0, ndoi].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='FTIR', zorder=5)
-                                        ax0[0, ndoi].scatter(prfmean_day[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=6)
+                                        ax0[0, ndoi].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='FTIR', zorder=7)
+                                        ax0[0, ndoi].scatter(prfmean_day[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=8)
                                         ax0[0, ndoi].fill_betweenx(fts.alt[v],prfmean_day[dfValue+v][d]/1e3-prferr_day[dfValue+v][d]/1e3,prfmean_day[dfValue+v][d]/1e3+prferr_day[dfValue+v][d]/1e3,alpha=0.25,color='blue')
 
                                         ax0[0, ndoi].set_ylim(1, 15)
@@ -513,11 +566,13 @@ def main(argv):
                                         ax0[0, ndoi].plot(aPrf_day[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
                                         ax0[0, ndoi].scatter(aPrf_day[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=4)
                                            
-                                        ax0[0, ndoi].plot(sondePrf[dfValue+v][d][indsFPH]/1e3, sondealt2[dfValue+v][d][indsFPH],color='k', label='FPH', linewidth=2.0, zorder=1)
+                                        ax0[0, ndoi].plot(sondePrf[dfValue+v][d][indsFPH]/1e3, sondealt2[dfValue+v][d][indsFPH],color='k', label='FPH', linewidth=3.0, zorder=1)
                                         #ax0[0, ndoi].scatter(sondePrf[dfValue+v][d]/1e3, sondealt2[dfValue+v][d],facecolors='white', s=35, color='k', zorder=2)
                                         #ax0[0, ndoi].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,alpha=0.25,color='k')
                                         ax0[0, ndoi].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrfsd[dfValue+v][d][indsFPH]/1e3,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrfsd[dfValue+v][d][indsFPH]/1e3,alpha=0.25,color='k')
 
+                                        ax0[0, ndoi].plot(Prfsonde_interp_smth[dfValue+v][d]/1e3, fts.alt[v],color='red', label='FPH-smth', linewidth=2.0, zorder=5)
+                                        ax0[0, ndoi].scatter(Prfsonde_interp_smth[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='red', zorder=6)
 
                                         ax0[0, ndoi].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[0, ndoi].transAxes,fontsize=16)
 
@@ -543,16 +598,19 @@ def main(argv):
                                         ax0[1, (ndoi-5)].tick_params(which='both',labelsize=16)
                                         ax0[1, (ndoi-5)].set_title(da, fontsize=16)
 
-                                        ax0[1, (ndoi-5)].plot(aPrf_day[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
-                                        ax0[1, (ndoi-5)].scatter(aPrf_day[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=2)
+                                        ax0[1, (ndoi-5)].plot(aPrf_day[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=8)
+                                        ax0[1, (ndoi-5)].scatter(aPrf_day[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=9)
                                            
                                         #ax0[1, (ndoi-5)].plot(sondePrf[dfValue+v][d]/1e3, sondealt2[dfValue+v][d],color='k', linewidth=2.0, zorder=1)
-                                        ax0[1, (ndoi-5)].plot(sondePrf[dfValue+v][d][indsFPH]/1e3, sondealt2[dfValue+v][d][indsFPH],color='k', label='FPH', linewidth=2.0, zorder=1)
+                                        ax0[1, (ndoi-5)].plot(sondePrf[dfValue+v][d][indsFPH]/1e3, sondealt2[dfValue+v][d][indsFPH],color='k', label='FPH', linewidth=3.0, zorder=1)
                                         ##ax0[1, (ndoi-5)].scatter(sondePrf[dfValue+v][d]/1e3, sondealt2[dfValue+v][d],facecolors='white', s=35, color='k',zorder=2)
                                         #ax0[1, (ndoi-5)].fill_betweenx(sondealt2[dfValue+v][d],sondePrf[dfValue+v][d]/1e3-sondePrf[dfValue+v][d]/1e3*0.05,sondePrf[dfValue+v][d]/1e3+sondePrf[dfValue+v][d]/1e3*0.05,alpha=0.25,color='k')
                                         #ax0[1, (ndoi-5)].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrf[dfValue+v][d][indsFPH]/1e3*0.05,alpha=0.25,color='k')
                                         ax0[1, (ndoi-5)].fill_betweenx(sondealt2[dfValue+v][d][indsFPH],sondePrf[dfValue+v][d][indsFPH]/1e3-sondePrfsd[dfValue+v][d][indsFPH]/1e3,sondePrf[dfValue+v][d][indsFPH]/1e3+sondePrfsd[dfValue+v][d][indsFPH]/1e3,alpha=0.25,color='k')
 
+                                        ax0[1, (ndoi-5)].plot(Prfsonde_interp_smth[dfValue+v][d]/1e3, fts.alt[v],color='red', linewidth=2.0, zorder=5)
+                                        ax0[1, (ndoi-5)].scatter(Prfsonde_interp_smth[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='red', zorder=6)
+                                        
                                         ax0[1, (ndoi-5)].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[1, (ndoi-5)].transAxes,fontsize=16)
 
                                         ax0[1, (ndoi-5)].set_xlim(xmin=0)
@@ -568,30 +626,31 @@ def main(argv):
                                     
                     if pltInputs['saveFlg']: 
                         pdfsav.savefig(fig,dpi=200)
-                        if pltInputs['smthFlg']: 
-                            plt.savefig(pltDir+'Selected_Prf_'+loc.upper()+'_'+idver+'_smooth.pdf', bbox_inches='tight')
-                        else:
-                            plt.savefig(pltDir+'Selected_Prf_'+loc.upper()+'_'+idver+'.pdf', bbox_inches='tight')
+                        #if pltInputs['smthFlg']: 
+                        plt.savefig(pltDir+'Selected_Prf_'+loc.upper()+'_'+idver+'_v2.pdf', bbox_inches='tight')
+                        #else:
+                        #    plt.savefig(pltDir+'Selected_Prf_'+loc.upper()+'_'+idver+'.pdf', bbox_inches='tight')
                     else:       
                         plt.show(block=False)
-                        user_input = raw_input('Press any key to exit >>> ')
-                        sys.exit() 
 
+            #user_input = raw_input('Press any key to exit >>> ')
+            #sys.exit()
 
-            #---------------------------------
-            #Figure: selected profiles (smoothed or not and same grid)
-            #---------------------------------           
+        #---------------------------------
+        #Figure: selected profiles (raw grid)
+        #---------------------------------
+        if pltInputs['timeFlg'].lower() == 'inc':
+           
             if pltInputs['doi']:
                 doidt = [dt.date(int(d[0:4]), int(d[4:6]), int(d[6:8])) for d in pltInputs['doi']]
                 doidt = np.asarray(doidt) 
-
-                dfValue = str(pltInputs['dfValue'])
 
                 for v in pltInputs['ver']:
 
                     fig, ax0 = plt.subplots(2, 5, figsize=(15,10), sharey=True, sharex=False)
                     ndoi = 0
 
+                    
                     for d, da in enumerate(sondedates[dfValue+v]):
 
                         deltadoi = doidt - da
@@ -600,66 +659,66 @@ def main(argv):
 
                             if deltadoi[ndoi] == dt.timedelta(0):
 
+                                if loc.lower() == 'mlo': indsFPH =  np.where(sondealt2[dfValue+v][d] >= 3.0)[0]
+                                elif loc.lower() == 'fl0': indsFPH =  np.where(sondealt2[dfValue+v][d] >= 1.0)[0]
+
+
                                 if ndoi < len(doidt):
 
                                     if ndoi<=4:
 
-                                        if ndoi ==0: ax0[0, ndoi].set_ylabel('Altitude [km]', fontsize=14)
+                                        if ndoi ==0: ax0[0, ndoi].set_ylabel('Altitude [km]', fontsize=16)
 
-                                        ax0[0, ndoi].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='FTIR', zorder=5)
-                                        ax0[0, ndoi].scatter(prfmean_day[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=6)
-                                        ax0[0, ndoi].fill_betweenx(fts.alt[v],prfmean_day[dfValue+v][d]/1e3-prferr_day[dfValue+v][d]/1e3,prfmean_day[dfValue+v][d]/1e3+prferr_day[dfValue+v][d]/1e3,alpha=0.25,color='blue')
 
+                                        ax0[0, ndoi].plot(Prf_r_a[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='FTIR', zorder=7)
+                                        ax0[0, ndoi].scatter(Prf_r_a[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=8)
+                                        
                                         ax0[0, ndoi].set_ylim(1, 15)
                                         if loc.lower() == 'fl0': ax0[0, ndoi].set_ylim(1, 15)
                                         if loc.lower() == 'mlo': ax0[0, ndoi].set_ylim(3, 15)
                                            
                                         ax0[0, ndoi].grid(True,which='both', alpha=0.35)
-                                        ax0[0, ndoi].tick_params(which='both',labelsize=14)
-                                        ax0[0, ndoi].set_title(da, fontsize=14)   
+                                        ax0[0, ndoi].tick_params(which='both',labelsize=16)
+                                        ax0[0, ndoi].set_title(da, fontsize=16)   
 
-                                        ax0[0, ndoi].plot(aPrf_day[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
-                                        ax0[0, ndoi].scatter(aPrf_day[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=4)
+                                        ax0[0, ndoi].plot(Prfsond_r_a[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
+                                        ax0[0, ndoi].scatter(Prfsond_r_a[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=4)
                                            
-                                        ax0[0, ndoi].plot(Prfsonde_interp[dfValue+v][d]/1e3, fts.alt[v],color='k', label='CFH', linewidth=2.0, zorder=1)
-                                        ax0[0, ndoi].scatter(Prfsonde_interp[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='k', zorder=2)
 
-                                        ax0[0, ndoi].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[0, ndoi].transAxes,fontsize=14)
+                                        ax0[0, ndoi].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[0, ndoi].transAxes,fontsize=16)
 
-                                        ax0[0, ndoi].set_xlim(xmin=0)
+                                        #ax0[0, ndoi].set_xlim(xmin=0)
                                         if ndoi == 0: ax0[0, ndoi].legend(prop={'size':11})
 
-                                        if prfmean_day[dfValue+v][d][-1]/1e3 <= 3: ax0[0, ndoi].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
+                                        if aPrf_day[dfValue+v][d][-1]/1e3 <= 3: ax0[0, ndoi].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
                                         else: ax0[0, ndoi].xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
-
 
                                     if ndoi>=5:
 
-                                        ax0[1, (ndoi-5)].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='Mean (Retrieved)', zorder=5)
-                                        ax0[1, (ndoi-5)].scatter(prfmean_day[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=6)
-                                        ax0[1, (ndoi-5)].fill_betweenx(fts.alt[v],prfmean_day[dfValue+v][d]/1e3-prferr_day[dfValue+v][d]/1e3,prfmean_day[dfValue+v][d]/1e3+prferr_day[dfValue+v][d]/1e3,alpha=0.25,color='blue')
+                                        ax0[1, (ndoi-5)].plot(Prf_r_a[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='FTIR', zorder=7)
+                                        ax0[1, (ndoi-5)].scatter(Prf_r_a[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=8)
 
-                                        if ndoi ==5: ax0[1, (ndoi-5)].set_ylabel('Altitude [km]', fontsize=14)
+                                        ax0[1, (ndoi-5)].plot(Prfsond_r_a[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
+                                        ax0[1, (ndoi-5)].scatter(Prfsond_r_a[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=4)
+                                           
+
+                                        if ndoi ==5: ax0[1, (ndoi-5)].set_ylabel('Altitude [km]', fontsize=16)
 
                                         if loc.lower() == 'fl0': ax0[1, (ndoi-5)].set_ylim(1, 15)
                                         if loc.lower() == 'mlo': ax0[1, (ndoi-5)].set_ylim(3, 15)
-        
-                                        if ndoi ==7 :ax0[1, (ndoi-5)].set_xlabel('VMR [x10$^3$ ppm]', fontsize=14)
+     
+                                        if ndoi ==7 :ax0[1, (ndoi-5)].set_xlabel('VMR [x10$^3$ ppm]', fontsize=16)
                                         ax0[1, (ndoi-5)].grid(True,which='both', alpha=0.35)
-                                        ax0[1, (ndoi-5)].tick_params(which='both',labelsize=14)
-                                        ax0[1, (ndoi-5)].set_title(da, fontsize=14)
+                                        ax0[1, (ndoi-5)].tick_params(which='both',labelsize=16)
+                                        ax0[1, (ndoi-5)].set_title(da, fontsize=16)
 
-                                        ax0[1, (ndoi-5)].plot(aPrf_day[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
-                                        ax0[1, (ndoi-5)].scatter(aPrf_day[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=4)
-                                           
-                                        ax0[1, (ndoi-5)].plot(Prfsonde_interp[dfValue+v][d]/1e3, fts.alt[v],color='k', linewidth=2.0, zorder=1)
-                                        ax0[1, (ndoi-5)].scatter(Prfsonde_interp[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='k', zorder=2)
+                                        
+                                        
+                                        ax0[1, (ndoi-5)].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[1, (ndoi-5)].transAxes,fontsize=16)
 
-                                        ax0[1, (ndoi-5)].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[1, (ndoi-5)].transAxes,fontsize=14)
+                                        #ax0[1, (ndoi-5)].set_xlim(xmin=0)
 
-                                        ax0[1, (ndoi-5)].set_xlim(xmin=0)
-
-                                        if prfmean_day[dfValue+v][d][-1]/1e3 <= 3: ax0[1, (ndoi-5)].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
+                                        if aPrf_day[dfValue+v][d][-1]/1e3 <= 3: ax0[1, (ndoi-5)].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
                                         else: ax0[1, (ndoi-5)].xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
 
                                     ndoi+=1
@@ -670,12 +729,115 @@ def main(argv):
                                     
                     if pltInputs['saveFlg']: 
                         pdfsav.savefig(fig,dpi=200)
-                        if pltInputs['smthFlg']: 
-                            plt.savefig(pltDir+'Selected_Prf_Interp_'+loc.upper()+'_'+idver+'_smooth.pdf', bbox_inches='tight')
-                        else:
-                            plt.savefig(pltDir+'Selected_Prf_Interp_'+loc.upper()+'_'+idver+'.pdf', bbox_inches='tight')
+                        #if pltInputs['smthFlg']: 
+                        plt.savefig(pltDir+'Selected_Prf_'+loc.upper()+'_'+idver+'_v2.pdf', bbox_inches='tight')
+                        #else:
+                        #    plt.savefig(pltDir+'Selected_Prf_'+loc.upper()+'_'+idver+'.pdf', bbox_inches='tight')
                     else:       
                         plt.show(block=False)
+
+            #user_input = raw_input('Press any key to exit >>> ')
+            #sys.exit()
+                        
+            # #---------------------------------
+            # #Figure: selected profiles (smoothed or not and same grid)
+            # #---------------------------------           
+            # if pltInputs['doi']:
+            #     doidt = [dt.date(int(d[0:4]), int(d[4:6]), int(d[6:8])) for d in pltInputs['doi']]
+            #     doidt = np.asarray(doidt) 
+
+            #     dfValue = str(pltInputs['dfValue'])
+
+            #     for v in pltInputs['ver']:
+
+            #         fig, ax0 = plt.subplots(2, 5, figsize=(15,10), sharey=True, sharex=False)
+            #         ndoi = 0
+
+            #         for d, da in enumerate(sondedates[dfValue+v]):
+
+            #             deltadoi = doidt - da
+
+            #             if ndoi < len(doidt):
+
+            #                 if deltadoi[ndoi] == dt.timedelta(0):
+
+            #                     if ndoi < len(doidt):
+
+            #                         if ndoi<=4:
+
+            #                             if ndoi ==0: ax0[0, ndoi].set_ylabel('Altitude [km]', fontsize=14)
+
+            #                             ax0[0, ndoi].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='FTIR', zorder=5)
+            #                             ax0[0, ndoi].scatter(prfmean_day[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=6)
+            #                             ax0[0, ndoi].fill_betweenx(fts.alt[v],prfmean_day[dfValue+v][d]/1e3-prferr_day[dfValue+v][d]/1e3,prfmean_day[dfValue+v][d]/1e3+prferr_day[dfValue+v][d]/1e3,alpha=0.25,color='blue')
+
+            #                             ax0[0, ndoi].set_ylim(1, 15)
+            #                             if loc.lower() == 'fl0': ax0[0, ndoi].set_ylim(1, 15)
+            #                             if loc.lower() == 'mlo': ax0[0, ndoi].set_ylim(3, 15)
+                                           
+            #                             ax0[0, ndoi].grid(True,which='both', alpha=0.35)
+            #                             ax0[0, ndoi].tick_params(which='both',labelsize=14)
+            #                             ax0[0, ndoi].set_title(da, fontsize=14)   
+
+            #                             ax0[0, ndoi].plot(aPrf_day[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
+            #                             ax0[0, ndoi].scatter(aPrf_day[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=4)
+                                           
+            #                             ax0[0, ndoi].plot(Prfsonde_interp[dfValue+v][d]/1e3, fts.alt[v],color='k', label='CFH', linewidth=2.0, zorder=1)
+            #                             ax0[0, ndoi].scatter(Prfsonde_interp[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='k', zorder=2)
+
+            #                             ax0[0, ndoi].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[0, ndoi].transAxes,fontsize=14)
+
+            #                             ax0[0, ndoi].set_xlim(xmin=0)
+            #                             if ndoi == 0: ax0[0, ndoi].legend(prop={'size':11})
+
+            #                             if prfmean_day[dfValue+v][d][-1]/1e3 <= 3: ax0[0, ndoi].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
+            #                             else: ax0[0, ndoi].xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
+
+
+            #                         if ndoi>=5:
+
+            #                             ax0[1, (ndoi-5)].plot(prfmean_day[dfValue+v][d]/1e3,fts.alt[v], color='b',  linewidth=2.0, label='Mean (Retrieved)', zorder=5)
+            #                             ax0[1, (ndoi-5)].scatter(prfmean_day[dfValue+v][d]/1e3,fts.alt[v],facecolors='white', s=35, color='b', zorder=6)
+            #                             ax0[1, (ndoi-5)].fill_betweenx(fts.alt[v],prfmean_day[dfValue+v][d]/1e3-prferr_day[dfValue+v][d]/1e3,prfmean_day[dfValue+v][d]/1e3+prferr_day[dfValue+v][d]/1e3,alpha=0.25,color='blue')
+
+            #                             if ndoi ==5: ax0[1, (ndoi-5)].set_ylabel('Altitude [km]', fontsize=14)
+
+            #                             if loc.lower() == 'fl0': ax0[1, (ndoi-5)].set_ylim(1, 15)
+            #                             if loc.lower() == 'mlo': ax0[1, (ndoi-5)].set_ylim(3, 15)
+        
+            #                             if ndoi ==7 :ax0[1, (ndoi-5)].set_xlabel('VMR [x10$^3$ ppm]', fontsize=14)
+            #                             ax0[1, (ndoi-5)].grid(True,which='both', alpha=0.35)
+            #                             ax0[1, (ndoi-5)].tick_params(which='both',labelsize=14)
+            #                             ax0[1, (ndoi-5)].set_title(da, fontsize=14)
+
+            #                             ax0[1, (ndoi-5)].plot(aPrf_day[dfValue+v][d]/1e3, fts.alt[v], '-', color='gray', label='a priori', linewidth=2.0, zorder=3)
+            #                             ax0[1, (ndoi-5)].scatter(aPrf_day[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='gray', zorder=4)
+                                           
+            #                             ax0[1, (ndoi-5)].plot(Prfsonde_interp[dfValue+v][d]/1e3, fts.alt[v],color='k', linewidth=2.0, zorder=1)
+            #                             ax0[1, (ndoi-5)].scatter(Prfsonde_interp[dfValue+v][d]/1e3, fts.alt[v],facecolors='white', s=35, color='k', zorder=2)
+
+            #                             ax0[1, (ndoi-5)].text(0.05, 0.95, 'N = {}'.format(NobsFTS[dfValue+v][d]), va='center',transform=ax0[1, (ndoi-5)].transAxes,fontsize=14)
+
+            #                             ax0[1, (ndoi-5)].set_xlim(xmin=0)
+
+            #                             if prfmean_day[dfValue+v][d][-1]/1e3 <= 3: ax0[1, (ndoi-5)].xaxis.set_major_locator(MaxNLocator(nbins=4, integer=False))
+            #                             else: ax0[1, (ndoi-5)].xaxis.set_major_locator(MaxNLocator(nbins=6, integer=True))
+
+            #                         ndoi+=1
+
+            #         fig.subplots_adjust(bottom=0.075,top=0.95, left=0.05, right=0.95) 
+
+            #         idver = getidver(v)
+                                    
+            #         if pltInputs['saveFlg']: 
+            #             pdfsav.savefig(fig,dpi=200)
+            #             if pltInputs['smthFlg']: 
+            #                 plt.savefig(pltDir+'Selected_Prf_Interp_'+loc.upper()+'_'+idver+'_smooth.pdf', bbox_inches='tight')
+            #             else:
+            #                 plt.savefig(pltDir+'Selected_Prf_Interp_'+loc.upper()+'_'+idver+'.pdf', bbox_inches='tight')
+            #         else:       
+            #             plt.show(block=False)
+
 
         #------------------------------------
         #HISTOGRAM OF RESIDUALS BEFORE FILTERING
@@ -699,7 +861,9 @@ def main(argv):
                 ax1 = plt.subplot(gs1[0:1, :])
 
                 indsH = np.where( (fts.alt[v] >= pcol[0]) & (fts.alt[v] <=pcol[1])  )[0]
-                x = PrfDiff[dfValue+v][:,indsH]
+
+                if pltInputs['smthFlg']: x = PrfDiff_smth[dfValue+v][:,indsH]
+                else:                    x = PrfDiff[dfValue+v][:,indsH]
                 x = x[~np.isnan(x)]
             
                 n, bins, patches = ax1.hist(x/1e3, bins=20, normed=True, alpha=0.8 ,histtype='step', fill=True, color='k')  #color='green'
@@ -755,6 +919,92 @@ def main(argv):
             else:       
                 plt.show(block=False)
 
+        #------------------------------------
+        #HISTOGRAM OF RESIDUALS ret - apriori BEFORE FILTERING
+        #------------------------------------
+        for v in pltInputs['ver']:
+
+            print v
+            
+            fig = plt.figure(figsize=(10,7.5))
+
+            for p, pcol in enumerate(pCols[0:-1]):
+
+                gs1 = gridspec.GridSpec(1, 3)
+
+                if p == 0: gs1.update(left=0.075, right=0.5, top=0.95, bottom=0.69,  wspace=0.05,  hspace=0.08)
+                if p == 2: gs1.update(left=0.075, right=0.5, top = 0.64, bottom=0.38, wspace=0.05, hspace=0.08)
+                if p == 4: gs1.update(left=0.075, right=0.5, top = 0.33, bottom=0.07, wspace=0.05, hspace=0.08)
+                
+                if p == 1: gs1.update(left=0.555, right=0.98, top=0.95, bottom=0.69,  wspace=0.05,  hspace=0.08)
+                if p == 3: gs1.update(left=0.555, right=0.98, top=0.64, bottom=0.38, wspace=0.05,   hspace=0.08)
+                if p == 5: gs1.update(left=0.555, right=0.98, top=0.33, bottom=0.07, wspace=0.05,   hspace=0.08)
+
+                ax1 = plt.subplot(gs1[0:1, :])
+
+                indsH = np.where( (fts.alt[v] >= pcol[0]) & (fts.alt[v] <=pcol[1])  )[0]
+
+                x = PrfDiff_r_a[dfValue+v][:,indsH]
+               
+                x = x[~np.isnan(x)]
+            
+                n, bins, patches = ax1.hist(x/1e3, bins=20, normed=True, alpha=0.8 ,histtype='step', fill=True, color='k')  #color='green'
+                P.setp(patches, 'facecolor', 'g', 'alpha', 0.8)
+                mu = np.nanmean(x/1e3)
+                me = np.nanmedian(x/1e3)
+                sigma = np.nanstd(x/1e3)
+                #add a line showing the expected distribution
+                y = P.normpdf( bins, mu, sigma)
+                l = ax1.plot(bins, y, 'k--', linewidth=3)
+
+                ax1.axvline(x=np.percentile(np.abs(x/1e3), Qpercent), color='k', linestyle='--')
+                ax1.axvline(x=np.percentile(np.abs(x/1e3), Qpercent)*-1., color='k', linestyle='--')
+
+                ax1.axvline(x=mu, color='blue', linestyle='--')
+                ax1.axvline(x=me, color='green', linestyle='--')
+
+                ax1.axvline(x=mu + sigma, color='r', linestyle='--')
+                ax1.axvline(x=mu - sigma, color='r', linestyle='--')
+
+
+                ax1.grid(True,which='both', alpha=0.35)
+                ax1.tick_params(which='both',labelsize=12)#, labelbottom='off')
+                #ax1.set_ylabel('Probability', fontsize=12)
+                #ax1.set_title(str(pcol[0])+' - '+str(pcol[1])+' km',horizontalalignment='center', verticalalignment='baseline', fontsize=14)
+                #ax1.set_xlim(-1, 1)
+                ax1.text(0.95, 0.92, str(pcol[0])+'-'+str(pcol[1])+' km', va='center',transform=ax1.transAxes,fontsize=13, ha='right')
+
+                if (p == 4) or (p == 5): 
+                    ax1.set_xlabel('VMR [x10$^3$ ppm]', fontsize=14)
+                    ax1.tick_params(labelbottom='on')
+                if (p == 0) or (p == 2) or (p == 4): ax1.set_ylabel('Probability', fontsize=14)
+               
+                
+                print '\nAltitude Layer: '+str(pcol[0])+' - '+str(pcol[1])+' km'
+                # #print 'bias (vmr)        = {0:.2f}'.format(biasCalc2/1e3)
+                print 'Mean Histogram (vmr)   = {0:.3f} +/- {1:.3f}'.format(mu, sigma)
+                print 'Median Histogram (vmr)   = {0:.3f} +/- {1:.3f}'.format(me, sigma)
+                print 'Percent wrst Apriori = {0:.3f} +/- {1:.3f}'.format(mu/np.nanmean(aPrf_day[dfValue+v][:, indsH]/1e3) * 100., sigma/np.nanmean(aPrf_day[dfValue+v][:, indsH]/1e3) * 100.)
+                print 'Percent wrst Apriori = {0:.3f} +/- {1:.3f}'.format(me/np.nanmean(aPrf_day[dfValue+v][:, indsH]/1e3) * 100., sigma/np.nanmean(aPrf_day[dfValue+v][:, indsH]/1e3) * 100.)
+
+                # print 'Percentile 95 in Delta T {} min : {}'.format(dfValue+v, np.percentile(np.abs(x/1e3), Qpercent))
+
+            #plt.suptitle(v, fontsize=16)
+
+            idver = getidver(v)
+
+            if pltInputs['saveFlg']: 
+                pdfsav.savefig(fig,dpi=200)
+                if pltInputs['smthFlg']: 
+                    plt.savefig(pltDir+'Hist1_'+loc.upper()+'_'+idver+'_smooth.pdf', bbox_inches='tight')
+                else:
+                    plt.savefig(pltDir+'Hist1_'+loc.upper()+'_'+idver+'.pdf', bbox_inches='tight')
+            else:       
+                plt.show(block=False)
+        
+        user_input = raw_input('Press any key to exit >>> ')
+        sys.exit()
+  
         
         #------------------------------------
         #FILTERING OUTLIERS BASED ON PERCENTILE
@@ -771,18 +1021,23 @@ def main(argv):
 
                     indsH = np.where( (fts.alt[v] >= pcol[0]) & (fts.alt[v] <=pcol[1])  )[0]
 
-                    if df == dfValue: 
-                        print 'Percentile 95 in Delta T {} min and Pcol {} : {}'.format(df, pcol, np.percentile(np.abs(PrfDiff[df+v][:,indsH]), Qpercent))
-                        Prct.setdefault(pcol[0], []).append(np.percentile(np.abs(PrfDiff[df+v][:,indsH]), Qpercent))
+                    if pltInputs['smthFlg']:  prfD       = PrfDiff_smth[df+v][:,indsH]
+                    else: prfD    = PrfDiff[df+v][:,indsH]
 
-                    if loc.lower() == 'fl0': iBad = np.where( (np.abs(PrfDiff[df+v][:,indsH]) >= np.percentile(np.abs(PrfDiff[df+v][:,indsH]), Qpercent)) | (PrfDist[df+v][:,indsH] > 300.0) )
-                    if loc.lower() == 'mlo': iBad = np.where( (np.abs(PrfDiff[df+v][:,indsH]) >= np.percentile(np.abs(PrfDiff[df+v][:,indsH]), Qpercent)))
+                    if df == dfValue: 
+                        print 'Percentile 95 in Delta T {} min and Pcol {} : {}'.format(df, pcol, np.percentile(np.abs(prfD), Qpercent))
+                        Prct.setdefault(pcol[0], []).append(np.percentile(np.abs(prfD), Qpercent))
+
+                    if loc.lower() == 'fl0': iBad = np.where( (np.abs(prfD) >= np.percentile(np.abs(prfD), Qpercent)) | (PrfDist[df+v][:,indsH] > 300.0) )
+                    if loc.lower() == 'mlo': iBad = np.where( (np.abs(prfD) >= np.percentile(np.abs(prfD), Qpercent)))
 
                     iBad = np.asarray(iBad)
                     
-                    if  df == 30: print 'Percent of bad points in Delta T = {} minutes: {}'.format(df+v, float(iBad.shape[1])/float((PrfDiffRel[df+v][:,indsH].shape[0] * PrfDiffRel[df+v][:,indsH].shape[1]))*100.)
+                    if  df == 30: print 'Percent of bad points in Delta T = {} minutes: {}'.format(df+v, float(iBad.shape[1])/float((prfD.shape[0] * prfD.shape[1]))*100.)
                     #print PrfDiffRel[df]
                     prfmean_day[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                   = np.delete(prfmean_day[df], indsBad, axis=0)
+
+                    Prf_r_a[df+v][iBad[0], indsH[iBad[1]]] = np.nan# 
                     
                     prferr_day[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                      = np.delete(prferr_day[df], indsBad, axis=0)
                     prfSTD_day[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                      = np.delete(prfSTD_day[df], indsBad, axis=0)
@@ -795,6 +1050,9 @@ def main(argv):
 
                     Prfsonde_interp[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                 = np.delete(Prfsonde_interp[df], indsBad, axis=0)
                     Prfsonde_sd_interp[df+v][iBad[0], indsH[iBad[1]]] = np.nan#              = np.delete(Prfsonde_sd_interp[df], indsBad, axis=0)
+
+                    Prfsonde_interp_smth[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                 = np.delete(Prfsonde_interp[df], indsBad, axis=0)
+                    Prfsonde_sd_interp_smth[df+v][iBad[0], indsH[iBad[1]]] = np.nan# 
                     #PrfsondeMol_interp[df+v][iBad[0], indsH[iBad[1]]] = np.nan#              = np.delete(PrfsondeMol_interp[df], indsBad, axis=0)
                     #PrfsondeMol_sd_interp[df+v][iBad[0], indsH[iBad[1]]] = np.nan#           = np.delete(PrfsondeMol_sd_interp[df], indsBad, axis=0)
                     sondeairmass_a_interp[df+v][iBad[0], indsH[iBad[1]]] = np.nan#           = np.delete(sondeairmass_a_interp[df], indsBad, axis=0)
@@ -802,8 +1060,16 @@ def main(argv):
                     PrfDiff[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                         = np.delete(PrfDiff[df], indsBad, axis=0)
                     PrfDiffApr[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                      = np.delete(PrfDiffApr[df], indsBad, axis=0)
                     PrfDiffRel[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                      = np.delete(PrfDiffRel[df], indsBad, axis=0)
-
                     PrfDiffAprRel[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                   = np.delete(PrfDiffAprRel[df], indsBad, axis=0)
+
+                    PrfDiff_smth[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                         = np.delete(PrfDiff[df], indsBad, axis=0)
+                    PrfDiffApr_smth[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                      = np.delete(PrfDiffApr[df], indsBad, axis=0)
+                    PrfDiffRel_smth[df+v][iBad[0], indsH[iBad[1]]] = np.nan#                      = np.delete(PrfDiffRel[df], indsBad, axis=0)
+                    PrfDiffAprRel_smth[df+v][iBad[0], indsH[iBad[1]]] = np.nan# 
+
+                    Prfsond_r_a[df+v][iBad[0], indsH[iBad[1]]] = np.nan#
+
+                    PrfDiff_r_a[df+v][iBad[0], indsH[iBad[1]]] = np.nan#
 
                     if fleoutFlg:
                         Prfsondelon_interp[df+v][iBad[0], indsH[iBad[1]]] = np.nan#              = np.delete(Prfsondelon_interp[df], indsBad, axis=0)
@@ -814,6 +1080,8 @@ def main(argv):
                         #sondelatP[str(df)+'_'+str(pn)]    = np.ma.mean(np.ma.masked_invalid(Prfsondelat_interp[df][:,indsH]), axis=1)
                         #sondelonP[str(df)+'_'+str(pn)]    = np.ma.mean(np.ma.masked_invalid(Prfsondelon_interp[df][:,indsH]), axis=1)
                         #distP[str(df)+'_'+str(pn)]        = np.ma.mean(np.ma.masked_invalid(PrfDist[df][:,indsH]), axis=1)
+
+                   # Exit progr
         
         #----------------------------------------
         #
@@ -845,8 +1113,6 @@ def main(argv):
         #-------------------
         #Bar Plot with Bias
         #-------------------
-
-
 
         for df in diffT:
 
@@ -920,7 +1186,10 @@ def main(argv):
                 ax1 = plt.subplot(gs1[0:1, :])
 
                 indsH = np.where( (fts.alt[v] >= pcol[0]) & (fts.alt[v] <=pcol[1])  )[0]
-                x = PrfDiff[dfValue+v][:,indsH]
+                
+                if pltInputs['smthFlg']: x = PrfDiff_smth[dfValue+v][:,indsH]
+                else: x = PrfDiff[dfValue+v][:,indsH]
+               
                 x = x[~np.isnan(x)]
             
                 n, bins, patches = ax1.hist(x/1e3, bins=20, normed=True, alpha=0.8 ,histtype='step', fill=True, color='k')  #color='green'
@@ -986,7 +1255,7 @@ def main(argv):
 
                 fig1, ax1  = plt.subplots(2, figsize=(8,7), sharex=True)
 
-                for pn, pcol in enumerate(pCols):
+                for pn, pcol in enumerate(pCols[:-2]):
 
                     stdDF        = []
                     Npnts        = []
@@ -1045,7 +1314,6 @@ def main(argv):
                         ax1[0].plot(diffT, Npnts,  color='blue',linewidth=2.0, zorder=1)
                         ax1[0].scatter(diffT, Npnts, facecolors='white', color='blue',s=60, label='Number of profiles', zorder=2)
                         
-
                         print 'Number of profiles = {}'.format(Npnts)
                         print 'Number of dates = {}'.format(Npnts2)
                         print 'diffT = {}'.format(diffT)
@@ -1084,7 +1352,7 @@ def main(argv):
                
                 else:       
                     plt.show(block=False)
-
+        
        
         #-------------------------------------------------
         # Profile position diference at specific Delta T
@@ -1111,8 +1379,8 @@ def main(argv):
 
                             inds = np.where(np.asarray(diffT) == t)[0]
 
-                            print inds.shape
-                            print inds
+                            #print inds.shape
+                            #print inds
 
                             df = str(diffT[inds[0]])
 
@@ -1248,6 +1516,17 @@ def main(argv):
         interceptApr ={}
         intercept_eApr = {}
         rvalueApr    = {}
+
+
+        slope_r_a        = {}
+        slope_r_a_e      = {}
+        
+        intercept_r_a    = {}
+        intercept_r_a_e  = {}
+
+        rvalue_r_a       = {}
+
+
         
         for v in pltInputs['ver']: 
 
@@ -1263,10 +1542,17 @@ def main(argv):
                 for p, pcol in enumerate(pCols[0:-1]):
 
                     inds = np.where( (fts.alt[v] >= pcol[0]) & (fts.alt[v] <pcol[1])  )[0]
+
+                    #--------------
+                    #
+                    #--------------
+                    if pltInputs['smthFlg']: prfsonde = Prfsonde_interp_smth[df+v][:, inds]
+                    else:                    prfsonde = Prfsonde_interp[df+v][:, inds]
+
                     #--------------
                     #Bias and precision in Retrieval
                     #--------------
-                    bias_n = np.sum(prfmean_day[df+v][:, inds] - Prfsonde_interp[df+v][:, inds], axis=1 )/float(len(inds))#Prfsonde_interp[df][:, inds].shape[1] 
+                    bias_n = np.sum(prfmean_day[df+v][:, inds] - prfsonde, axis=1 )/float(len(inds))#Prfsonde_interp[df][:, inds].shape[1] 
                     #biasCalc = prfmean_day[df][:, inds] - Prfsonde_interp[df][:, inds]
                     bias_n = bias_n[~np.isnan(bias_n)]/1e3
 
@@ -1280,21 +1566,21 @@ def main(argv):
                     bias.setdefault(df+v, []).append(me)
                     bias_e.setdefault(df+v, []).append(stdE)
 
-                    bias_perc.setdefault(df+v, []).append(me/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
-                    bias_perc_e.setdefault(df+v, []).append(stdE/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    bias_perc.setdefault(df+v, []).append(me/np.nanmean(prfsonde/1e3) * 100.)
+                    bias_perc_e.setdefault(df+v, []).append(stdE/np.nanmean(prfsonde/1e3) * 100.)
 
                     prec.setdefault(df+v, []).append(prec_n)
                     #prec_e.setdefault(df+v, []).append(stdE * 0.71)
                     prec_e.setdefault(df+v, []).append(stdE * 0.0)
 
-                    prec_perc.setdefault(df+v, []).append(prec_n/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    prec_perc.setdefault(df+v, []).append(prec_n/np.nanmean(prfsonde/1e3) * 100.)
                     #prec_perc_e.setdefault(df+v, []).append((stdE * 0.71)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
-                    prec_perc_e.setdefault(df+v, []).append((stdE * 0.0)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    prec_perc_e.setdefault(df+v, []).append((stdE * 0.0)/np.nanmean(prfsonde/1e3) * 100.)
 
                     #--------------
                     #Bias and precision in Apriori
                     #--------------
-                    bias_nApr = np.sum(aPrf_day[df+v][:, inds] - Prfsonde_interp[df+v][:, inds], axis=1 )/float(len(inds))#Prfsonde_interp[df][:, inds].shape[1] 
+                    bias_nApr = np.sum(aPrf_day[df+v][:, inds] - prfsonde, axis=1 )/float(len(inds))#Prfsonde_interp[df][:, inds].shape[1] 
                     bias_nApr = bias_nApr[~np.isnan(bias_nApr)]/1e3
 
                     muApr = np.nanmean(bias_nApr)
@@ -1315,10 +1601,13 @@ def main(argv):
                     #--------------
                     #Orthogonal Regression in Retrieval
                     #--------------
-                    xx = Prfsonde_interp[df+v][:, inds]
+                    xx = prfsonde
                     xx = xx[~np.isnan(xx)]/1e3
 
-                    xx_e = Prfsonde_sd_interp[df+v][:, inds]
+                    if pltInputs['smthFlg']: xx_e = Prfsonde_sd_interp_smth[df+v][:, inds]
+                    else:                    xx_e = Prfsonde_sd_interp[df+v][:, inds]
+
+                    #xx_e = Prfsonde_sd_interp_smth[df+v][:, inds]
                     xx_e = xx_e[~np.isnan(xx_e)]/1e3
 
                     yy = prfmean_day[df+v][:, inds]
@@ -1336,6 +1625,34 @@ def main(argv):
 
                     slopelr, interceptlr, r_valueln, p_valuelr, std_errlr = stats.linregress(xx, yy)
                     rvalue.setdefault(df+v, []).append(float(r_valueln))
+
+                    #--------------
+                    #Orthogonal Regression in Retrieval - apriori
+                    #--------------
+                    xx = Prfsond_r_a[df+v][:, inds]
+                    xx = xx[~np.isnan(xx)]/1e3
+
+                    if pltInputs['smthFlg']: xx_e = xx*0.05
+                    else:                    xx_e = xx*0.05
+
+                    #xx_e = Prfsonde_sd_interp_smth[df+v][:, inds]
+                    xx_e = xx_e[~np.isnan(xx_e)]/1e3
+
+                    yy = Prf_r_a[df+v][:, inds]
+                    yy = yy[~np.isnan(yy)]/1e3
+
+                    yy_e = yy*0.1
+                    yy_e = yy*0.1
+
+                    odr_ra, odrErr_ra  = mf.orthoregress(xx, yy, xerr=xx_e, yerr=yy_e, InError=True)
+                    slope_r_a.setdefault(df+v, []).append(float(odr_ra[0]))
+                    intercept_r_a.setdefault(df+v, []).append(float(odr_ra[1]))
+
+                    slope_r_a_e.setdefault(df+v, []).append(float(odrErr_ra[0]))
+                    intercept_r_a_e.setdefault(df+v, []).append(float(odrErr_ra[1]))
+
+                    slopelr_ra, interceptlr_ra, r_valueln_ra, p_valuelr_ra, std_errlr_ra = stats.linregress(xx, yy)
+                    rvalue_r_a.setdefault(df+v, []).append(float(r_valueln_ra))
                     
                     #--------------
                     #Orthogonal Regression in Apriori
@@ -1367,18 +1684,19 @@ def main(argv):
                         #print 'bias (vmr)        = {0:.2f}'.format(biasCalc2/1e3)
                         print 'Mean Bias (vmr)   = {0:.3f} +/- {1:.3f}'.format(mu, stdE)
                         print 'Median Bias (vmr)   = {0:.3f} +/- {1:.3f}'.format(me, stdE)
-                        print 'Percent wrst Mean Sonde = {0:.3f} +/- {1:.3f}'.format(mu/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100., stdE/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
-                        print 'Percent wrst Median Sonde = {0:.3f} +/- {1:.3f}'.format(me/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100., stdE/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                        print 'Percent wrst Mean Sonde = {0:.3f} +/- {1:.3f}'.format(mu/np.nanmean(prfsonde/1e3) * 100., stdE/np.nanmean(prfsonde/1e3) * 100.)
+                        print 'Percent wrst Median Sonde = {0:.3f} +/- {1:.3f}'.format(me/np.nanmean(prfsonde/1e3) * 100., stdE/np.nanmean(prfsonde/1e3) * 100.)
 
                         print '\nPrecision (vmr)   = {0:.3f} +/- {1:.3f}'.format(prec_n, stdE * 0.71)
-                        print 'Precision Percent wrst Sonde = {0:.3f} +/- {1:.3f}'.format(prec_n/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100., (stdE * 0.71)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                        print 'Precision Percent wrst Sonde = {0:.3f} +/- {1:.3f}'.format(prec_n/np.nanmean(prfsonde/1e3) * 100., (stdE * 0.71)/np.nanmean(prfsonde/1e3) * 100.)
                         
                         print '\nSlope: {0:.2f} +/- {1:.2f}'.format(float(odr[0]), float(odrErr[0]))
                         print 'Intercept = {0:.3f} +/- {1:.3f}'.format(float(odr[1]), float(odrErr[1]))
                         print 'R value = {0:.2f}'.format(float(r_valueln))
-                        print 'Slope Apriori: {0:.2f} +/- {1:.2f}'.format(float(odrApr[0]), float(odrErrApr[0]))
-                        print 'Intercept Apriori = {0:.3f} +/- {1:.3f}'.format(float(odrApr[1]), float(odrErrApr[1]))
-                        print 'R value Apriori = {0:.2f}'.format(float(r_value2Apr)) 
+                        
+                        print '\nSlope r-a: {0:.2f} +/- {1:.2f}'.format(float(odr_ra[0]), float(odrErr_ra[0]))
+                        print 'Intercept r-a = {0:.3f} +/- {1:.3f}'.format(float(odr_ra[1]), float(odrErr_ra[1]))
+                        print 'R value r-a = {0:.2f}'.format(float(r_valueln_ra)) 
 
         
         #---------------------------------
@@ -1416,10 +1734,17 @@ def main(argv):
                     df = str(df)
 
                     inds = np.where( (fts.alt[v] >= pcol[0]) & (fts.alt[v] <pcol[1])  )[0]
+
+                    #--------------
+                    #
+                    #--------------
+                    if pltInputs['smthFlg']: prfsonde = Prfsonde_interp_smth[df+v][:, inds]
+                    else:                    prfsonde = Prfsonde_interp[df+v][:, inds]
+
                     #--------------
                     #Bias and precision in Retrieval
                     #--------------
-                    bias_n = np.sum(prfmean_day[df+v][:, inds] - Prfsonde_interp[df+v][:, inds], axis=1 )/float(len(inds))
+                    bias_n = np.sum(prfmean_day[df+v][:, inds] - prfsonde, axis=1 )/float(len(inds))
                     bias_n = bias_n[~np.isnan(bias_n)]/1e3
 
                     mu = np.nanmean(bias_n)
@@ -1431,24 +1756,27 @@ def main(argv):
                     bias2.setdefault(pcolstr+v, []).append(me)
                     bias_e2.setdefault(pcolstr+v, []).append(stdE)
 
-                    bias_perc2.setdefault(pcolstr+v, []).append(me/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
-                    bias_perc_e2.setdefault(pcolstr+v, []).append(stdE/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    bias_perc2.setdefault(pcolstr+v, []).append(me/np.nanmean(prfsonde/1e3) * 100.)
+                    bias_perc_e2.setdefault(pcolstr+v, []).append(stdE/np.nanmean(prfsonde/1e3) * 100.)
 
                     prec2.setdefault(pcolstr+v, []).append(prec_n)
                     #prec_e2.setdefault(pcolstr+v, []).append(stdE * 0.71)
                     prec_e2.setdefault(pcolstr+v, []).append(stdE * 0.0)
 
-                    prec_perc2.setdefault(pcolstr+v, []).append(prec_n/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    prec_perc2.setdefault(pcolstr+v, []).append(prec_n/np.nanmean(prfsonde/1e3) * 100.)
                     #prec_perc_e2.setdefault(pcolstr+v, []).append((stdE * 0.71)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
-                    prec_perc_e2.setdefault(pcolstr+v, []).append((stdE * 0.0)/np.nanmean(Prfsonde_interp[df+v][:, inds]/1e3) * 100.)
+                    prec_perc_e2.setdefault(pcolstr+v, []).append((stdE * 0.0)/np.nanmean(prfsonde/1e3) * 100.)
 
                     #--------------
                     #Orthogonal Regression in Retrieval
                     #--------------
-                    xx = Prfsonde_interp[df+v][:, inds]
+                    xx = prfsonde
                     xx = xx[~np.isnan(xx)]/1e3
 
-                    xx_e = Prfsonde_sd_interp[df+v][:, inds]
+                    if pltInputs['smthFlg']: xx_e = Prfsonde_sd_interp_smth[df+v][:, inds]
+                    else:                    xx_e = Prfsonde_sd_interp[df+v][:, inds]
+
+                    #xx_e = Prfsonde_sd_interp_smth[df+v][:, inds]
                     xx_e = xx_e[~np.isnan(xx_e)]/1e3
 
                     yy = prfmean_day[df+v][:, inds]
@@ -1517,7 +1845,7 @@ def main(argv):
                     ax2.bar(ind+c*width, intercept_v, width, yerr=intercept_ve, ecolor='k', color=colors2[c % len(colors2)])
 
                 ax2.set_xlim(-width,len(ind)+width*0.4)
-                ax2.set_ylabel('Intercept [x10$^3$ ppm$_v$]', fontsize=16)
+                ax2.set_ylabel('Intercept [x10$^3$ ppm]', fontsize=16)
                 ax2.set_xticks(ind+width*2)
                 ax2.tick_params(which='both',labelsize=16)
                 if loc.lower() =='fl0': 
@@ -1603,7 +1931,7 @@ def main(argv):
 
                 
                 ax.set_xlim(-width,len(ind)+width*0.4)
-                ax.set_ylabel('Bias [x10$^3$ ppm$_v$]', fontsize=16)
+                ax.set_ylabel('Bias [x10$^3$ ppm]', fontsize=16)
                 #ax.set_ylim(0,1.5)
                 ax.axhline(y=0.0, linestyle='--', linewidth=1.5, color='k', alpha=0.5)
                 ax.legend([b[0] for b in bar_groups], labels, fontsize=12, ncol=len(labels), loc='upper center', bbox_to_anchor=(0.5, 1.05))
@@ -1645,7 +1973,7 @@ def main(argv):
                     ax3.bar(ind+c*width, prec_v, width, yerr=prec_ve, ecolor='k', color=colors2[c % len(colors2)])
 
                 ax3.set_xlim(-width,len(ind)+width*0.4)
-                ax3.set_ylabel('Precision [x10$^3$ ppm$_v$]', fontsize=16)
+                ax3.set_ylabel('Precision [x10$^3$ ppm]', fontsize=16)
                 ax3.set_xticks(ind+width*2)
                 ax3.tick_params(which='both',labelsize=16)
                 ax3.axhline(y=0.0, linestyle='--', linewidth=1.5, color='k', alpha=0.5)
@@ -1722,18 +2050,18 @@ def main(argv):
 
         ax1[1].grid(True) 
         ax1[1].tick_params(which='both',labelsize=16)
-        ax1[1].set_ylabel('Intercept [x10$^3$ ppm$_v$]', fontsize=16)
+        ax1[1].set_ylabel('Intercept [x10$^3$ ppm]', fontsize=16)
         #ax1[0].set_ylim(bottom=0)
         #ax1[1].legend(prop={'size':11}, loc=2)
 
         ax1[2].grid(True) 
         ax1[2].tick_params(which='both',labelsize=16)
-        ax1[2].set_ylabel('Bias [x10$^3$ ppm$_v$]', fontsize=16)
+        ax1[2].set_ylabel('Bias [x10$^3$ ppm]', fontsize=16)
         #ax1[0].set_ylim(bottom=0)
         #ax1[2].legend(prop={'size':11}, loc=2)
 
         ax1[3].grid(True)
-        ax1[3].set_ylabel('Precision [x10$^3$ ppm$_v$]', fontsize=16)
+        ax1[3].set_ylabel('Precision [x10$^3$ ppm]', fontsize=16)
         ax1[3].tick_params(which='both',labelsize=16)
         #ax1[3].set_ylim(bottom=0)
         ax1[3].set_xlim(left=0, right=np.max(diffT) + 10)
@@ -1798,18 +2126,18 @@ def main(argv):
 
                 ax1[1].grid(True) 
                 ax1[1].tick_params(which='both',labelsize=16)
-                ax1[1].set_ylabel('Intercept [x10$^3$ ppm$_v$]', fontsize=16)
+                ax1[1].set_ylabel('Intercept [x10$^3$ ppm]', fontsize=16)
                 #ax1[0].set_ylim(bottom=0)
                 #ax1[1].legend(prop={'size':11}, loc=2)
 
                 ax1[2].grid(True) 
                 ax1[2].tick_params(which='both',labelsize=16)
-                ax1[2].set_ylabel('Bias [x10$^3$ ppm$_v$]', fontsize=16)
+                ax1[2].set_ylabel('Bias [x10$^3$ ppm]', fontsize=16)
                 #ax1[0].set_ylim(bottom=0)
                 #ax1[2].legend(prop={'size':11}, loc=2)
 
                 ax1[3].grid(True)
-                ax1[3].set_ylabel('Precision [x10$^3$ ppm$_v$]', fontsize=16)
+                ax1[3].set_ylabel('Precision [x10$^3$ ppm]', fontsize=16)
                 ax1[3].tick_params(which='both',labelsize=16)
                 ax1[3].set_ylim(bottom=0)
                 ax1[3].set_xlim(left=0, right=np.max(diffT) + 10)

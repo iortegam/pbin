@@ -330,9 +330,11 @@ def main(argv):
 
             print 'Linerar Correlation: '+ pltInputs['ID'][k] + 'vs' + pltInputs['ver_vs']
             print 'Total Column:'
-            print "slope: {0:4.2f}".format(slope)
+            print "slope: {0:.4f}".format(slope)
             print "Intercept: {0:.2E}".format(intercept)
             print "r-value: {0:.2E}".format(r_value)
+            print "r2: {0:.2E}".format(r_value**2)
+            print "N points: {}".format(len(tc_fic))
 
             #---------------------
             #Bias
@@ -432,11 +434,11 @@ def main(argv):
     ax[0,0].set_xlabel('Total Column [molec$\cdot$cm$^{-2}$] - %s' %str(pltInputs['ver_vs']))
     ax[0,0].set_ylabel('Total Column [molec$\cdot$cm$^{-2}$]')    
     ax[0,0].legend(prop={'size':12})
-    ax[0,0].set_ylim(np.min(TC[indT])-0.05*np.min(TC[indT]), np.max(TC[indT])+0.05*np.max(TC[indT]))
-    ax[0,0].set_xlim(np.min(TC[indT])-0.05*np.min(TC[indT]), np.max(TC[indT])+0.05*np.max(TC[indT]))
-    ax[0,0].plot(one2one, one2one, ls ='--', color='gray', linewidth=2)
-    ax[0,0].plot(one2one, one2one*0.8, ls ='--', color='gray', linewidth=2)
-    ax[0,0].plot(one2one*0.8, one2one, ls ='--', color='gray', linewidth=2) 
+    #ax[0,0].set_ylim(np.min(TC[indT])-0.05*np.min(TC[indT]), np.max(TC[indT])+0.05*np.max(TC[indT]))
+    #ax[0,0].set_xlim(np.min(TC[indT])-0.05*np.min(TC[indT]), np.max(TC[indT])+0.05*np.max(TC[indT]))
+    #ax[0,0].plot(one2one, one2one, ls ='--', color='gray', linewidth=2)
+    #ax[0,0].plot(one2one, one2one*0.8, ls ='--', color='gray', linewidth=2)
+    #ax[0,0].plot(one2one*0.8, one2one, ls ='--', color='gray', linewidth=2) 
     ax[0,0].grid(True)
 
     ax[0,1].set_xlabel('RMS - %s' %str(pltInputs['ver_vs']))

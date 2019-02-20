@@ -177,6 +177,7 @@ class FTSClass():
 
         self.sza              = OrderedDict()
         self.saa              = OrderedDict()
+        self.PrimaryGas       = OrderedDict()
 
         if errFlg:          
             self.rand_err         = OrderedDict()
@@ -220,6 +221,7 @@ class FTSClass():
             self.dates[GasVer]    = np.asarray(statDataCl[GasVer].rprfs['date'])
             self.alt[GasVer]      = np.asarray(statDataCl[GasVer].rprfs['Z'][0,:])
            
+            self.PrimaryGas[GasVer] =  statDataCl[GasVer].PrimaryGas
             #self.LayThk[GasVer]   = np.asarray(statDataCl[GasVer].thckAlt[:-1]) 
             #print statDataCl[GasVer].thckAlt
             #print statDataCl[GasVer].midAlt

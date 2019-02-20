@@ -850,8 +850,6 @@ class CAMClass():
         print '\nNumber of times:'+ str(ntimes)
         print 'Number of dimensions:' + str(lev.shape)
 
-        exit()
-
         # -------------------------------
         # Hybrid levels to pressure levels
         # -------------------------------

@@ -64,6 +64,20 @@
 -To delete a branch
 >> git branch -d branchName
 
+-To change a a branch name (if you are in the branch)
+>> git branch -m New-Name 
+
+-Copy files from a branch:
+https://remarkablemark.org/blog/2016/11/04/copy-files-from-git-branch/
+
+>> e.g., git checkout Dev_Ivan HDFRead
+
+after this add and commit, the push is you want, example:
+
+>> git checkout Dev_Ivan RefProfiles
+>> git add -A
+>> git commit -m 'Ref Prof'
+>> git push -u new-origin Pre-Release_v3.0
 
 #-------------------------------------------
 # Creating a new Pre-relase branch starting from Bavo's branch

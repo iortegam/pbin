@@ -5,14 +5,14 @@
 # Purpose:
 #        This is the input file for pltsonde.py   --> Plot sonde vs FTS 
 #----------------------------------------------------------------------------------------
-loc = 'mlo'               
+loc = 'fl0'               
     
 if loc.lower() == 'mlo':
    
     gasName    = 'h2o'                                  
     ver        = ['sonde/Current_ERA_v66','sonde/Current_ERA', 'sonde/Current_NCEP', 'sonde/Current_WACCM']     
     ctlF       = ['sfit4_v1.ctl', 'sfit4_v1.ctl', 'sfit4_v1.ctl', 'sfit4_v1.ctl' ]
-    doi        = ['20120706', '20120831', '20130116', '20130410', '20130626', '20131031', '20140212', '20141020', '20150326', '20151026']    
+    doi        = ['20120706', '20120831', '20130116', '20130410', '20130626', '20131031', '20140212', '20140917', '20150326', '20151026']    
    
 elif loc.lower() == 'fl0':
 
@@ -29,7 +29,7 @@ else:
 #------
 #Smooth sonde profiles using AK
 #------
-smthFlg    = True
+smthFlg    = False
 
 #------
 # Time Flag: 'inc' = increasing ;  'int' = interval     
@@ -39,7 +39,8 @@ timeFlg    = 'int'
 #------
 # Flags
 #------
-saveFlg    = True	               # Flag to either save data to pdf file (saveFlg=True) or plot to screen (saveFlg=False)
+saveFlg    = False	               # Flag to either save data to pdf file (saveFlg=True) or plot to screen (saveFlg=False)
+
 errorFlg   = True                  # Flag to process error data
 fltrFlg    = True                  # Flag to filter the data
 byYrFlg    = False                  # Flag to create plots for each individual year in date range

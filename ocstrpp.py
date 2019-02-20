@@ -27,9 +27,9 @@ def main(argv):
 	#INPUTS
 	#----------------------------------------------------------
 	
-	loc        = 'eur'
+	loc        = 'par'
 
-	iyear      = 2006
+	iyear      = 2011
 	fyear      = 2016
 
 	savePDF    = False
@@ -127,7 +127,7 @@ def main(argv):
 
 	for i in range(nyears):
 
-	    f2 = open( NCEPhgtDir +  '/NCEP_trpp/TropHght_'+loc.lower()+'_'+str( int(iyear) +i)+ '.dat', 'r')
+	    f2 = open( NCEPhgtDir +  'NCEP_trpp/TropHght_'+loc.lower()+'_'+str( int(iyear) +i)+ '.dat', 'r')
 	    
 
 	    lines = f2.readlines()

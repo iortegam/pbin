@@ -6,7 +6,7 @@
 #        This is the input file for pltsonde.py   --> Plot sonde vs FTS 
 #----------------------------------------------------------------------------------------
 loc        = 'fl0'
-gasName    = 'hcn'               
+gasName    = 'co'               
     
 if loc.lower() == 'fl0':
 
@@ -76,7 +76,7 @@ maxCHI     = 2.0                    # Max CHI_y_2 value
 maxTC      = 5.0E25                # Max Total column amount for filtering
 minTC      = 0.0                 # Min Total column amount for filtering
 sclfct     = 1.0E9                  # Scale factor to apply to vmr plots (ppmv=1.0E6, ppbv=1.0E9, etc)
-sclfctName = 'ppbv'                 # Name of scale factor for labeling plots
+sclfctName = 'ppb'                 # Name of scale factor for labeling plots
 
 #----------------------
 # Date range to process

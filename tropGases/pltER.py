@@ -47,6 +47,9 @@ import dataOutClass as dc
 from collections                     import OrderedDict
 import PltClass as mp
 
+from scipy import linspace, polyval, polyfit, sqrt, stats, randn
+
+
 import ClassFTS as cfts
 import myfunctions as mf
 
@@ -92,10 +95,10 @@ def main():
     #-----------------------------------------------------------------------------------------
     loc                = 'fl0'
 
-    gasName            = ['co',  'c2h6' , 'nh3', 'h2co', 'hcn', 'ch4']
-    ver                = ['Current_v3', 'Current_v2', 'Current_v2', 'Current_v8', 'Current_v1', 'Current_WP']            
+    gasName            = ['co',  'c2h6' , 'ch4', 'nh3', 'h2co', 'hcooh', 'hcn']
+    ver                = ['Current_v3', 'Current_v2', 'Current_WP', 'Current_v2', 'Current_v8', 'Current_v3', 'Current_v1']            
 
-    saveFlg           = True 
+    saveFlg            = False 
 
     #----------------------
     # Date range to process
@@ -218,6 +221,7 @@ def main():
     vmr_Enhan     = {}
     res_Enhan     = {}
     dates_Enhan   = {}
+    dates_Enhan2  = {}
     dvmr_Enhan    = {}
 
     resMean       = {}
@@ -233,6 +237,15 @@ def main():
 
     vmr_WE         = {}
     dates_WE       = {}
+    dates_WE2       = {}
+
+    #-----------
+    #
+    #----------
+    vmr_EnhanCO    = {}
+    dvmr_EnhanCO   = {}
+    vmrCO_WE       = {}
+
 
     for i, g in enumerate(gasName):
 
@@ -272,15 +285,24 @@ def main():
         #----------------------------
         # Get Residuals above (possible enhancements due to O&NG)
         #----------------------------
-        vmr_above           = []
-        residual_above      = []
-        dt_above            = []
+        #vmr_above           = []
+        #residual_above      = []
+        #dt_above            = []
 
         inds                = np.where(res >= (res_Mean + res_Std*2))[0]
 
         vmr_Enhan[g]        = np.asarray(vmr[g][inds])
         dates_Enhan[g]      = np.asarray(dates[g][inds])
+        dates_Enhan2[g]     = np.asarray(dates[g][inds])
         res_Enhan[g]        = np.asarray(res[inds])
+
+        #------------------------------
+        # Interpolate CO to enhancements
+        #------------------------------
+        datesCO           = np.asarray(fts['co_dt'])
+        dateYearFracCO    = mf.toYearFraction(datesCO)
+        vmrCO             = np.asarray(fts['co_wVMR'], dtype=np.float32)
+        vmr_EnhanCO[g]    = interpolate.interp1d(dateYearFracCO, vmrCO, kind='nearest', bounds_error=False)(dateYearFrac[inds])
 
         #for ii, jj in enumerate(res):
 
@@ -310,8 +332,35 @@ def main():
         inds_wd          = np.logical_and(wdir_interp >= 180., wdir_interp <= 360.)
         vmr_WE[g]        = vmr[g][inds_wd]
         dates_WE[g]      = dates[g][inds_wd]
+        dates_WE2[g]     = dates[g][inds_wd]
 
         residuals_bkg[g] = residuals[g][inds_wd]
+
+        doy_WE           = mf.toYearFraction(dates_WE[g])
+        doy_Enhan        = mf.toYearFraction(dates_Enhan[g])
+
+        #----------------------------
+        #
+        #----------------------------
+        if g.upper() != 'HCN':
+            intrsctVals      = np.intersect1d(doy_WE, doy_Enhan, assume_unique=False)
+                        
+            inds1            = np.nonzero( np.in1d( doy_WE, intrsctVals, assume_unique=False ) )[0]
+            inds2            = np.nonzero( np.in1d( doy_Enhan, intrsctVals, assume_unique=False ) )[0]
+
+            dates_Enhan[g]   = np.delete(dates_Enhan[g] ,inds2,axis=0)
+            vmr_Enhan[g]     = np.delete(vmr_Enhan[g] ,inds2,axis=0)
+
+            dates_WE[g]       = np.delete(dates_WE[g] ,inds1,axis=0)
+            vmr_WE[g]         = np.delete(vmr_WE[g] ,inds1,axis=0)
+
+        #----------------------------
+        #
+        #----------------------------
+            vmr_EnhanCO[g]      = np.delete(vmr_EnhanCO[g] ,inds2,axis=0)
+
+        vmrCO_WE[g]         = interpolate.interp1d(dateYearFracCO, vmrCO, kind='nearest', bounds_error=False)(dateYearFrac[inds_wd])
+        if g.upper() != 'HCN': vmrCO_WE[g]         = np.delete(vmrCO_WE[g] ,inds1,axis=0)
 
         #----------------------------
         # Substracting background
@@ -331,11 +380,15 @@ def main():
         month_Enhan         = np.array([d.month for d in dates_Enhan[g]])
 
         dvmr_Enhan[g]       = np.zeros(len(vmr_Enhan[g]))
-
         dvmr[g]             = np.zeros(len(dates[g]))
 
+        #----------------------------
+        # 
+        #----------------------------
+        dvmr_EnhanCO[g]       = np.zeros(len(vmr_Enhan[g]))
+        mnthMean_bkgCO        = np.zeros(len(mnthSort))
 
-        
+  
         for i,m in enumerate(mnthSort):
 
             inds           = np.where(month == m)[0]
@@ -353,14 +406,40 @@ def main():
             inds                = np.where(month_Enhan == m)[0]
             dvmr_Enhan[g][inds] = vmr_Enhan[g][inds] - mnthMean_bkg[i]
 
+            #----------------------------
+            #
+            #---------------------------- 
+            mnthMean_bkgCO[i]     = np.min(vmrCO_WE[g][inds_bkg]) #- np.std(vmrCO_WE[g][inds_bkg]) 
+            dvmr_EnhanCO[g][inds] = vmr_EnhanCO[g][inds] - mnthMean_bkgCO[i]
+
+        print 'Gas: {}'.format(g)
         print 'Number of days with Enahncements  ({}): {}'.format(g, float(len(dvmr_Enhan[g])))
         print 'Percent of days with Enahncements ({}): {}'.format(g, float(len(dvmr_Enhan[g]))/float(len(dates[g])) * 100.)
 
+        #print len(dvmr_EnhanCO[g])
+        indspos = np.where(dvmr_EnhanCO[g] > 0)[0]
+        indsneg = np.where(dvmr_EnhanCO[g] < 0)[0]
+        #print len(indspos)
+        #print len(indsneg)
+
+
+        #odr, odrErr  = mf.orthoregress(vmr_EnhanCO[g], vmr_Enhan[g], xerr=vmr_EnhanCO[g]*0.05, yerr=vmr_Enhan[g]*0.075, InError=True)
+        #slope = float(odr[0])
+        #intercept = float(odr[1])
+        #print slope 
+        
+        #odr, odrErr  = mf.orthoregress(dvmr_EnhanCO[g], dvmr_Enhan[g], xerr=dvmr_EnhanCO[g]*0.05, yerr=dvmr_Enhan[g]*0.075, InError=True)
+        #slope = float(odr[0])
+        #intercept = float(odr[1])
+        #print slope 
+
+
         #fig,ax  = plt.subplots(figsize=(7,9))
-        #ax.scatter(dates[g], dvmr[g], color='gray', s=25, facecolors='white', zorder=1)
+        #ax.scatter(dvmr_EnhanCO[g], dvmr_Enhan[g], color='gray', s=25, facecolors='white', zorder=1)
         #ax.scatter(dates_Enhan[g], dvmr_Enhan[g], color='red', s=25, facecolors='white', zorder=1)  
         #plt.show(block=False)
-        #user_input = raw_input('Press any key to exit >>> ')
+    
+    #user_input = raw_input('Press any key to exit >>> ')
 
     #---------------------------------
     #     PLOT: -- Time Series --
@@ -438,14 +517,14 @@ def main():
         fig0.add_subplot(ax0)
 
         #----------------------------
-        # PLOT: Residuals in VMR (red points enhancements, dotted line STD*1.5)
+        # PLOT: Residuals in VMR (red points enhancements, dotted line STD*2)
         #----------------------------
 
         ax = plt.Subplot(fig, outer_grid[i])
  
         ax.scatter(dates[g],residuals[g], color='gray', s=25, facecolors='white', zorder=1, label='All')
-        ax.scatter(dates_Enhan[g],res_Enhan[g], color='red', s=25, facecolors='white', zorder=2, label='Enhancements')
-        ax.scatter(dates_WE[g],residuals_bkg[g], color='blue', s=25, facecolors='white', zorder=3,  label='Background')
+        ax.scatter(dates_Enhan2[g],res_Enhan[g], color='red', s=25, facecolors='white', zorder=2, label='Enhancements')
+        ax.scatter(dates_WE2[g],residuals_bkg[g], color='blue', s=25, facecolors='white', zorder=3,  label='Background')
 
         ax.axhline(resMean[g]+resStd[g]*2,color='k',linestyle='--', linewidth=2)
         ax.axhline(resMean[g]-resStd[g]*2,color='k',linestyle='--', linewidth=2)
@@ -483,6 +562,10 @@ def main():
         ax2.scatter(dates[g],vmr[g], color='gray', s=25, facecolors='white', zorder=1, label='All')
         ax2.scatter(dates_Enhan[g],vmr_Enhan[g], color='red', s=25, facecolors='white', zorder=2, label='Enhancements')
         ax2.scatter(dates_WE[g],vmr_WE[g], color='blue', s=25, facecolors='white', zorder=3,  label='Background')
+
+        if g == 'co': 
+            ax2.scatter(dates_Enhan[g],vmr_EnhanCO[g], color='orange', s=25, facecolors='white', zorder=2, label='Enhancements')
+            ax2.scatter(dates_WE[g],vmrCO_WE[g], color='purple', s=25, facecolors='white', zorder=4,  label='Background')
         
         ax2.grid(True, alpha=0.35)
         ax2.tick_params(labelsize=16)
@@ -510,6 +593,7 @@ def main():
 
         #ax3.scatter(dates_Enhan[g],vmr_Enhan[g], color='red', s=25, facecolors='white', zorder=1)
         ax3.scatter(dates_Enhan[g],dvmr_Enhan[g], color='red', s=35, facecolors='white', zorder=2)
+        if g == 'co': ax3.scatter(dates_Enhan[g],dvmr_EnhanCO[g], color='orange', s=35, facecolors='white', zorder=2)
 
         ax3.grid(True, alpha=0.35)
         ax3.tick_params(labelsize=16)
@@ -619,12 +703,13 @@ def main():
         pdfsav.savefig(fig2,dpi=200)
         pdfsav.savefig(fig3,dpi=200)
         #fig.savefig(pltDir+'Time_Series.pdf', bbox_inches='tight')
-        fig2.savefig(pltDir+'Time_Series_residuals.pdf', bbox_inches='tight')
+        fig.savefig(pltDir+'Time_Series_residuals.pdf', bbox_inches='tight')
+        fig2.savefig(pltDir+'Time_Series_enh.pdf', bbox_inches='tight')
     else:
         plt.show(block=False)
     
-    user_input = raw_input('Press any key to exit >>> ')
-    sys.exit()
+    #user_input = raw_input('Press any key to exit >>> ')
+    #sys.exit()
  
 
     #--------------------------------
@@ -722,14 +807,16 @@ def main():
     doy_x        = mf.toYearFraction(dates_x)
 
     datesEnh_x   = np.asarray(dates_Enhan['co'])
+    doyEnh_x     = mf.toYearFraction(datesEnh_x)   
     vmrEnh_x     = np.asarray(vmr_Enhan['co'])
-    doyEnh_x     = mf.toYearFraction(datesEnh_x) 
     dvmrEnh_x    = np.asarray(dvmr_Enhan['co'])
+
+    dates_x_WE   = np.asarray(dates_WE['co'])
 
     #gasName2     = [g for g in gasName if g.lower() != 'co']
 
-    gasName2     = ['c2h6', 'nh3', 'h2co', 'ch4']
-    MX           = [ 30., 17., 30., 16.]
+    gasName2     = ['c2h6', 'nh3', 'h2co', 'hcooh', 'hcn']
+    MX           = [ 30., 17., 30., 46., 27.]
     MCO          = 28. 
  
     #yearsall  = [ singDate.year for singDate in dates_Enhan['c2h6']]
@@ -737,8 +824,11 @@ def main():
     #yearsList = list(set(yearsall))
     #yearsList.sort()
 
-    yearsList     = [ [2010, 2014], [2015, 2017] ]
-    yearsListStr  = ['2010 - 2014', '2015 - 2017']
+    #yearsList     = [ [2010, 2014], [2015, 2017] ]
+    #yearsListStr  = ['2010 - 2014', '2015 - 2017']
+
+    yearsList     = [ [2010, 2017] ]
+    yearsListStr  = ['2010 - 2017']
 
     dER1          = {}
     dERstd1       = {}
@@ -751,100 +841,178 @@ def main():
     #---------------------------------
     #
     #---------------------------------
-    fig  = plt.figure(figsize=(8,9))
-    fig2  = plt.figure(figsize=(8,9))
+    fig  = plt.figure(figsize=(12,8))
+    fig2  = plt.figure(figsize=(12,8))
     
-    outer_grid   = gridspec.GridSpec(len(gasName2), 1, wspace=0.15, hspace=0.125)
+    #outer_grid   = gridspec.GridSpec(len(gasName2), 1, wspace=0.15, hspace=0.125)
+    #outer_grid = gridspec.GridSpec(int(math.ceil(len(gasName2)/2.0))  , 2, wspace=0.15, hspace=0.125)
+
+    outer_grid = gridspec.GridSpec(2  , 2, wspace=0.15, hspace=0.125)
 
     for i, g in enumerate(gasName2):
 
         gasStr = mf.getgasname(g)
 
+        # da = []
+        # for dd in dates[g]:
+        #     da.append(dt.date( int(dd.year), int(dd.month), int(dd.day) ) )
 
-        if (g.lower() != 'co') or (g.lower() != 'hcn'):
-
-            # da = []
-            # for dd in dates[g]:
-            #     da.append(dt.date( int(dd.year), int(dd.month), int(dd.day) ) )
-
-            # self.datefts = np.asarray(self.datefts)
-            # self.sonde['date'] = np.asarray(self.sonde['date'])
+        # self.datefts = np.asarray(self.datefts)
+        # self.sonde['date'] = np.asarray(self.sonde['date'])
 
 
-            # doy_fts   = dc.toYearFraction(self.datefts)
-            # doy_sonde = dc.toYearFraction(self.sonde['date'])
+        # doy_fts   = dc.toYearFraction(self.datefts)
+        # doy_sonde = dc.toYearFraction(self.sonde['date'])
 
-            # #-------------------------------------------------------
-            # #FINDING COINCIDENT DATES
-            # #-------------------------------------------------------
-            # intrsctVals = np.intersect1d(doy_fts, doy_sonde, assume_unique=False)
-            
-            # inds1       = np.nonzero( np.in1d( doy_sonde, intrsctVals, assume_unique=False ) )[0]
-            # inds2       = np.nonzero( np.in1d( doy_fts, intrsctVals, assume_unique=False ) )[0]
+        # #-------------------------------------------------------
+        # #FINDING COINCIDENT DATES
+        # #-------------------------------------------------------
+        # intrsctVals = np.intersect1d(doy_fts, doy_sonde, assume_unique=False)
+        
+        # inds1       = np.nonzero( np.in1d( doy_sonde, intrsctVals, assume_unique=False ) )[0]
+        # inds2       = np.nonzero( np.in1d( doy_fts, intrsctVals, assume_unique=False ) )[0]
 
-            datesEnh         = np.asarray(dates_Enhan[g])
-            vmrEnh           = np.asarray(vmr_Enhan[g])
-            dvmrEnh          = np.asarray(dvmr_Enhan[g])
-            dvmr_y             = np.asarray(vmr[g])
-            doyEnh           = mf.toYearFraction(datesEnh) 
+        datesEnh         = np.asarray(dates_Enhan[g])
+        vmrEnh           = np.asarray(vmr_Enhan[g])
+        dvmrEnh          = np.asarray(dvmr_Enhan[g])
+        vmr_y             = np.asarray(vmr[g])
+        doyEnh           = mf.toYearFraction(datesEnh) 
 
-            doy              = mf.toYearFraction(dates[g])   
+        doy              = mf.toYearFraction(dates[g])   
 
-            vmr_x_interpol      = interpolate.interp1d(doy_x, vmr_x, axis=0, fill_value='extrapolate', bounds_error=False)(doy)
-            Ratio               = dvmr_y/vmr_x_interpol
-            
-            vmrEnh_x_interpol   = interpolate.interp1d(doyEnh_x, vmrEnh_x, axis=0, bounds_error=False)(doyEnh)
-            RatioEnh            = vmrEnh/vmrEnh_x_interpol
+        vmr_x_interpol      = interpolate.interp1d(doy_x, vmr_x, axis=0,fill_value='extrapolate', bounds_error=False)(doy)
+        Ratio               = vmr_y/vmr_x_interpol
+        
+        vmrEnh_x_interpol   = interpolate.interp1d(doyEnh_x, vmrEnh_x, axis=0, fill_value='extrapolate', bounds_error=False)(doyEnh)
+        RatioEnh            = vmrEnh/vmrEnh_x_interpol
 
-            dvmrEnh_x_interpol   = interpolate.interp1d(doyEnh_x, dvmrEnh_x, axis=0, bounds_error=False)(doyEnh)
+        dvmrEnh_x_interpol   = interpolate.interp1d(doyEnh_x, dvmrEnh_x, axis=0, kind='nearest', fill_value='extrapolate',bounds_error=False)(doyEnh)
 
-            dRatioEnh            = dvmrEnh/dvmrEnh_x_interpol
+        dRatioEnh            = dvmrEnh/dvmrEnh_x_interpol
 
-            #yearG1  = [ singDate.year for singDate in dates_Enhan[g] if singDate.month in moi1]
-            #yearG1  = np.asarray(yearG1)
+        #yearG1  = [ singDate.year for singDate in dates_Enhan[g] if singDate.month in moi1]
+        #yearG1  = np.asarray(yearG1)
 
-            yearG1  = [ singDate.year for singDate in dates_Enhan[g]]
+        yearG1  = [ singDate.year for singDate in dates_Enhan[g]]
+        yearG1  = np.asarray(yearG1)
+        
+        #dERstd1[g] = np.asarray(dERstd1[g], dtype=np.float32)
+
+        dRatioEnh2   = dvmrEnh/np.asarray(dvmr_EnhanCO[g])
+
+        dates_Enhan2 = dates_Enhan[g]
+
+        #yearG1  = [ singDate.year for singDate in dates_Enhan[g]]
+        #yearG1  = np.asarray(yearG1)
+        
+
+        if gasStr.upper() == 'HCOOH':
+            indsok = np.where(dRatioEnh2 < 0.4)[0]
+
+            dRatioEnh2  = dRatioEnh2[indsok]
+            dates_Enhan2 = dates_Enhan[g][indsok]
+
+        if gasStr.upper() == 'HCN':
+            indsok = np.where(dRatioEnh2 < 0.2)[0]
+
+            dRatioEnh2  = dRatioEnh2[indsok]
+            dates_Enhan2 = dates_Enhan[g][indsok]
+
+        for y in yearsList:
+
+            yearG1  = [ singDate.year for singDate in dates_Enhan2]
             yearG1  = np.asarray(yearG1)
+            #indsy = np.where(yearG1 == y)[0]
 
-         
-            for y in yearsList:
-                #indsy = np.where(yearG1 == y)[0]
+            indsy = np.where( (yearG1 >= y[0]) &  (yearG1 <= y[1]))[0]
 
-                indsy = np.where( (yearG1 >= y[0]) &  (yearG1 <= y[1]))[0]
+            #print y
+            #print yearG1[indsy]
+     
+            if len(indsy) >=1 :
+                #dER1.setdefault(g,[]).append(np.nanmean(dRatioEnh[indsy]))
+                #dERstd1.setdefault(g,[]).append(np.nanstd(dRatioEnh[indsy]))
 
-                print y
-                print yearG1[indsy]
-         
-                if len(indsy) >=1 :
-                    dER1.setdefault(g,[]).append(np.nanmean(dRatioEnh[indsy]))
-                    dERstd1.setdefault(g,[]).append(np.nanstd(dRatioEnh[indsy]))
+                dER1.setdefault(g,[]).append(dRatioEnh2[indsy])
+                #dERstd1.setdefault(g,[]).append(np.nanstd(dRatioEnh[indsy]))
 
-                else:
-                    dER1.setdefault(g,[]).append(float('nan'))
-                    dERstd1.setdefault(g,[]).append(float('nan'))
+            else:
+                dER1.setdefault(g,[]).append(float('nan'))
+                dERstd1.setdefault(g,[]).append(float('nan'))
 
-            dER1[g]    = np.asarray(dER1[g], dtype=np.float32)
-            dERstd1[g] = np.asarray(dERstd1[g], dtype=np.float32)
-           
+        dER1[g]    = np.asarray(dER1[g], dtype=np.float32)
 
-        #----------------------------
-        #
-        #----------------------------
-        print 'Mean Enhancement ratio of {} : {} +/- {}'.format(gasStr, np.nanmean(dRatioEnh), np.nanstd(dRatioEnh) )
 
-        print 'Mean Emmision factor ratio of {} : {} +/- {}'.format(gasStr, 59.91 *np.nanmean(dRatioEnh)* (MX[i]/MCO), 59.91 * np.nanstd(dRatioEnh)* (MX[i]/MCO) )
+        indspos = np.where((dRatioEnh2 > 0) & (dRatioEnh2 < 0.4) )[0]
+
+        print 'Negative percent dCO = {}'.format( (len(dRatioEnh2) - len(indspos)) /float(len(dRatioEnh2)) )
+
+        odr, odrErr  = mf.orthoregress(vmrEnh_x_interpol, vmrEnh, xerr=vmrEnh_x_interpol*0.05, yerr=vmrEnh*0.075, InError=True)
+        slope = float(odr[0])
+        intercept = float(odr[1])
+        print slope 
+
+        slopelr, interceptlr, r_valueln, p_valuelr, std_errlr = stats.linregress(vmrEnh_x_interpol, vmrEnh)
+        rvalue_i = float(r_valueln)
+        print rvalue_i
+        
+        odr, odrErr  = mf.orthoregress(dvmrEnh_x_interpol, dvmrEnh, xerr=dvmrEnh_x_interpol*0.05, yerr=dvmrEnh*0.075, InError=True)
+        slope = float(odr[0])
+        intercept = float(odr[1])
+        print slope 
        
+        #----------------------------
+        # 
+        #----------------------------
+        if gasStr.upper() == 'HCN': 
+            EFCO = 89.0
+           
+        else: EFCO = 59.91
 
+        
+        print 'Mean Enhancement ratio of {} : {} +/- {}'.format(gasStr, np.nanmean(dRatioEnh), np.nanstd(dRatioEnh) )
+        print 'Mean Enhancement - 2 ratio of {} : {} +/- {}'.format(gasStr, np.nanmean(dRatioEnh2[indspos]), 2.*np.nanstd(dRatioEnh2[indspos])/np.sqrt(len(dRatioEnh2[indspos])) )
+
+        print 'Median Enhancement ratio of {} : {} +/- {}'.format(gasStr, np.nanmedian(dRatioEnh), np.nanstd(dRatioEnh) )
+        print 'Median Enhancement - 2 ratio of {} : {} +/- {}'.format(gasStr, np.nanmedian(dRatioEnh2[indspos]), 2.*np.nanstd(dRatioEnh2[indspos])/np.sqrt(len(dRatioEnh2[indspos])) )
+
+        print 'Median Emmision factor ratio of {} : {} +/- {}'.format(gasStr, EFCO *np.nanmedian(dRatioEnh)* (MX[i]/MCO), EFCO * np.nanstd(dRatioEnh)* (MX[i]/MCO) )
+        print 'Median Emmision factor ratio of {} : {} +/- {}'.format(gasStr, EFCO *np.nanmedian(dRatioEnh2[indspos])* (MX[i]/MCO), EFCO * 2.*np.nanstd(dRatioEnh2[indspos])/np.sqrt(len(dRatioEnh2[indspos]))*(MX[i]/MCO) )
+        
+        if gasStr.upper() == 'HCN':
+            print '\nFIRE HCN EMISSION'
+            d1 = dt.datetime(2015, 8, 20)
+            d2 = dt.datetime(2015, 8, 22)
+
+            indsDates = np.where( (datesEnh[indspos] > d1) & (datesEnh[indspos] < d2) )[0]
+            
+            Factor = np.exp(5./75.)/np.exp(5./30)
+
+            print Factor
+
+            #print 'Median Enhancement ratio of {} : {} +/- {}'.format(gasStr, np.nanmedian(dRatioEnh[indsDates]), np.nanstd(dRatioEnh[indsDates]) )
+            print 'Median Enhancement - 2 ratio of {} : {} +/- {}'.format(gasStr, np.nanmean(dRatioEnh2[indspos][indsDates]), 2.*np.nanstd(dRatioEnh2[indspos][indsDates])/np.sqrt(len(dRatioEnh2[indspos][indsDates])) )
+            print 'Median Enhancement w Factor - 2 ratio of {} : {} +/- {}'.format(gasStr, Factor * np.nanmean(dRatioEnh2[indspos][indsDates]), 2.*np.nanstd(dRatioEnh2[indspos][indsDates])/np.sqrt(len(dRatioEnh2[indspos][indsDates])) )
+
+            #print 'Median Emmision factor ratio of {} : {} +/- {}'.format(gasStr, 59.91 *np.nanmedian(dRatioEnh)* (MX[i]/MCO), 59.91 * np.nanstd(dRatioEnh)* (MX[i]/MCO) )
+            print 'Median Emmision factor ratio of {} : {} +/- {}'.format(gasStr, EFCO * Factor*np.nanmean(dRatioEnh2[indspos][indsDates])* (MX[i]/MCO), EFCO * 2.*np.nanstd(dRatioEnh2[indspos][indsDates])/np.sqrt(len(dRatioEnh2[indspos][indsDates]))*(MX[i]/MCO) )
+            
+        if gasStr.upper() == 'HCN': continue
+        
         ax = plt.Subplot(fig, outer_grid[i])
   
-        ax.scatter(dates[g],Ratio, color='gray', s=30, facecolors='white', zorder=1, label='All')
+        #ax.scatter(dates[g],Ratio, color='gray', s=30, facecolors='white', zorder=1, label='All')
+        ax.plot(dates[g],Ratio, color='gray', linestyle='None', marker ='.', markersize=10, label='All', zorder=1, alpha=0.75)
+        ax.scatter(dates[g],Ratio, color='gray', s=30, facecolors='white', zorder=2, label='All')
         #ax.scatter(dates_Enhan[g],RatioEnh, color='red', s=25, facecolors='white', zorder=1)
-        ax.scatter(dates_Enhan[g],dRatioEnh, color='red', s=35, facecolors='white', zorder=2, label='Enhancements')
+        #ax.scatter(dates_Enhan[g],dRatioEnh, color='red', s=35, facecolors='white', zorder=2, label='Enhancements')
+
+        ax.scatter(dates_Enhan2[indspos],dRatioEnh2[indspos], color='red', s=35, facecolors='white', zorder=3, label='Enhancements-2')
         
         ax.grid(True, alpha=0.35)
         ax.tick_params(labelsize=16)
-        ax.grid(True,which='both', alpha=0.35)  
-        ax.text(0.03, 0.9, gasStr+'/CO', va='center',transform=ax.transAxes,fontsize=24)
+        #ax.grid(True,which='both', alpha=0.35)  
+        ax.text(0.03, 0.9, gasStr,  va='center',transform=ax.transAxes,fontsize=24)
 
         ax.xaxis.set_major_locator(yearsLc)
         ax.xaxis.set_minor_locator(months)
@@ -853,9 +1021,9 @@ def main():
         ax.set_ylim(ymin=0)
         ax.set_xlim(xmin, xmax)
 
-        if i == 0: 
-            ax.set_title('Enhancements Ratio (ER) - ratio of gas X to CO (ppb/ppb)', fontsize=18)        
-            ax.legend(prop={'size':12}, loc = 1)
+        #if i == 0: 
+            #ax.set_title('ER (ppb/ppb)', fontsize=18)        
+            #ax.legend(prop={'size':12}, loc = 1)
 
         #ax.axvspan(frappe_i, frappe_f,  alpha=0.5, color='yellow')
         #ax.set_xlim(frappe_i, frappe_f)
@@ -865,22 +1033,40 @@ def main():
         #----------------------------
         # 
         #----------------------------
+        years = [ singDate.year for singDate in dates_Enhan2 ]
+
+        tcks = range(np.min(years),np.max(years)+2)
+        cm   = plt.get_cmap(clmap)
+        norm = colors.BoundaryNorm(tcks,cm.N)                       
+        #sc1 = ax1.scatter(sza,rms,c=years,cmap=cm,norm=norm)
+        #ax2.scatter(sza,dofs,c=years,cmap=cm,norm=norm)   
+
         ax1 = plt.Subplot(fig2, outer_grid[i])
 
-        dates_Mnth        = [dt.datetime(2015, d.month, d.day, d.hour, d.minute, d.second) for d in dates[g]]
-        dates_Enhan_Mnth  = [dt.datetime(2015, d.month, d.day, d.hour, d.minute, d.second) for d in dates_Enhan[g]]
+        dates_Mnth         = [dt.datetime(2015, d.month, d.day, d.hour, d.minute, d.second) for d in dates[g]]
+        dates_Enhan_Mnth   = [dt.datetime(2015, d.month, d.day, d.hour, d.minute, d.second) for d in dates_Enhan[g]]
+        dates_Enhan_Mnth2  = [dt.datetime(2015, d.month, d.day, d.hour, d.minute, d.second) for d in dates_Enhan2[indspos]]
 
         ax1 = plt.Subplot(fig2, outer_grid[i])
         
         ax1.plot(dates_Mnth,Ratio, color='gray', linestyle='None', marker ='.', markersize=10, label='All', zorder=1, alpha=0.75)
         #ax1.scatter(dates_Mnth,Ratio, color='gray', s=30, facecolors='white', zorder=1, label='All')
         #ax.scatter(dates_Enhan[g],RatioEnh, color='red', s=25, facecolors='white', zorder=1)
-        ax1.scatter(dates_Enhan_Mnth,dRatioEnh, color='red', s=35, facecolors='white', zorder=2, label='Enhancements')
-        ax1.text(0.03, 0.9, gasStr+'/CO', va='center',transform=ax1.transAxes,fontsize=24)
+        #ax1.scatter(dates_Enhan_Mnth,dRatioEnh, color='red', s=35, facecolors='white', zorder=2, label='Enhancements')
+
+        #sc1 = ax1.scatter(dates_Enhan_Mnth,dRatioEnh, c=years,cmap=cm,norm=norm, s=35, zorder=2, label='Enhancements')
+        #sc1  = ax1.scatter(dates_Enhan_Mnth2,dRatioEnh2, c=years,cmap=cm,norm=norm, s=45,  zorder=2, label='Enhancements-2')
+   
+        #ax1.scatter(dates_Enhan_Mnth,dRatioEnh, color='red', s=35, facecolors='white', zorder=2, label='Enhancements')
+        ax1.scatter(dates_Enhan_Mnth2,dRatioEnh2[indspos], color='blue', s=45, facecolors='white', zorder=2, label='Enhancements-2')
+        #ax1.text(0.03, 0.9, gasStr+'/CO', va='center',transform=ax1.transAxes,fontsize=24)
+        #ax1.text(0.03, 0.9, '$\Delta $ '+gasStr+'to \Delta $ CO', va='center',transform=ax1.transAxes,fontsize=24)
+        #ax1.text(0.03, 0.9, '$\Delta $ '+gasStr+'to \Delta $ CO', va='center',transform=ax1.transAxes,fontsize=24)
+        ax1.text(0.03, 0.9, gasStr, va='center',transform=ax1.transAxes,fontsize=24)
         
         ax1.grid(True, alpha=0.35)
         ax1.tick_params(labelsize=16)
-        ax1.grid(True,which='both', alpha=0.35)  
+        #ax1.grid(True,which='both', alpha=0.35)  
         #ax1.text(0.03, 0.9, gasStr, va='center',transform=ax.transAxes,fontsize=24)
 
         ax1.set_xlim(dt.date(2015,1,1), dt.date(2015,12,31))
@@ -890,12 +1076,12 @@ def main():
         #ax.xaxis.set_minor_locator(months)
         ax1.xaxis.set_major_formatter(DateFormatter('%b'))
 
-        if i == 0: 
-            ax1.legend(prop={'size':12}, loc='upper center', bbox_to_anchor=(0.5, 1.1), fancybox=True, ncol=3) 
+        #if i == 0: 
+        #    ax1.legend(prop={'size':12}, loc='upper center', bbox_to_anchor=(0.5, 1.1), fancybox=True, ncol=3) 
 
         fig2.add_subplot(ax1)
 
-    all_axes  = fig.get_axes()
+    all_axes   = fig.get_axes()
     all_axes2  = fig2.get_axes()
    
     #show only the outside spines
@@ -924,25 +1110,126 @@ def main():
                 ax.spines['bottom'].set_visible(True)
                 plt.setp(ax.get_xticklabels(), visible=True)
 
+            if i == 3:
+                ax.spines['bottom'].set_visible(True)
+                plt.setp(ax.get_xticklabels(), visible=True)
+
+    
+    
 
     all_axes[-1].set_xlabel('Year', fontsize=16)
+    all_axes[-2].set_xlabel('Year', fontsize=16)
+    all_axes[-3].set_xlabel('Year', fontsize=16)
+    all_axes[-4].set_xlabel('Year', fontsize=16)
+    
     all_axes2[-1].set_xlabel('Month', fontsize=16)
+    all_axes2[-2].set_xlabel('Month', fontsize=16)
 
-    fig.text(0.02, 0.5, 'Enhancement Ratios [ppb/ppb]', fontsize=18, va='center', rotation='vertical')
-    fig2.text(0.02, 0.5, 'Enhancement Ratios [ppb/ppb]', fontsize=18, va='center', rotation='vertical')
+    fig.text(0.02, 0.5,  'ER [ppb/ppb]', fontsize=18, va='center', rotation='vertical')
+    fig2.text(0.02, 0.5, 'ER [ppb/ppb]', fontsize=18, va='center', rotation='vertical')
 
+    fig.autofmt_xdate()
     fig2.autofmt_xdate()
 
-    fig.subplots_adjust(bottom=0.065,top = 0.94, left=0.15, right=0.95)
-    fig2.subplots_adjust(bottom=0.085,top = 0.96, left=0.15, right=0.95)
+    fig.subplots_adjust(bottom=0.1,top = 0.96, left=0.11, right=0.95)
+    fig2.subplots_adjust(bottom=0.085,top = 0.96, left=0.11, right=0.95)
 
 
     if saveFlg: 
         pdfsav.savefig(fig,dpi=200)
     else:
         plt.show(block=False)
-
+    
+    fig.savefig(pltDir+'EnhancementRatios_series.pdf', bbox_inches='tight')
     fig2.savefig(pltDir+'EnhancementRatios_mnth.pdf', bbox_inches='tight')
+
+
+    #----------------------------
+    # Whiskers
+    #----------------------------
+
+    #-------------------------------------------------------
+    #Define parameters for plots
+    #-------------------------------------------------------
+    clmap        = 'jet'
+    #locations    = [ [1,2], [4,5], [7,8], [10,11], [13,14]]
+    lticks       = [1, 2, 3, 4, 5, 6]
+
+    locations    = np.array(range(len(gasName2))) + 1
+    
+    l = 0
+
+    fig,  ax = plt.subplots(figsize=(10, 6))
+    gasname_w = []
+
+    for i, g in enumerate(gasName2):
+
+        gasStr = mf.getgasname(g)
+    
+        Data = np.asarray(dER1[g][0])
+        meanpointprops = dict(marker='o', markeredgecolor='red',
+                              markerfacecolor='white', markersize=10)
+
+
+        bp = ax.boxplot(Data,   positions = [locations[i]], widths = 0.65, showmeans=True, meanprops=meanpointprops, patch_artist=True)
+        #setBoxColors(bp)
+
+        maxloc = locations[i] + 1.0
+
+        gasname_w.append(gasStr)
+
+        for patch in bp['boxes']:
+            patch.set_facecolor('lightblue')
+            patch.set( linewidth=2)
+
+        for whisker in bp['whiskers']:
+            whisker.set(color='blue', linewidth=2)
+
+        ## change color and linewidth of the caps
+        for cap in bp['caps']:
+            cap.set(color='blue', linewidth=2)
+
+        ## change color and linewidth of the medians
+        for median in bp['medians']:
+            median.set(linewidth=2)
+
+        maxy = [np.amax(d) for d in Data] 
+
+        ax.text(lticks[i], np.amax(maxy)+( np.amax(maxy)*0.05), r'N={}'.format(len(Data)), fontsize=18)
+
+
+        
+    ax.set_xlim((0,maxloc))
+    ax.set_ylim(ymin=0)
+    ax.yaxis.grid(True, alpha = 0.25)
+    #ax.set_yscale("log", nonposy='clip')
+    ax.set_xticklabels(gasname_w)
+    ax.set_xticks(locations[0:len(gasName2)])
+    ax.xaxis.set_tick_params(which='major',labelsize=18)
+    ax.yaxis.set_tick_params(which='major',labelsize=18)
+    #ax.set_xlabel('Gas', fontsize = 18)
+    ax.set_ylabel('ER [ppb/ppb]', fontsize = 18)
+
+
+    # draw temporary red and blue lines and use them to create a legend
+    # hB, = ax.plot([1,1],'b-')
+    # hR, = ax.plot([1,1],'r-')
+    # ax.legend((hB, hR),('Cold season', 'Warm season'), prop={'size':16})
+    # #legend((hB, hR),(seasons))
+    # hB.set_visible(False)
+    # hR.set_visible(False)
+
+    if saveFlg: 
+        pdfsav.savefig(fig,dpi=200)
+    else:
+        plt.show(block=False) 
+
+    fig.savefig(pltDir+'Box_ER.pdf', bbox_inches='tight')
+    
+    user_input = raw_input('Press any key to exit >>> ')
+    sys.exit()
+
+    
 
     #----------------------------
     # Bar: Enhancement ratio (Warm season)
@@ -951,18 +1238,18 @@ def main():
     ind    = np.arange(len(yearsList))
     #fig, (ax2, ax3, ax4) = plt.subplots(1, 3, sharey=True, figsize=(15, 8.5))
 
-    print dER1['nh3']
-    print dERstd1['nh3']
+    #print dER1['nh3']
+    #print dERstd1['nh3']
 
-    print dER1['c2h6']
-    print dERstd1['c2h6']
+    #print dER1['c2h6']
+    #print dERstd1['c2h6']
 
-    print dER1['h2co']
-    print dERstd1['h2co']
+    #print dER1['h2co']
+    #print dERstd1['h2co']
     
     ax.bar(ind-0.27, dER1['c2h6'], 0.27, yerr=dERstd1['c2h6'], align='center', color = 'r', ecolor = 'k', label = 'C$_2$H$_6$')
     ax.bar(ind, dER1['nh3'], 0.27, yerr=dERstd1['nh3'], align='center', color = 'b', ecolor = 'k', label = 'NH$_3$')
-    ax.bar(ind+0.27, dER1['ch4']/10., 0.27, yerr=dERstd1['ch4']/10., align='center', color = 'g', ecolor = 'k', label = 'H$_2$CO')  #yerr=slope_TC*0
+    #ax.bar(ind+0.27, dER1['ch4']/10., 0.27, yerr=dERstd1['ch4']/10., align='center', color = 'g', ecolor = 'k', label = 'H$_2$CO')  #yerr=slope_TC*0
     #ax.xaxis.grid(True)
     ax.yaxis.grid(True, alpha=0.35)
     #ax.set_xlabel('Year')
@@ -990,8 +1277,8 @@ def main():
 
     fig.savefig(pltDir+'EnhancementRatios_bars.pdf', bbox_inches='tight')
 
-    #user_input = raw_input('Press any key to exit >>> ')
-    #sys.exit()
+    user_input = raw_input('Press any key to exit >>> ')
+    sys.exit()
 
     #----------------------------
     # Bar: Enhancement ratio (Cold season)

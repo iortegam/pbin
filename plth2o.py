@@ -856,6 +856,7 @@ def main():
         #-------------------------------------------------
 
         clr = ['maroon', 'gray', 'orange', 'cyan', 'yellow', 'black']
+        #clr = ('green', 'red', 'maroon', 'blue', 'gray', 'yellow', 'cyan', 'orange', 'black')
         fig = plt.figure(figsize=(16,9))
 
             
@@ -880,14 +881,28 @@ def main():
             for i,g in enumerate(mwList[x]): 
                 sclfct += 0.05
 
-                if g.upper() == 'CH4': lab = 'CH$_4$'
-                elif g.upper() == 'CO2': lab = 'CO$_2$'
-                elif g.upper() == 'N2O': lab = 'N$_2$O'
-                elif g.upper() == 'H2O': lab = 'H$_2$O'
-                elif g.upper() == 'HCL': lab = 'HCl'
+                if g.upper() == 'CH4': 
+                    lab = 'CH$_4$'
+                    clr = 'maroon'
+                elif g.upper() == 'CO2': 
+                    lab = 'CO$_2$'
+                    clr = 'cyan'
+                elif g.upper() == 'N2O': 
+                    lab = 'N$_2$O'
+                    clr = 'orange'
+                elif g.upper() == 'H2O': 
+                    lab = 'H$_2$O'
+                    clr = 'gray'
+                elif g.upper() == 'HCL': 
+                    lab = 'HCl'
+                    clr = 'yellow'
+                elif g.upper() == 'HDO': 
+                    lab = 'HDO'
+                    clr = 'purple'
+                
                 else: lab = g.upper() 
                 
-                ax2.plot(dataSpec['WaveN_'+x],gasSpec[g.upper()+'_'+x]+(gasSpec[g.upper()+'_'+x]*sclfct),label=lab, color=clr[i])
+                ax2.plot(dataSpec['WaveN_'+x],gasSpec[g.upper()+'_'+x]+(gasSpec[g.upper()+'_'+x]*sclfct),label=lab, color=clr)
             
             plt.tick_params(which='minor',length=4,color='b')
             

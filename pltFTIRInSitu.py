@@ -24,7 +24,7 @@ from cycler import cycler
 
 from itertools import izip
 import myfunctions as mf
-import dataModelOutClass as dm
+#import dataModelOutClass as dm
 import dataOutClass as dc
 from collections                     import OrderedDict
 from scipy import linspace, polyval, polyfit, sqrt, stats, randn
@@ -100,19 +100,21 @@ def main():
 
     loc               = 'mlo'
     gasName           = ['h2o', 'hdo']
-    ver               = ['Current_v6_50', 'Current_v8_50'] 
-    ctlF              = ['sfit4_v6.ctl', 'sfit4_v6.ctl'] 
-    maxRMS            = [0.5, 0.5]                      
+    #ver               = ['Current_v6_50', 'Current_v8_50']
+    ver               = ['Current_v10', 'Current_v10']  
+    ctlF              = ['sfit4_v10.ctl', 'sfit4_v10.ctl'] 
+    maxRMS            = [0.6, 0.6]                      
     minDOF            = [1.0, 1.0]
 
     saveFlg           = True 
+    prntFlg           = False     # CEATE ASCII FILE?
 
     insFlg            = False   # Read In-situ?
 
-    if insFlg: pltFile  =  '/data/iortega/results/'+loc.lower()+'/fig/dD_'+loc.upper()+'_v8_2016_wInsitu.pdf'
-    else: pltFile       =  '/data/iortega/results/'+loc.lower()+'/fig/dD_'+loc.upper()+'_v8_2016_vPartial_50_2.pdf'
+    if insFlg: pltFile  =  '/data/iortega/results/'+loc.lower()+'/fig/dD_'+loc.upper()+'_v10_2016_vPartial_wInsitu.pdf'
+    else: pltFile       =  '/data/iortega/results/'+loc.lower()+'/fig/dD_'+loc.upper()+'_v10_2016_vPartial.pdf'
 
-    aoi               = 3.4   #Altitude of interest for single grid value
+    aoi               = 5.5   #Altitude of interest for single grid value
     maxalt            = 130.0  # Max Altitude 
 
     #------
@@ -141,15 +143,18 @@ def main():
     sclfctName         = 'ppmv'                 # Name of scale factor for labeling plots
 
     #pCols = [ [3.0, 5.0], [5.0, 16.0], [3.0, 16.0] ]
-    pCols = [ [3.3, 4.1], [4.8, 5.55], [6.3, 7.2], [7.9, 8.9],
-              [3.3, 4.9], [5.5, 7.2], [7.9, 9.8], [10.7, 12.8],
-              [3.3, 5.55], [6.3, 8.9], [9.7, 12.72], [13.7, 17.2] ]
+    #pCols = [ [3.3, 4.1], [4.8, 5.55], [6.3, 7.2], [7.9, 8.9],
+    #          [3.3, 4.9], [5.5, 7.2], [7.9, 9.8], [10.7, 12.8],
+    #          [3.3, 5.55], [6.3, 8.9], [9.7, 12.8], [6.3, 12.8] ]
+              #[3.3, 5.55], [6.3, 8.9], [9.7, 12.8], [13.7, 17.2] ]
+
+    pCols = [ [3.3, 4.9], [5.5, 7.2], [7.9, 9.8], [10.7, 12.8], [3.3, 5.55], [6.3, 8.9], [9.7, 12.8], [13.7, 17.2]]
 
     if saveFlg: pdfsav = PdfPages(pltFile)
 
     if insFlg:
 
-        aoi               = 3.4
+        aoi               = 3.3
 
         #-------------------------------------------------------
         #READ IN-SITU NDATA - H2O (ppm)
@@ -256,27 +261,27 @@ def main():
         #----------------------
         # Date range to process FTIR (depending on insitu dates)
         #----------------------
-        # iyear              = Date_in[0].year     
-        # imnth              = Date_in[0].month    
-        # iday               = Date_in[0].day     
-        # fyear              = Date_in[-1].year    
-        # fmnth              = Date_in[-1].month   
-        # fday               = Date_in[-1].day   
+        iyear              = Date_in[0].year     
+        imnth              = Date_in[0].month    
+        iday               = Date_in[0].day     
+        fyear              = Date_in[-1].year    
+        fmnth              = Date_in[-1].month   
+        fday               = Date_in[-1].day   
 
-        iyear              = 2016
-        imnth              = 5
-        iday               = 1
-        fyear              = 2016
-        fmnth              = 5
-        fday               = 31  
+        #iyear              = 2016
+        #imnth              = 4
+        #iday               = 1
+        #fyear              = 2016
+        #fmnth              = 6
+        #fday               = 30
 
     else:    
         iyear              = 2016
-        imnth              = 4
+        imnth              = 1
         iday               = 1
         fyear              = 2016
-        fmnth              = 6
-        fday               = 30
+        fmnth              = 12
+        fday               = 31
 
     #-------------------------------------------------
     #FTS
@@ -784,6 +789,7 @@ def main():
     alt_h2o         = alt[h2over][indsalt]
 
     indsaoi        = mf.nearestind(aoi, alt_h2o)
+
     aoi            = alt_h2o[indsaoi]
 
     TC_h2o          = totClmn[h2over][inds2]
@@ -959,9 +965,11 @@ def main():
     #---------------------------------
     indsFilter = []
 
-    rprf_pos  = np.asarray(Prf_dD) >= 100
-    indsT     = np.where( np.sum(rprf_pos, axis=1) > 100 )[0]
-    print ('Total number observations found with positive partial column = {}'.format(len(indsT)))
+    maxValue = 100.
+
+    rprf_pos  = np.asarray(Prf_dD) >= maxValue
+    indsT     = np.where( np.sum(rprf_pos, axis=1) > maxValue )[0]
+    print ('Total number observations found with partial columns above {} = {}'.format(maxValue, len(indsT)))
     print ('Percent of observations found with positive partial column = {0:.2f}'.format(float(len(indsT))/float(len(Dates_h2o)) * 100.))
     indsFilter = np.union1d(indsT, indsFilter)
 
@@ -2070,7 +2078,7 @@ def main():
     ax.set_ylabel('dD [total column]',fontsize=14)
     ax.set_xlabel('H$_2$O Column [mm]',fontsize=14)
     ax.tick_params(labelsize=14)
-    #ax.legend(prop={'size':14})
+    ax.legend(prop={'size':14})
     #ax.set_ylim(-750, 0)
     #ax.xaxis.set_minor_locator(dayLc)
     #ax.xaxis.set_major_formatter(DateFmt)
@@ -2140,51 +2148,112 @@ def main():
     # print rms_hdo[indLow]
     # print Dates_hdo[indLow]
 
-    fig, ax = plt.subplots(figsize=(8,6))
+    # fig, ax = plt.subplots(figsize=(8,6))
     
-    #ax.errorbar(vmrP_h2o[str(p)]/1e3, dDP[str(p)], yerr=VMR_e_ns_h2o/1e3, fmt='o',xerr=insitu_interp/1e3*0.05, markersize=0, color='green', ecolor='green')
-    if insFlg: ax.plot(insitu/1e3, dDinsitu, 'k.',markersize=4, color='gray', alpha=0.5,  label='in-situ - All', zorder=1)
-    if insFlg: ax.scatter(insitu_interp/1e3, dDinsitu_interp, facecolors='white', s=40, color='r', label='in-situ - interpolated to FTIR time', zorder=2)
-    if insFlg: ax.scatter(insitu_interp_s/1e3, dDinsitu_interp, facecolors='white', s=40, color='blue', label='in-situ smoothed - interpolated to FTIR time', zorder=2)
-    #ax.scatter(VMR_ns_h2o/1e3, dDfts, facecolors='white', s=40, color='green', label='FTIR', zorder=3)
-    #ax.scatter(VMR_ns_h2o/1e3, dDfts_s, facecolors='white', s=40, color='k', label='FTIR-smoothed', zorder=3)
+    # #ax.errorbar(vmrP_h2o[str(p)]/1e3, dDP[str(p)], yerr=VMR_e_ns_h2o/1e3, fmt='o',xerr=insitu_interp/1e3*0.05, markersize=0, color='green', ecolor='green')
+    # if insFlg: ax.plot(insitu/1e3, dDinsitu, 'k.',markersize=4, color='gray', alpha=0.5,  label='in-situ - All', zorder=1)
+    # if insFlg: ax.scatter(insitu_interp/1e3, dDinsitu_interp, facecolors='white', s=40, color='r', label='in-situ - interpolated to FTIR time', zorder=2)
+    # if insFlg: ax.scatter(insitu_interp_s/1e3, dDinsitu_interp, facecolors='white', s=40, color='blue', label='in-situ smoothed - interpolated to FTIR time', zorder=2)
+    # #ax.scatter(VMR_ns_h2o/1e3, dDfts, facecolors='white', s=40, color='green', label='FTIR', zorder=3)
+    # #ax.scatter(VMR_ns_h2o/1e3, dDfts_s, facecolors='white', s=40, color='k', label='FTIR-smoothed', zorder=3)
 
-    ax.errorbar(VMR_ns_h2o/1e3, dDfts, yerr=dDfts_e, xerr=VMR_e_ns_h2o/1e3, fmt='o', ecolor='g', mec='g', mfc='w', mew=1, label='FTIR')
-    #ax.errorbar(VMR_ns_h2o/1e3, dDfts_s, yerr=dDfts_e, xerr=VMR_e_ns_h2o/1e3,fmt='o', ecolor='r', mec='r', mfc='w', mew=1, label='FTIR-smoothed')
+    # ax.errorbar(VMR_ns_h2o/1e3, dDfts, yerr=dDfts_e, xerr=VMR_e_ns_h2o/1e3, fmt='o', ecolor='g', mec='g', mfc='w', mew=1, label='FTIR')
+    # #ax.errorbar(VMR_ns_h2o/1e3, dDfts_s, yerr=dDfts_e, xerr=VMR_e_ns_h2o/1e3,fmt='o', ecolor='r', mec='r', mfc='w', mew=1, label='FTIR-smoothed')
     
-    ax.set_ylabel('dD [per mil]',fontsize=14)
-    ax.set_xlabel('H$_2$O VMR [ppm, x10$^3$]',fontsize=14)
-    ax.tick_params(labelsize=14)
-    ax.grid(True)
-    #ax.set_ylim(top=0)
-    ax.set_ylim(-1000, 50)
-    if insFlg: ax.legend(prop={'size':12}, loc=3)
-    #ax.set_xscale('log')
-    #ax.set_ylim(-700, 0)
-    #ax.set_xlim(0, 20)
+    # ax.set_ylabel('dD [per mil]',fontsize=14)
+    # ax.set_xlabel('H$_2$O VMR [ppm, x10$^3$]',fontsize=14)
+    # ax.tick_params(labelsize=14)
+    # ax.grid(True)
+    # #ax.set_ylim(top=0)
+    # ax.set_ylim(-1000, 50)
+    # if insFlg: ax.legend(prop={'size':12}, loc=3)
+    # #ax.set_xscale('log')
+    # #ax.set_ylim(-700, 0)
+    # #ax.set_xlim(0, 20)
 
 
-    plt.suptitle('[dD, H2O] pair at altitude = {0:.1f} km'.format(aoi), fontsize=16)
+    # plt.suptitle('[dD, H2O] pair at altitude = {0:.1f} km'.format(aoi), fontsize=16)
 
-    if saveFlg:     
-        pdfsav.savefig(fig,dpi=200)
-    else:           
-        plt.show(block=False)
-        #user_input = raw_input('Press any key to exit >>> ')
-        #sys.exit()
+    # if saveFlg:     
+    #     pdfsav.savefig(fig,dpi=200)
+    # else:           
+    #     plt.show(block=False)
+    #     #user_input = raw_input('Press any key to exit >>> ')
+    #     #sys.exit()
+
+    if prntFlg:
+
+        #-----------------------------------------
+        # Open output file for year and write data
+        #-----------------------------------------
+        print 'Printing ascci File'
+
+        with open('/data/iortega/results/'+loc.lower()+'/WV_dD_'+loc.upper()+'.ascii', 'w') as fopen:
+            writer = csv.writer(fopen, delimiter='\t', lineterminator='\n')
+
+            fopen.write('#Hannigan, J.W., Ortega, I\n')
+            fopen.write('#National Center for Atmospheric Research\n')
+            fopen.write('#Ground Based HR-FTIR Spectrometer at MLO\n')
+            fopen.write('#CONTACT_INFO: Hannigan, Jim, jamesw@ucar.edu, 303-497-1853, NCAR, 3090 Center Green Drive, Boulder, CO 80301\n')
+            fopen.write('#CONTACT_INFO: Ortega, Ivan, iortega@ucar.edu, 303-497-1861, NCAR, 3090 Center Green Drive, Boulder, CO 80301\n')
+            fopen.write('#DATA_INFO: Water Vapor and dD retrieved from HR-FTIR\n')
+            fopen.write('#Number of Profiles: {}\n'.format(len(TC_h2o)))
+            #alt2print = ["%.2f"%float(v) for v in [4.8, 7.9, 6.6]]
+            #alt2print = ["%.2f"%float(v) for v in pCols]
+            alt2print = pCols
+            fopen.write('#Layers [km]: ')
+            writer.writerows([alt2print])
+            fopen.write('#---------------------------------------------------------------\n')
+            fopen.write('#   LABEL                                Units            Column\n')
+            fopen.write('#---------------------------------------------------------------\n')
+            fopen.write('#   H2O partial column                   [molec/cm2]         1  \n')
+            fopen.write('#   H2O partial column random error      [molec/cm2]         2  \n')
+            fopen.write('#   H2O partial column total error       [molec/cm2]         3  \n')
+            fopen.write('#   dD partial column                    [per mil]           4  \n')
+            fopen.write('#   dD partial column random error       [per mil]           5  \n')
+            fopen.write('#   dD partial column total error        [per mil]           6  \n')
+            fopen.write('#   Note: last row are Total Columns     [molec/cm2]           \n')
+            fopen.write('#---------------------------------------------------------------\n')
+
+            DT   = Dates_h2o
+
+            for i, d in enumerate(DT):
+
+                fopen.write('# Date: {}\n'.format(d))
+
+                for p, pcol in enumerate(pCols):
+                    row = [tcP_h2o[str(p)][0,i], tcP_h2o_R_e[str(p)][0,i], tcP_h2o_e[str(p)][0,i], dDP_tcp[str(p)][0,i], dDP_tcp_R_e[str(p)][0,i], dDP_tcp_e[str(p)][0,i]]
+                    row2 = [ "%.3e"%k for k in row] 
+                    writer.writerows([row2])
+
+                row = [TC_h2o[i], TC_h2o_R_e[i], TC_h2o_e[i], TC_dD[i], TC_dD_R_e[i], TC_dD_e[i]]
+                row2 = [ "%.3e"%k for k in row] 
+                writer.writerows([row2])
+
+
 
     #---------------------------------
     # FIGURE - CORRELATION (H2O)
     #---------------------------------
     if insFlg:
+
+        ind_rm = np.where( (insitu_interp/1e3 < 6) & (VMR_ns_h2o/1e3 < 6))[0]
+
+        insitu_interp_rm   = insitu_interp[ind_rm]
+        VMR_ns_h2o_rm      = VMR_ns_h2o[ind_rm]
+        insitu_interp_s_rm = insitu_interp_s[ind_rm]
+
+        VMR_e_ns_h2o_rm = VMR_e_ns_h2o[ind_rm]
+
+
     
         fig, ax = plt.subplots(figsize=(8,6))
 
-        ax.errorbar(insitu_interp/1e3, VMR_ns_h2o/1e3, yerr=VMR_e_ns_h2o/1e3, xerr=insitu_interp/1e3*0.05,  fmt='o', markersize=0, color='b', ecolor='b')
-        ax.scatter(insitu_interp/1e3, VMR_ns_h2o/1e3, facecolors='white', s=40, color='b', label='FTIR Vs in-situ')
+        ax.errorbar(insitu_interp_rm/1e3, VMR_ns_h2o_rm/1e3, yerr=VMR_e_ns_h2o_rm/1e3, xerr=insitu_interp_rm/1e3*0.05,  fmt='o', markersize=0, color='b', ecolor='b')
+        ax.scatter(insitu_interp_rm/1e3, VMR_ns_h2o_rm/1e3, facecolors='white', s=40, color='b', label='FTIR Vs in-situ')
         
-        ax.errorbar(insitu_interp_s/1e3, VMR_ns_h2o/1e3, yerr=VMR_e_ns_h2o/1e3, fmt='o',xerr=insitu_interp/1e3*0.05, markersize=0, color='green', ecolor='green')
-        ax.scatter(insitu_interp_s/1e3, VMR_ns_h2o/1e3, facecolors='white', s=40, color='green', label='FTIR Vs in-situ (smoothed by FTIR AK)')
+        ax.errorbar(insitu_interp_s_rm/1e3, VMR_ns_h2o_rm/1e3, yerr=VMR_e_ns_h2o_rm/1e3, fmt='o',xerr=insitu_interp_rm/1e3*0.05, markersize=0, color='green', ecolor='green')
+        ax.scatter(insitu_interp_s_rm/1e3, VMR_ns_h2o_rm/1e3, facecolors='white', s=40, color='green', label='FTIR Vs in-situ (smoothed)')
         #ax.scatter(insitu_interp_s/1e3, VMRa_ns_h2o_i/1e3, facecolors='white', s=40, color='gray', label='A priori (ERA) Vs in-situ (smooth by FTIR AK)')
               
         ax.set_ylabel('VMR [ppm, x10$^3$]',fontsize=14)
@@ -2197,9 +2266,9 @@ def main():
 
         plt.suptitle('Orthogonal Linear Regression of H2O\n(near-surface FTIR Vs in-situ)', fontsize=16)
 
-        slope, intercept, r_value, p_value, std_err = stats.linregress(insitu_interp/1e3, VMR_ns_h2o/1e3)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(insitu_interp_rm/1e3, VMR_ns_h2o_rm/1e3)
        
-        odr, odrErr  = mf.orthoregress(insitu_interp/1e3, VMR_ns_h2o/1e3, xerr=insitu_interp*0.05/1e3, yerr=VMR_e_ns_h2o/1e3, InError=True)
+        odr, odrErr  = mf.orthoregress(insitu_interp_rm/1e3, VMR_ns_h2o_rm/1e3, xerr=insitu_interp_rm*0.05/1e3, yerr=VMR_e_ns_h2o_rm/1e3, InError=True)
         slope       = float(odr[0])
         intercept   = float(odr[1])
 
@@ -2210,12 +2279,12 @@ def main():
         ax.text(0.025,0.85,"Intercept: {0:.2f} +/- {1:.2f}".format(intercept, intercept_e),transform=ax.transAxes,  fontsize=14, color='blue')
         ax.text(0.025,0.78,"r-value: {0:.2f}".format(r_value),transform=ax.transAxes,  fontsize=14, color='blue')
 
-        bias = mf.bias(insitu_interp/1e3, VMR_ns_h2o/1e3)
-        ax.text(0.025,0.71,"bias: {0:.2f}".format(bias),transform=ax.transAxes,  fontsize=14, color='blue')
+        bias = mf.bias(insitu_interp_rm/1e3, VMR_ns_h2o_rm/1e3)
+        ax.text(0.025,0.71,"bias: {0:.2f} ({1:.2f}%)".format(bias, bias/np.mean(insitu_interp_rm/1e3) * 100.),transform=ax.transAxes,  fontsize=14, color='blue')
 
-        slope, intercept, r_value, p_value, std_err = stats.linregress(insitu_interp_s/1e3, VMR_ns_h2o/1e3)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(insitu_interp_s_rm/1e3, VMR_ns_h2o_rm/1e3)
       
-        odr, odrErr  = mf.orthoregress(insitu_interp_s/1e3, VMR_ns_h2o/1e3, xerr=insitu_interp_s/1e3*0.05, yerr=VMR_e_ns_h2o/1e3, InError=True)
+        odr, odrErr  = mf.orthoregress(insitu_interp_s_rm/1e3, VMR_ns_h2o_rm/1e3, xerr=insitu_interp_s_rm/1e3*0.05, yerr=VMR_e_ns_h2o_rm/1e3, InError=True)
         slope       = float(odr[0])
         intercept   = float(odr[1])
 
@@ -2226,10 +2295,11 @@ def main():
         ax.text(0.025,0.56,"Intercept: {0:.2f} +/- {1:.2f}".format(intercept, intercept_e),transform=ax.transAxes,  fontsize=14, color='green')
         ax.text(0.025,0.49,"r-value: {0:.2f}".format(r_value),transform=ax.transAxes,  fontsize=14, color='green')
         
-        bias = mf.bias(insitu_interp_s/1e3, VMR_ns_h2o/1e3)
-        ax.text(0.025,0.42,"bias: {0:.2f}".format(bias),transform=ax.transAxes,  fontsize=14, color='green')
+        bias = mf.bias(insitu_interp_s_rm/1e3, VMR_ns_h2o_rm/1e3)
+        #ax.text(0.025,0.42,"bias: {0:.2f}".format(bias),transform=ax.transAxes,  fontsize=14, color='green')
+        ax.text(0.025,0.42,"bias: {0:.2f} ({1:.2f}%)".format(bias, bias/np.mean(insitu_interp_rm/1e3) * 100.),transform=ax.transAxes,  fontsize=14, color='green')
 
-        rmse = mf.rmse(insitu_interp_s/1e3, VMR_ns_h2o/1e3)
+        rmse = mf.rmse(insitu_interp_s_rm/1e3, VMR_ns_h2o_rm/1e3)
      
         print 'bias (H2O) = {}'.format(bias) 
         print 'rmse (H2O) = {}'.format(rmse) 
@@ -2250,14 +2320,22 @@ def main():
         # FIGURE - CORRELATION (HDO)
         #---------------------------------
 
+        ind_rm = np.where((HDOinsitu_interp < 1.5) & (VMR_ns_hdo < 1.5) )[0]
+
+        HDOinsitu_interp_rm    = HDOinsitu_interp[ind_rm]
+        VMR_ns_hdo_rm          = VMR_ns_hdo[ind_rm]
+        HDOinsitu_interp_s_rm  = HDOinsitu_interp_s[ind_rm]
+
+        VMR_e_ns_hdo_rm = VMR_e_ns_hdo[ind_rm]
+
         fig, ax = plt.subplots(figsize=(8,6))
 
 
-        ax.errorbar(HDOinsitu_interp, VMR_ns_hdo, yerr=VMR_e_ns_hdo, xerr=HDOinsitu_interp*0.05,  fmt='o', markersize=0, color='b', ecolor='b')
-        ax.scatter(HDOinsitu_interp, VMR_ns_hdo, facecolors='white', s=40, color='b', label='FTIR Vs in-situ')
+        ax.errorbar(HDOinsitu_interp_rm, VMR_ns_hdo_rm, yerr=VMR_e_ns_hdo_rm, xerr=HDOinsitu_interp_rm*0.05,  fmt='o', markersize=0, color='b', ecolor='b')
+        ax.scatter(HDOinsitu_interp_rm, VMR_ns_hdo_rm, facecolors='white', s=40, color='b', label='FTIR Vs in-situ')
 
-        ax.errorbar(HDOinsitu_interp_s, VMR_ns_hdo, yerr=VMR_e_ns_hdo, xerr=HDOinsitu_interp*0.05,  fmt='o', markersize=0, color='green', ecolor='green')
-        ax.scatter(HDOinsitu_interp_s, VMR_ns_hdo, facecolors='white', s=40, color='green', label='FTIR Vs in-situ (smoothed by FTIR AK)')
+        ax.errorbar(HDOinsitu_interp_s_rm, VMR_ns_hdo_rm, yerr=VMR_e_ns_hdo_rm, xerr=HDOinsitu_interp_rm*0.05,  fmt='o', markersize=0, color='green', ecolor='green')
+        ax.scatter(HDOinsitu_interp_s_rm, VMR_ns_hdo_rm, facecolors='white', s=40, color='green', label='FTIR Vs in-situ (smoothed)')
 
         #ax.errorbar(HDOinsitu_interp_s, VMR_ns_hdo_s, yerr=VMR_e_ns_hdo, xerr=HDOinsitu_interp*0.05,  fmt='o', markersize=0, color='r', ecolor='r')
         #ax.scatter(HDOinsitu_interp_s, VMR_ns_hdo_s, facecolors='white', s=40, color='r', label='FTIR Vs in-situ (smoothed dD and insitu)')
@@ -2272,9 +2350,9 @@ def main():
 
         plt.suptitle('Orthogonal Linear Regression of HDO\n(near-surface FTIR Vs in-situ)', fontsize=16)
 
-        slope, intercept, r_value, p_value, std_err = stats.linregress(HDOinsitu_interp, VMR_ns_hdo)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(HDOinsitu_interp_rm, VMR_ns_hdo_rm)
 
-        odr, odrErr  = mf.orthoregress(HDOinsitu_interp, VMR_ns_hdo, xerr=HDOinsitu_interp*0.05, yerr=VMR_e_ns_hdo, InError=True)
+        odr, odrErr  = mf.orthoregress(HDOinsitu_interp_rm, VMR_ns_hdo_rm, xerr=HDOinsitu_interp_rm*0.05, yerr=VMR_e_ns_hdo_rm, InError=True)
         slope       = float(odr[0])
         intercept   = float(odr[1])
 
@@ -2285,12 +2363,13 @@ def main():
         ax.text(0.025,0.85,"Intercept: {0:.2f} +/- {1:.2f}".format(intercept, intercept_e),transform=ax.transAxes,  fontsize=14, color='blue')
         ax.text(0.025,0.78,"r-value: {0:.2f}".format(r_value),transform=ax.transAxes,  fontsize=14, color='blue')
 
-        bias = mf.bias(HDOinsitu_interp, VMR_ns_hdo)
-        ax.text(0.025,0.71,"bias: {0:.2f}".format(bias),transform=ax.transAxes,  fontsize=14, color='blue')
+        bias = mf.bias(HDOinsitu_interp_rm, VMR_ns_hdo_rm)
+        #ax.text(0.025,0.71,"bias: {0:.2f}".format(bias),transform=ax.transAxes,  fontsize=14, color='blue')
+        ax.text(0.025,0.71,"bias: {0:.2f} ({1:.2f}%)".format(bias, bias/np.mean(HDOinsitu_interp_rm) * 100.),transform=ax.transAxes,  fontsize=14, color='blue')
 
-        slope, intercept, r_value, p_value, std_err = stats.linregress(HDOinsitu_interp_s, VMR_ns_hdo)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(HDOinsitu_interp_s_rm, VMR_ns_hdo_rm)
 
-        odr, odrErr  = mf.orthoregress(HDOinsitu_interp_s, VMR_ns_hdo, xerr=HDOinsitu_interp_s*0.05, yerr=VMR_e_ns_hdo, InError=True)
+        odr, odrErr  = mf.orthoregress(HDOinsitu_interp_s_rm, VMR_ns_hdo_rm, xerr=HDOinsitu_interp_s_rm*0.05, yerr=VMR_e_ns_hdo_rm, InError=True)
         slope       = float(odr[0])
         intercept   = float(odr[1])
 
@@ -2301,10 +2380,12 @@ def main():
         ax.text(0.025,0.56,"Intercept: {0:.2f} +/- {1:.2f}".format(intercept, intercept_e),transform=ax.transAxes,  fontsize=14, color='green')
         ax.text(0.025,0.49,"r-value: {0:.2f}".format(r_value),transform=ax.transAxes,  fontsize=14, color='green')
         
-        bias = mf.bias(HDOinsitu_interp_s, VMR_ns_hdo)
-        ax.text(0.025,0.42,"bias: {0:.2f}".format(bias),transform=ax.transAxes,  fontsize=14, color='green')
+        bias = mf.bias(HDOinsitu_interp_s_rm, VMR_ns_hdo_rm)
+        #ax.text(0.025,0.42,"bias: {0:.2f}".format(bias),transform=ax.transAxes,  fontsize=14, color='green')
+        ax.text(0.025,0.42,"bias: {0:.2f} ({1:.2f}%)".format(bias, bias/np.mean(HDOinsitu_interp_rm) * 100.),transform=ax.transAxes,  fontsize=14, color='green')
 
-        rmse = mf.rmse(HDOinsitu_interp_s, VMR_ns_hdo)
+
+        rmse = mf.rmse(HDOinsitu_interp_s_rm, VMR_ns_hdo_rm)
      
         print 'bias (HDO) = {}'.format(bias) 
         print 'rmse (HDO) = {}'.format(rmse) 
@@ -2532,7 +2613,7 @@ def main():
     #             row = [TC_h2o[i], TC_h2o_e[i], TC_dD[i], TC_dD_e[i], -9999]
     #             row2 = [ "%.3e"%k for k in row] 
     #             writer.writerows([row2])
-
+        
     if saveFlg:     
         pdfsav.close()
     else:           

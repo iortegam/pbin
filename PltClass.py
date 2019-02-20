@@ -44,6 +44,10 @@ import srtm
 from geographiclib.geodesic import Geodesic
 from dbfread import DBF
 
+#from osgeo import ogr, osr
+import matplotlib.cm as cmx
+import matplotlib.colors as colors
+
 
 def getseason(dates):
     
@@ -88,6 +92,8 @@ def setBoxColors(bp):
     #setp(bp['fliers'][3], color='red')
     setp(bp['medians'][1], color='red')
 
+
+
 def cmap_discretize(cmap, N):
     """Return a discrete colormap from the continuous colormap cmap.
     
@@ -113,6 +119,43 @@ def cmap_discretize(cmap, N):
 def getcolor():
     clr  = ['red', 'blue',  'green' ]
     return clr
+
+def createCircleAroundWithRadius(lat, lon, radiusMiles):
+    #ring = ogr.Geometry(ogr.wkbLinearRing)
+    latArray = []
+    lonArray = []
+
+    for brng in range(0,360, 1):
+        lat2, lon2 = getLocation(lat,lon,brng,radiusMiles)
+        latArray.append(lat2)
+        lonArray.append(lon2)
+
+    return lonArray,latArray
+
+
+def getLocation(lat1, lon1, brng, distanceMiles):
+    lat1 = lat1 * math.pi/ 180.0
+    lon1 = lon1 * math.pi / 180.0
+    #earth radius
+    R = 6378.1 #Km
+    #R = ~ 3959 MilesR = 3959
+
+    distanceMiles = distanceMiles/R
+
+    #brng = (brng / 90)* math.pi / 2
+
+    brng = (float(brng) / 90)* math.pi / 2
+
+    lat2 = math.asin(math.sin(lat1) * math.cos(distanceMiles) 
+    + math.cos(lat1) * math.sin(distanceMiles) * math.cos(brng))
+
+    lon2 = lon1 + math.atan2(math.sin(brng)*math.sin(distanceMiles)
+    * math.cos(lat1),math.cos(distanceMiles)-math.sin(lat1)*math.sin(lat2))
+
+    lon2 = 180.0 * lon2/ math.pi
+    lat2 = 180.0 * lat2/ math.pi
+
+    return lat2, lon2
 
 
 class myPltClass():
@@ -148,6 +191,7 @@ class myPltClass():
 
     def closeFig(self):
         self.pdfsav.close()
+
 
     #---------------------------TOTAL COLUMN PLOTS OF SEVERAL TRACE GASE----------------------
     def pltts(self, DT, TC, vmrP, TCp, pCols):
@@ -1602,6 +1646,7 @@ class MapClass():
         self.geobot = Geodesic.WGS84.Direct(origin[0],origin[1],azimuth,distance)
 
         domain_size = (500, 500)          #DOMAIN SIZE (roughly the RESOLUTION OF THE MAP)
+        #domain_size = (100, 100)
 
         self.domain=[domain_size,
                 (self.geobot['lat2'],self.geotop['lat2']),
@@ -1616,6 +1661,8 @@ class MapClass():
         self.lons=np.linspace(self.domain[2][0],self.domain[2][1],self.domain[0][0])
 
         self.SaveFlg=saveFlg 
+
+
 
     def pltMapZ(self, LonData=0., LatData=0., zData=0., zmin=0., zmax=0.0, ztitle='', LatID=0., LonID=0., SaveFile=''):
 
@@ -1641,10 +1688,11 @@ class MapClass():
 
         cmap = plt.get_cmap('terrain')
 
-        x, y = m(self.lons, self.lats)
-        p = m.pcolormesh(x,y,self.elev_array, cmap=cmap, vmin=self.domain[4], vmax=self.domain[3])
-        p.cmap.set_over(cmap(.0))
-        p.cmap.set_under('w')  
+        # x, y = m(self.lons, self.lats)
+        # p = m.pcolormesh(x,y,self.elev_array, cmap=cmap, vmin=self.domain[4], vmax=self.domain[3])
+        # p.cmap.set_over(cmap(.0))
+        # p.cmap.set_under('w')  
+        
         ax.tick_params(labelsize=14)
 
         clmap   = 'jet'
@@ -1665,6 +1713,7 @@ class MapClass():
 
         ax.tick_params(axis='both', which='major', labelsize=14)
 
+
         m.drawcounties()
         # draw parallels.
         parallels = np.arange(30.,50, 1.5)
@@ -1679,7 +1728,26 @@ class MapClass():
         ax.plot(x,y,'k^', markersize=15)
         plt.text(x2,y2,'NCAR', color='k', fontsize=16)
 
+
         fig.subplots_adjust(left = 0.12, bottom=0.12, top=0.96, right = 0.86)
+
+        # -------
+        radii = 40
+
+        locP = [ [-104.6, 40.42] , [-105.245, 39.6], [-106.6, 39.7]]
+
+        for l in locP:
+
+            centerlon = l[0]
+            centerlat = l[1]
+
+            X,Y = createCircleAroundWithRadius(centerlat,centerlon, radii)
+
+            X,Y = m(X,Y)
+            ax.plot(X,Y,marker=None,color='green',linewidth=2)
+
+            x,y = m(centerlon,centerlat)
+            ax.plot(x,y ,marker='D',color='green',markersize=4)
         
         if self.SaveFlg: 
            pdfsav.savefig(fig,dpi=200)
@@ -1776,7 +1844,7 @@ class MapClass():
         fig.subplots_adjust(left = 0.12, bottom=0.12, top=0.96, right = 0.86)
         
         if self.SaveFlg: 
-           pdfsav.savefig(fig,dpi=200)
+           pdfsav.savefig(fig,dpi=100)
            
         else:           
             plt.show(block=False)

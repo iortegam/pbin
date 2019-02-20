@@ -6,7 +6,7 @@
 #        This is the input file for plte.py   --> Plot error for a serie of target gases defined below
 #
 #----------------------------------------------------------------------------------------
-loc = 'fl0'               # Name of station location
+loc = 'tab'               # Name of station location
 
 if loc == 'tab':
 
@@ -17,11 +17,11 @@ if loc == 'tab':
     #ver_vs     = 'v1'
     #g4ratio    = 'H2O'
 
-    gasName    = ['co', 'co', 'co']
-    ver        = ['Current', 'Current_v2', 'Current_v3']
-    ctlF       = ['sfit4_h2o.ctl', 'sfit4_v2.ctl', 'sfit4_v3.ctl']
-    ID         = ['v1', 'v2', 'v3']     
-    ver_vs     = 'v1'
+    gasName    = ['co', 'nh3']#, 'c2h6']
+    ver        = ['Current_B3', 'Current_v2', 'Current_v2']
+    ctlF       = ['sfit4_v3.ctl', 'sfit4_v2.ctl', 'sfit4_v2.ctl']
+    ID         = ['co_B3', 'v2_nh3', 'v2_c2h6']     
+    ver_vs     = 'v2_nh3'
     g4ratio    = 'H2O'
     
 elif loc == 'mlo':
@@ -103,7 +103,7 @@ else:
 #------
 # Flags
 #------
-saveFlg    = True                  # Flag to either save data to pdf file (saveFlg=True) or plot to screen (saveFlg=False)
+saveFlg    = False                  # Flag to either save data to pdf file (saveFlg=True) or plot to screen (saveFlg=False)
 errorFlg   = True                  # Flag to process error data
 fltrFlg    = True                   # Flag to filter the data
 byYrFlg    = False                  # Flag to create plots for each individual year in date range
@@ -149,12 +149,12 @@ sclfctName = 'ppbv'                 # Name of scale factor for labeling plots
 #----------------------
 # Date range to process
 #----------------------
-iyear      = 2015
-imnth      = 1
-iday       = 1
-fyear      = 2016
-fmnth      = 7
-fday       = 10
+iyear      = 2017
+imnth      = 8
+iday       = 19
+fyear      = 2017
+fmnth      = 8
+fday       = 23
 
 #----------------------------
 # Partial Columns Bounds [km] 
