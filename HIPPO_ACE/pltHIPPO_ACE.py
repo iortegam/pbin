@@ -168,10 +168,10 @@ def main():
     dataDir       = '/data1/Campaign/HIPPO/'
     file          = 'HIPPO_discrete_continuous_merge_20121129.tbl'   #MERGE FILE: http://data.eol.ucar.edu/master_list/?project=HIPPO-2
     
-    HIPPOFlg       = False
+    HIPPOFlg       = True
 
-    pltPr2Flg      = True    #PLOT PROFILES BINNED BY LATITUDE
-    pltRFFlg       = False   #PLOT OF MAP AWITH RESEARCH FLIGHT
+    pltPr2Flg      = False    #PLOT PROFILES BINNED BY LATITUDE
+    pltRFFlg       = True   #PLOT OF MAP AWITH RESEARCH FLIGHT
     pltPrFlg       = False   #PLOT ALL PROFILES (A LOT OF PROFILES)
 
     #-------------------------------------
@@ -184,7 +184,7 @@ def main():
     fyearACE      = 2013
     fmonthACE     = 12
     
-    ACEFlg        = True
+    ACEFlg        = False
     
     pltPrACEFlg   = True
     DownFlg       = False
@@ -192,7 +192,7 @@ def main():
     #-------------------------------------
     #INDEPENDENT FLAGS
     #-------------------------------------
-    saveFlg       = False
+    saveFlg       = True
     gas           = 'ocs'
     #BinLat        = [ [-90.0, -30.0], [-30.0, 30.0], [30.0, 90.0] ]
     #BinID         = ['South', 'Tropics', 'North']
@@ -219,7 +219,7 @@ def main():
 
     if saveFlg: pdfsav = PdfPages('/data/iortega/pbin/HIPPO_ACE/'+gas.upper()+'_HIPPO_ACEv3p5_Plts.pdf')
 
-    pltFile        = '/data/iortega/pbin/HIPPO_ACE/'+gas.upper()+'_HIPPO_Plts.pdf'
+    pltFile        = '/data/iortega/pbin/HIPPO_ACE/'+gas.upper()+'_HIPPO_Plts-RFs.pdf'
     pltFileACE     = '/data/iortega/pbin/HIPPO_ACE/'+gas.upper()+'_ACEv3.5_Plts.pdf'
 
     if HIPPOFlg:

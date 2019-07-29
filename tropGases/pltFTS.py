@@ -102,7 +102,7 @@ def main():
     #gasName            = ['co',            'c2h6',        'hcn']   
     #ver                = ['Current_B3',    'Current_v2',   'Current_WP']       
 
-    saveFlg           = True 
+    saveFlg           = False 
     camFlg            = True
 
     DirData           = '/data/iortega/results/'+loc.lower()+'/data/'
@@ -144,7 +144,7 @@ def main():
 
         for gi, gf in enumerate(gasName):
             #try:
-                cols, indexToName = mf.getColumns(DirData + gf + '_CAM-CHEM_v2.dat', headerrow=0, delim=',', header=True)
+                cols, indexToName = mf.getColumns(DirData + gf + '_CAM-CHEM_v2_finn.dat', headerrow=0, delim=',', header=True)
 
                 for index in indexToName:
                     cam[gasName[gi]+'_'+indexToName[index]]  = cols[indexToName[index]]
@@ -240,6 +240,8 @@ def main():
     vmr_mnth              = {}
     vmr_std_mnth          = {}
     dates_mnth            = {}
+    cnt_mnth              = {}
+
 
     driftFourier_mnth     = {}
     drift_mnth            = {}
@@ -333,6 +335,7 @@ def main():
         vmr_mnth[g]         = mnthlyVals['mnthlyAvg']
         dates_mnth[g]       = mnthlyVals['dates']
         vmr_std_mnth[g]     = mnthlyVals['std']
+        cnt_mnth[g]         = mnthlyVals['cnt']
         
         years               = np.asarray([dt.date(d.year,1,1) for d in mnthlyVals['dates']])
 
@@ -805,9 +808,15 @@ def main():
 
         gasname = mf.getgasname(g)
 
+        indsB  = np.where(cnt_mnth[g] == 1)[0]
+ 
+        vmr_mnth[g][indsB] = float('nan')
+
+
         ax = plt.Subplot(fig, outer_grid[i])
 
         for ii, yyyy in enumerate(uniqueyears):
+
 
             indsY = where(years == yyyy)[0]
             month = np.array([d.month for d in dates_mnth[g][indsY]])

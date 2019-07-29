@@ -164,7 +164,7 @@ m.drawmapscale(-105.6, 40.7 , origin[1], origin[0], 50, barstyle='fancy')
 
 plt.show(block=False)
 #plt.savefig('/data/iortega/Manuscripts/Tropgases/fig//Map.pdf', bbox_inches='tight', dpi=80)
-plt.savefig('/data/iortega/pbin/tropGases/fig/Map.pdf', bbox_inches='tight', dpi=80)
+plt.savefig('/data/iortega/pbin/tropGases/fig/Map2.pdf', bbox_inches='tight', dpi=80)
 
 user_input = raw_input('Press any key to exit >>> ')
 sys.exit()

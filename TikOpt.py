@@ -184,13 +184,13 @@ def main():
     	#                             Initialization
     	#-----------------------------------------------------------------------------------------
     	loc       = 'tab'                                                                              # LOCATION
-        gas       = 'ch3oh'                                                                            # GAS                               
-    	#alpha     = [0.1, 1, 10, 100, 1000, 10000, 100000, 1000000]                                   # ALPHA VALUES TO TEST
-        alpha     = [10000]#, 1000, 1e4]                                                         # ALPHA VALUES TO TEST
+        gas       = 'pan'                                                                            # GAS                               
+    	alpha     = [0.1, 1, 10, 100, 1000, 10000, 100000, 1000000]                                   # ALPHA VALUES TO TEST
+        #alpha     = [10000]#, 1000, 1e4]                                                         # ALPHA VALUES TO TEST
     	TikOut    = '/data1/ebaumer/'+loc.lower()+'/'+gas.lower()+'/x.'+gas.lower()+'/'                # PATH TO SAVE THE TIK MATRIX
         binDir    = '/data/ebaumer/Code/sfit-core-code/src/'                                           # PATH FOR THE SFIT4 SOURCE CODE
 
-        errFlg    = True                                                                               # ERROR ANALYSIS?
+        errFlg    = False                                                                               # ERROR ANALYSIS?
         saveFlg   = True                                                                               # SAVE PDF FILE?
         TransFlg  = True                                                                              # OPTIONAL = TRANSFORMATION IN CASE IN CASE NON-CONSTANT RETRIEVAL GRID (e.g., http://www.atmos-meas-tech.net/4/1943/2011/)
         

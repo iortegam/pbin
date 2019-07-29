@@ -986,9 +986,10 @@ def main():
 
             indsDates = np.where( (datesEnh[indspos] > d1) & (datesEnh[indspos] < d2) )[0]
             
-            Factor = np.exp(5./75.)/np.exp(5./30)
+            Factor = np.exp(1.5/75.)/np.exp(1.5/30)
 
             print Factor
+            print datesEnh[indspos][indsDates]
 
             #print 'Median Enhancement ratio of {} : {} +/- {}'.format(gasStr, np.nanmedian(dRatioEnh[indsDates]), np.nanstd(dRatioEnh[indsDates]) )
             print 'Median Enhancement - 2 ratio of {} : {} +/- {}'.format(gasStr, np.nanmean(dRatioEnh2[indspos][indsDates]), 2.*np.nanstd(dRatioEnh2[indspos][indsDates])/np.sqrt(len(dRatioEnh2[indspos][indsDates])) )
@@ -1195,12 +1196,12 @@ def main():
 
         maxy = [np.amax(d) for d in Data] 
 
-        ax.text(lticks[i], np.amax(maxy)+( np.amax(maxy)*0.05), r'N={}'.format(len(Data)), fontsize=18)
+        #ax.text(lticks[i], np.amax(maxy)+( np.amax(maxy)*0.05), r'N={}'.format(len(Data)), fontsize=18)
 
 
         
     ax.set_xlim((0,maxloc))
-    ax.set_ylim(ymin=0)
+    ax.set_ylim(ymin=0, ymax=0.2)
     ax.yaxis.grid(True, alpha = 0.25)
     #ax.set_yscale("log", nonposy='clip')
     ax.set_xticklabels(gasname_w)

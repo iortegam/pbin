@@ -153,8 +153,6 @@ def main():
     iday               = 1
     fyear              = 2018
     fmnth              = 12
-    
-
     fday               = 30
     
     if loc.lower() == 'mlo':
@@ -972,15 +970,6 @@ def main():
             #plt.savefig(pltDir+'Time_Series_mnth.pdf', bbox_inches='tight')
         else:
             plt.show(block=False)
-
-
-
-        
-        
-    
-
-
-
 
 
         if saveFlg: pdfsav.close()

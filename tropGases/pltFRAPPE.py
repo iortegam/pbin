@@ -153,7 +153,7 @@ def main(argv):
     #-------------------------------------------------
     #                 FLAGS
     #-------------------------------------------------
-    saveFlg         = False
+    saveFlg         = True
     
     #--------------FLAGS TO READ DATA-----------------
     RFFlag          = True              #FLIGHT INFORMATION (ALWAYS TRUE TO INTERPOLATE LAT AND LON)
@@ -174,9 +174,9 @@ def main(argv):
     pltMapRF        = False             #Map of all RF
     pltMapC2H6      = True             #Map of all C2H6
     pltMapCO        = True             #Map of all CO
-    pltMapH2CO      = False             #Map of all h2co
-    pltMapNH3       = False             #Map of all NH3
-    pltMapHCOOH     = False             #Map of all NH3
+    pltMapH2CO      = True             #Map of all h2co
+    pltMapNH3       = True             #Map of all NH3
+    pltMapHCOOH     = True             #Map of all NH3
     
     pltMapC2H6toCO  = True             #Map of the Ratio
     pltMapNH3toCO   = False             #Map of the Ratio
@@ -600,7 +600,7 @@ def main(argv):
 
         meanpointprops = dict(marker='o', markeredgecolor='black', markerfacecolor='white', markersize=6)
 
-        bp = ax.boxplot(y, whis=1.5, positions = [locations[k][0], locations[k][1], locations[k][2]], widths = 0.85,  showfliers=True, showmeans=True, meanprops=meanpointprops, patch_artist=True)
+        bp = ax.boxplot(y, whis=[5, 95], positions = [locations[k][0], locations[k][1], locations[k][2]], widths = 0.85,  showfliers=True, showmeans=True, meanprops=meanpointprops, patch_artist=True)
         
         maxloc = locations[k][2] + 1.0
 
@@ -720,77 +720,81 @@ def main(argv):
 
             Dist     = []
 
-            if g.upper() != 'NH3':
+            # if g.upper() != 'NH3':
+
+            #     print 'HERE - {}'.format(g)
         
-                for i, la in enumerate(lat_y):
-                    c = mf.haversine(abs(loc[0]), abs(loc[1]), abs(lon_y[i]), abs(lat_y[i]) )
-                    Dist.append(float(c))
+            #     for i, la in enumerate(lat_y):
+            #         c = mf.haversine(abs(loc[0]), abs(loc[1]), abs(lon_y[i]), abs(lat_y[i]) )
+            #         Dist.append(float(c))
 
-                Dist      = np.asarray(Dist)
-                inds      = np.where(Dist <= maxD)[0]
+            #     Dist      = np.asarray(Dist)
+            #     inds      = np.where(Dist <= maxD)[0]
 
-                doy_y2    = np.asarray(doy_y[inds])
-                conc_y2   = np.asarray(conc_y[inds])
+            #     doy_y2    = np.asarray(doy_y[inds])
+            #     conc_y2   = np.asarray(conc_y[inds])
                 
-                #conc_i    = np.asarray(conc[inds])
-                #doy_i     = np.asarray(doy[inds])
+            #     #conc_i    = np.asarray(conc[inds])
+            #     #doy_i     = np.asarray(doy[inds])
 
-                conc_x_i = interpolate.interp1d(doy_x, conc_x, kind='nearest',   fill_value=-999, bounds_error=False)(doy_y2)
-                conc_i = interpolate.interp1d(doy, conc, kind='nearest',   fill_value=-999, bounds_error=False)(doy_y2)
+            #     conc_x_i = interpolate.interp1d(doy_x, conc_x, kind='nearest',   fill_value=-999, bounds_error=False)(doy_y2)
+            #     conc_i = interpolate.interp1d(doy, conc, kind='nearest',   fill_value=-999, bounds_error=False)(doy_y2)
 
-                #IQR = stats.iqr(conc_i, rng=(25,75))
-                #print 'IQR = ', str(IQR)
+            #     #IQR = stats.iqr(conc_i, rng=(25,75))
+            #     #print 'IQR = ', str(IQR)
 
-                #PCy = np.percentile(conc_i, [25, 50, 75])
-                #print 'PCy = ', str(PCy)
+            #     #PCy = np.percentile(conc_i, [25, 50, 75])
+            #     #print 'PCy = ', str(PCy)
                
-                #Qy = stats.mstats.hdquantiles(conc_i, prob=(0.75,0.9))
-                #print 'Qy = ', str(Qy)
+            #     #Qy = stats.mstats.hdquantiles(conc_i, prob=(0.75,0.9))
+            #     #print 'Qy = ', str(Qy)
 
-                if p == 0: 
-                    max_i  = np.median(conc_y2) + PCy[2]# + (IQR)
+            #     if p == 0: 
+            #         max_i  = 0. #np.median(conc_y2) + PCy[2]# + (IQR)
                     
-                else:      
-                    max_i = 0.
+            #     else:      
+            #         max_i = 0.
 
-                inds   = np.where( (conc_y2 >= max_i) & (conc_x_i > 0.) & (conc_i > 0.) )[0]
-                Ra.append(conc_i[inds]/conc_x_i[inds])
+            #     inds   = np.where( (conc_y2 >= max_i) & (conc_x_i > 0.) & (conc_i > 0.) )[0]
+            #     Ra.append(conc_i[inds]/conc_x_i[inds])
 
 
-            else:
+            # else:
 
-                for i, la in enumerate(lat):
-                    c = mf.haversine(abs(loc[0]), abs(loc[1]), abs(lon[i]), abs(lat[i]) )
-                    Dist.append(float(c))
+            print 'HERE 2 - {}'.format(g)
 
-                Dist      = np.asarray(Dist)
-                inds      = np.where(Dist <= maxD)[0]
-                
-                conc_i    = np.asarray(conc[inds])
-                doy_i     = np.asarray(doy[inds])
+            for i, la in enumerate(lat):
+                c = mf.haversine(abs(loc[0]), abs(loc[1]), abs(lon[i]), abs(lat[i]) )
+                Dist.append(float(c))
 
-                conc_x_i  = interpolate.interp1d(doy_x, conc_x, kind='nearest',   fill_value=-999, bounds_error=False)(doy_i)
+            Dist      = np.asarray(Dist)
+            inds      = np.where(Dist <= maxD)[0]
             
-                #IQR = stats.iqr(conc_i, rng=(25,75))
-                #print 'IQR = ', str(IQR)
+            conc_i    = np.asarray(conc[inds])
+            doy_i     = np.asarray(doy[inds])
 
-                #PCy = np.percentile(conc_i, [25, 50, 75])
-                #print 'PCy = ', str(PCy)
-               
-                #Qy = stats.mstats.hdquantiles(conc_i, prob=(0.75,0.9))
-                #print 'Qy = ', str(Qy)
+            conc_x_i  = interpolate.interp1d(doy_x, conc_x, kind='nearest',   fill_value=-999, bounds_error=False)(doy_i)
+        
+            #IQR = stats.iqr(conc_i, rng=(25,75))
+            #print 'IQR = ', str(IQR)
 
-                if p == 0: 
-                    max_i  = np.median(conc_i) + PCy[2]# + (IQR)
-                    
-                else:      
-                    max_i = 0.
+            #PCy = np.percentile(conc_i, [25, 50, 75])
+            #print 'PCy = ', str(PCy)
+           
+            #Qy = stats.mstats.hdquantiles(conc_i, prob=(0.75,0.9))
+            #print 'Qy = ', str(Qy)
 
-                inds   = np.where( (conc_i >= max_i) & (conc_x_i > 0.) )[0]
-                Ra.append(conc_i[inds]/conc_x_i[inds])
+            if p == 0: 
+                max_i  = 0. #np.median(conc_i)# + PCy[2]# + (IQR)
+                
+            else:      
+                max_i = 0.
+
+            inds   = np.where( (conc_i >= max_i) & (conc_x_i > 0.) )[0]
+            Ra.append(conc_i[inds]/conc_x_i[inds])
 
 
-            odr  = mf.orthoregress(conc_x_i[inds], conc_i[inds], xerr=conc_x_i[inds]*0.05, yerr=conc_x_i[inds]*0.1, InError=False)
+            odr  = mf.orthoregress(conc_x_i[inds], conc_i[inds], xerr=conc_x_i[inds]*0.05, yerr=conc_i[inds]*0.1, InError=False)
             slope       = float(odr[0])
             intercept   = float(odr[1])
 
@@ -798,6 +802,9 @@ def main(argv):
             print 'loc = ', IDP[p]
             print 'Slope = ', str(slope)
             print 'intercept = ', str(intercept)
+            print 'Median Ra = ', str(np.median(conc_i[inds]/conc_x_i[inds]))
+            print 'Mean Ra = ', str(np.mean(conc_i[inds]/conc_x_i[inds]))
+            print 'std Ra = ', str(np.std(conc_i[inds]/conc_x_i[inds]))
 
 
 
@@ -864,8 +871,8 @@ def main(argv):
 
     fig.savefig('figFRAPPE/box_Ra.pdf', bbox_inches='tight')
 
-    user_input = raw_input('Press any key to exit >>> ')
-    sys.exit()  
+    #user_input = raw_input('Press any key to exit >>> ')
+    #sys.exit()  
 
     # -----------
 

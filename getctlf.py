@@ -317,9 +317,9 @@ def main(argv):
         # # Sa2[inds]= Sa2[inds]*0.75 #- MLO
         # # print Sa2
 
-        #inds = np.where((midpoint >= 15.))[0]
+        #inds = np.where((midpoint >= 40.))[0]
         #print 'Sa2 calculated:'
-        #Sa2[inds]= Sa2[inds]*0.5 #- MLO
+        #Sa2[inds]= Sa2[inds]*0.01#- MLO
         #print Sa2
 
         # # #inds = np.where(midpoint >= 50.)[0]

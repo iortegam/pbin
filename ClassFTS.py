@@ -145,6 +145,7 @@ class FTSClass():
             #statLyrFile  = '/data/Campaign/FL0/local/station.layers'
             #statDataCl[GasVer].readStatLyrs(statLyrFile)  
 
+
         self.rPrfVMR          = OrderedDict()
         self.rPrfMol          = OrderedDict()
         self.dates            = OrderedDict()
@@ -175,9 +176,19 @@ class FTSClass():
         self.aPrfVMR          = OrderedDict()
         self.aPrfMol          = OrderedDict()
 
+        self.aPrfVMRAll       = OrderedDict()
+        self.rPrfVMRAll       = OrderedDict()
+
+
+
         self.sza              = OrderedDict()
         self.saa              = OrderedDict()
         self.PrimaryGas       = OrderedDict()
+        self.gasList          = OrderedDict()
+
+        self.spc              = OrderedDict()   
+        self.pbp              = OrderedDict()   
+        self.ctl              = OrderedDict()         
 
         if errFlg:          
             self.rand_err         = OrderedDict()
@@ -237,6 +248,29 @@ class FTSClass():
             self.aPrfVMR[GasVer]  = np.asarray(statDataCl[GasVer].aprfs[statDataCl[GasVer].PrimaryGas]) * sclfct
             self.aPrfMol[GasVer]  = np.asarray(statDataCl[GasVer].aprfs[statDataCl[GasVer].PrimaryGas]  * np.asarray(statDataCl[GasVer].aprfs['AIRMASS']))
 
+            self.gasList[GasVer]  = statDataCl[GasVer].gasList
+
+
+            nonPgas = (gas for gas in statDataCl[GasVer].gasList)# if gas != statDataCl[GasVer].PrimaryGas)
+
+            aprPrf = {}
+            rPrf   = {}
+            
+            for gas in nonPgas:
+                if not statDataCl[GasVer].readPrfFlgRet[gas.upper()]: statDataCl[GasVer].readprfs([gas.upper()],retapFlg=1)   # Retrieved Profiles
+                if not statDataCl[GasVer].readPrfFlgApr[gas.upper()]: statDataCl[GasVer].readprfs([gas.upper()],retapFlg=0)   # Apriori Profiles
+                
+                #aprPrf[gas.upper()] = np.asarray(self.aprfs[gas.upper()]) * sclfct
+                #rPrf[gas.upper()]   = np.asarray(self.rprfs[gas.upper()]) * sclfct
+                #localGasList.append(gas)
+
+                aprPrf[gas.upper()] = np.asarray(statDataCl[GasVer].aprfs[gas.upper()]) * sclfct
+                rPrf[gas.upper()]   = np.asarray(statDataCl[GasVer].rprfs[gas.upper()]) * sclfct
+
+            self.aPrfVMRAll[GasVer] = aprPrf
+            self.rPrfVMRAll[GasVer] = rPrf
+
+
             #----------------------------------------
             # This is the mixing ratio for DRY AIR!!!
             #----------------------------------------
@@ -262,6 +296,10 @@ class FTSClass():
             # Read Spectra for each gas
             #----------------------------------
             statDataCl[GasVer].readSpectra(statDataCl[GasVer].gasList)
+
+            self.spc[GasVer]   = statDataCl[GasVer].spc
+            self.pbp[GasVer]   = statDataCl[GasVer].pbp
+            self.ctl[GasVer]   = statDataCl[GasVer].ctl
 
             #-------------------- 
             # Call to filter data
@@ -347,27 +385,33 @@ class FTSClass():
                     avkSCFi.append(np.array( [ [ float(x) for x in line.strip().split() ] for line in lines[2:] ] ))
                     
                 if not statDataCl[GasVer].readPrfFlgApr[statDataCl[GasVer].PrimaryGas]: statDataCl[GasVer].readprfs([statDataCl[GasVer].PrimaryGas],retapFlg=0)   # Apriori Profiles
-                          
-                self.avkSCF[GasVer]  = np.asarray(avkSCFi)
-                nobs            = np.shape(self.avkSCF[GasVer])[0]
-                n_layer         = np.shape(self.avkSCF[GasVer])[1]
-                self.avkVMR[GasVer]  = np.zeros((nobs,n_layer,n_layer))
-        
-                for obs in range(0,nobs):
-                    Iapriori        = np.zeros((n_layer,n_layer))
-                    IaprioriInv     = np.zeros((n_layer,n_layer))
-                    np.fill_diagonal(Iapriori,statDataCl[GasVer].aprfs[statDataCl[GasVer].PrimaryGas.upper()][obs])
-                    np.fill_diagonal(IaprioriInv, 1.0 / (statDataCl[GasVer].aprfs[statDataCl[GasVer].PrimaryGas.upper()][obs]))
-                    self.avkVMR[GasVer][obs,:,:] = np.dot(np.dot(Iapriori,np.squeeze(self.avkSCF[GasVer][obs,:,:])),IaprioriInv)       
-                    
-                self.avkSCF[GasVer]     = np.delete(self.avkSCF[GasVer],statDataCl[GasVer].inds,axis=0)
-                self.avkVMR[GasVer]     = np.delete(self.avkVMR[GasVer],statDataCl[GasVer].inds,axis=0)
-                self.dofs[GasVer]       = np.diagonal(self.avkSCF[GasVer],axis1=1,axis2=2)
-                self.avkSCFav[GasVer]   = np.mean(self.avkSCF[GasVer],axis=0)
-                self.avkVMRav[GasVer]   = np.mean(self.avkVMR[GasVer],axis=0)
                 
-                self.dofsAvg[GasVer]    = np.diag(self.avkSCFav[GasVer])
-                self.dofsAvg_cs[GasVer] = np.cumsum(np.diag(self.avkSCFav[GasVer])[::-1])[::-1]
+                try:
+
+                    self.avkSCF[GasVer]  = np.asarray(avkSCFi)
+                    nobs            = np.shape(self.avkSCF[GasVer])[0]
+                    n_layer         = np.shape(self.avkSCF[GasVer])[1]
+                    self.avkVMR[GasVer]  = np.zeros((nobs,n_layer,n_layer))
+            
+                    for obs in range(0,nobs):
+                        Iapriori        = np.zeros((n_layer,n_layer))
+                        IaprioriInv     = np.zeros((n_layer,n_layer))
+                        np.fill_diagonal(Iapriori,statDataCl[GasVer].aprfs[statDataCl[GasVer].PrimaryGas.upper()][obs])
+                        np.fill_diagonal(IaprioriInv, 1.0 / (statDataCl[GasVer].aprfs[statDataCl[GasVer].PrimaryGas.upper()][obs]))
+                        self.avkVMR[GasVer][obs,:,:] = np.dot(np.dot(Iapriori,np.squeeze(self.avkSCF[GasVer][obs,:,:])),IaprioriInv)       
+                        
+                    self.avkSCF[GasVer]     = np.delete(self.avkSCF[GasVer],statDataCl[GasVer].inds,axis=0)
+                    self.avkVMR[GasVer]     = np.delete(self.avkVMR[GasVer],statDataCl[GasVer].inds,axis=0)
+                    diagAK                  = np.diagonal(self.avkSCF[GasVer],axis1=1,axis2=2)
+                    self.dofs[GasVer]       = np.sum(diagAK, axis=1)   
+                    self.avkSCFav[GasVer]   = np.mean(self.avkSCF[GasVer],axis=0)
+                    self.avkVMRav[GasVer]   = np.mean(self.avkVMR[GasVer],axis=0)
+                    
+                    self.dofsAvg[GasVer]    = np.diag(self.avkSCFav[GasVer])
+                    self.dofsAvg_cs[GasVer] = np.cumsum(np.diag(self.avkSCFav[GasVer])[::-1])[::-1]
+
+                except:
+                    print 'AK not present'
 
 
             #--------------------------------------
@@ -385,6 +429,14 @@ class FTSClass():
             self.waterVMR[GasVer] = np.delete(self.waterVMR[GasVer],statDataCl[GasVer].inds,axis=0)   
             self.waterMol[GasVer] = np.delete(self.waterMol[GasVer],statDataCl[GasVer].inds,axis=0) 
 
+
+            for k in self.pbp[GasVer]:
+
+                 self.pbp[GasVer][k]  = np.delete(self.pbp[GasVer][k],statDataCl[GasVer].inds,axis=0)
+
+            for k in self.spc[GasVer]:
+
+                 self.spc[GasVer][k]  = np.delete(self.spc[GasVer][k],statDataCl[GasVer].inds,axis=0)
     
 
             #self.rPrfConc[GasVer]  = np.delete(self.rPrfMol[GasVer],statDataCl[GasVer].inds,axis=0)  

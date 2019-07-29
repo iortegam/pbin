@@ -79,6 +79,9 @@ after this add and commit, the push is you want, example:
 >> git commit -m 'Ref Prof'
 >> git push -u new-origin Pre-Release_v3.0
 
+To check remote name
+>> git remote
+
 #-------------------------------------------
 # Creating a new Pre-relase branch starting from Bavo's branch
 #-------------------------------------------

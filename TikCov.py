@@ -11,9 +11,9 @@
 
 import numpy as np
 
-nlayer    = 41        #FL0 = 44, MLO = 41, TAB = 47
-alpha     = 500
-pathOut   = '/data1/ebaumer/mlo/h2co/x.h2co/'
+nlayer    = 47        #FL0 = 44, MLO = 41, TAB = 47
+alpha     = 20
+pathOut   = '/data1/ebaumer/tab/pan/x.pan/'
 
 L1=np.zeros((nlayer-1,nlayer),dtype=float)
 

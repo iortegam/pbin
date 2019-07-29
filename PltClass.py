@@ -1693,7 +1693,7 @@ class MapClass():
         # p.cmap.set_over(cmap(.0))
         # p.cmap.set_under('w')  
         
-        ax.tick_params(labelsize=14)
+        ax.tick_params(labelsize=16)
 
         clmap   = 'jet'
         cm      = plt.get_cmap(clmap)
@@ -1708,19 +1708,20 @@ class MapClass():
 
         cax  = fig.add_axes([0.88, 0.14, 0.03, 0.8])
         cbar = fig.colorbar(sc, cax=cax)
+        cbar.ax.tick_params(labelsize=16) 
         
-        cbar.set_label(ztitle, fontsize=14)
+        cbar.set_label(ztitle, fontsize=16)
 
-        ax.tick_params(axis='both', which='major', labelsize=14)
+        ax.tick_params(axis='both', which='major', labelsize=16)
 
 
         m.drawcounties()
         # draw parallels.
         parallels = np.arange(30.,50, 1.5)
-        m.drawparallels(parallels,labels=[1,0,0,0],fontsize=14, linewidth=0.0, color='gray')
+        m.drawparallels(parallels,labels=[1,0,0,0],fontsize=16, linewidth=0.0, color='gray')
         # draw meridians
         meridians = np.arange(180.,360., 1.5)
-        m.drawmeridians(meridians,labels=[0,0,0,1],fontsize=14, linewidth=0.0, color='gray')
+        m.drawmeridians(meridians,labels=[0,0,0,1],fontsize=16, linewidth=0.0, color='gray')
         m.drawmapscale(-107.1, 42.05 , self.origin[1], self.origin[0], 100, barstyle='fancy')
 
         x, y = m(LonID, LatID)

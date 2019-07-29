@@ -831,13 +831,15 @@ def fit_driftfourier_poly(x, data, weights, degree, half_period=0.5):
     xnorm = x - xmin
     
     # coefficient matrix
-    A = np.ones((x.size, 2 * degree + 6))
+    A = np.ones((x.size, 2 * degree + 8))
     A[:, 1] = xnorm
     A[:, 2] = xnorm**2
     A[:, 3] = xnorm**3
     A[:, 4] = xnorm**4
     A[:, 5] = xnorm**5
-    A[:, 6:] = fourier_basis(xnorm, degree, half_period)[:, 1:]
+    A[:, 6] = xnorm**6
+    A[:, 7] = xnorm**7
+    A[:, 8:] = fourier_basis(xnorm, degree, half_period)[:, 1:]
     
     # linear weighted least squares
     results = np.linalg.lstsq(A * weights[:, np.newaxis],
@@ -851,17 +853,19 @@ def fit_driftfourier_poly(x, data, weights, degree, half_period=0.5):
     poly2     = params[3]
     poly3     = params[4]
     poly4     = params[5]
-    pfourier  = params[6:]
+    poly5     = params[6]
+    poly6     = params[7]
+    pfourier  = params[8:]
 
     
     #f_drift   = lambda t: slope * (t - xmin) + poly * (t - xmin)**2 + poly2 * (t - xmin)**3 + intercept
     #f_drift   = lambda t: (slope *t - slope*xmin) +  (poly*( t**2 - 2.*t*xmin + xmin**2)) +  (poly2*( t**3 - 3.*t**2*xmin + 3.*t*xmin**2 - xmin**3))  + intercept #+(poly3*( t**4 - 4.*t**3*xmin + 6.*t**2xmin**2 - 4*t*xmin**3 + xmin**4)) +(poly4*( t**5 - 5.*t**4*xmin + 10.*t**3*xmin**2 - 10*t**2*xmin**3 + 5*t*xmin**4 + xmin**5)) 
 
-    f_drift   = lambda t: slope * (t - xmin) + poly * (t - xmin)**2 + poly2 * (t - xmin)**3 + poly3 * (t - xmin)**4 +  poly4 * (t - xmin)**5 + intercept 
+    f_drift   = lambda t: slope * (t - xmin) + poly*(t - xmin)**2 + poly2*(t - xmin)**3 + poly3*(t - xmin)**4 +  poly4*(t - xmin)**5 +   poly5*(t - xmin)**6 +  poly6*(t - xmin)**7 + intercept 
     
     ####df_drift  = lambda t: slope + (poly*(2.*t.max() - 2.*t.min())) + (poly2*(3.*t.max()**2 - 6.*t.max()*t.min() + 3.*t.min()**2))
     #df_drift  = lambda t: slope + (poly*(2.*t - 2.*xmin)) + (poly2*(3.*t**2 - 6.*t*xmin + 3.*xmin**2))
-    df_drift  = lambda t: slope + (poly*(2.*t - 2.*xmin)) + (poly2*(3.*t**2 - 6.*t*xmin + 3.*xmin**2)) + (poly3*(4.*t**3 - 12.*t**2*xmin + 12.*t*xmin**2 - 4*xmin**3)) + (poly4*(5.*t**4 - 20.*t**3*xmin + 30.*t**2*xmin**2 - 20*t*xmin**3 +5*xmin**4))
+    df_drift  = lambda t: slope + (poly*(2.*t - 2.*xmin)) + (poly2*(3.*t**2 - 6.*t*xmin + 3.*xmin**2)) + (poly3*(4.*t**3 - 12.*t**2*xmin + 12.*t*xmin**2 - 4*xmin**3)) + (poly4*(5.*t**4 - 20.*t**3*xmin + 30.*t**2*xmin**2 - 20*t*xmin**3 +5.*xmin**4)) + (poly5*( 6.*t**5 - 30.*t**4*xmin + 60.*t**3*xmin**2 - 60.*t**2*xmin**2 + 30.*t*xmin**4 - 6.*xmin**5) ) + (poly6*(7.*t**6 - 36.*t**5*xmin + 105.*t**4*xmin**2 - 140.*t**3*xmin**3 + 105.*t**2*xmin**4 - 42.*t*xmin**5 + 7.*xmin**6   ) )
 
     f_fourier = lambda t: np.sum(fourier_basis(t - xmin, degree,
                                                half_period)[:, 1:]
@@ -920,7 +924,7 @@ def fit_driftfourier(x, data, weights, degree, half_period=0.5):
         matrix of "coefficients"
     
     """
-    xmin = x.min()
+    xmin  = x.min()
     xnorm = x - xmin
     
     # coefficient matrix

@@ -595,14 +595,23 @@ class HIPPOClass():
             #-----------------
             #MAP
             #-----------------
-            m  = Basemap(projection='mill',llcrnrlat=-90,urcrnrlat=90, llcrnrlon=-180,urcrnrlon=180,resolution='c', ax=ax[0])
-            # plot coastlines, draw label meridians and parallels.
-            m.drawcoastlines()
-            m.drawparallels(np.arange(-90,90,30),labels=[1,0,0,0], fontsize=16)
-            m.drawmeridians(np.arange(m.lonmin,m.lonmax+30,60),labels=[0,0,0,1], fontsize=16)
-            # fill continents 'coral' (with zorder=0), color wet areas 'aqua'
-            m.drawmapboundary(fill_color='aqua')
-            m.fillcontinents(color='coral',lake_color='aqua')
+            #m  = Basemap(projection='mill',llcrnrlat=-90,urcrnrlat=90, llcrnrlon=-180,urcrnrlon=180,resolution='c', ax=ax[0])
+            # m  = Basemap(projection='mill',llcrnrlat=-90,urcrnrlat=90, llcrnrlon=-180,urcrnrlon=180,resolution='l', ax=ax[0])
+            # # plot coastlines, draw label meridians and parallels.
+            # m.drawcoastlines()
+            # m.drawparallels(np.arange(-90,90,30),labels=[1,0,0,0], fontsize=16)
+            # m.drawmeridians(np.arange(m.lonmin,m.lonmax+30,60),labels=[0,0,0,1], fontsize=16)
+            # # fill continents 'coral' (with zorder=0), color wet areas 'aqua'
+            # m.drawmapboundary(fill_color='aqua')
+            # m.fillcontinents(color='coral',lake_color='aqua')
+
+            m = Basemap(projection='robin', resolution = 'l', area_thresh = 1000.0, lat_0=0, lon_0=180, ax=ax[0])
+            m.drawcoastlines(linewidth =0.25, color = 'gray', )
+            #eq_map.drawcountries()
+            m.fillcontinents(color = 'gray', alpha=0.5)
+            m.drawmapboundary()
+            m.drawmeridians(np.arange(0, 360, 30), color='gray', linewidth=0.5, alpha = 0.5)
+            m.drawparallels(np.arange(-90, 90, 30), color='gray', linewidth=0.5, labels=[1,0,0,0], alpha = 0.5)
 
             inds1     = np.where(self.Hno_all == hn)[0]
             
@@ -611,7 +620,7 @@ class HIPPOClass():
 
             x, y = m(lon_all,lat_all)
             #m.plot(x, y, marker ='o', markersize=4, color='r', linestyle='None', linewidth=3)
-            #m.scatter(x, y, facecolors='red', edgecolors='none', s=40)
+            #m.scatter(x, y, facecolors='red', edgecolors='none', s=40, zorder=2)
 
             inds2  = np.where(self.Hno == hn)[0]
             lat    = self.lat[inds2]
@@ -622,13 +631,13 @@ class HIPPOClass():
             #norm = colors.Normalize( vmin=np.nanmin(rf), vmax=np.nanmax(rf) )
             bounds = []
             bounds.extend([int(ii+1) for ii in range(np.max(rf))])
-   
+
             norm = colors.BoundaryNorm(bounds, cm.N )
 
        
             xx, yy = m(lon,lat)
             #m.plot(xx, yy, marker ='o', markersize=4, color='b', linestyle='None', linewidth=3)
-            m.scatter(xx, yy, edgecolors='none', s=30, c=rf,cmap=cm, norm=norm)
+            m.scatter(xx, yy, edgecolors='none', s=30, c=rf,cmap=cm, norm=norm, zorder=2)
 
             ax[0].tick_params(labelsize=18)
 
@@ -668,9 +677,9 @@ class HIPPOClass():
             
             if self.saveFlg: 
                self.pdfsav.savefig(fig,dpi=200)
-           
-        else:           
-            plt.show(block=False)
+               
+            else:           
+                plt.show(block=False)
 
         if self.saveFlg: self.pdfsav.close()
 
